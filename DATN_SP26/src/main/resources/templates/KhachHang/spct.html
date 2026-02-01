@@ -2,28 +2,62 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Danh sách sản phẩm</title>
+    <title>Debug SPCT - Giỏ hàng</title>
     <style>
-        .product-item { border: 1px solid #ccc; padding: 10px; margin: 10px; list-style: none; }
-        .btn-add { background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+        th { background-color: #f4f4f4; }
+        .btn-add {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-add:hover { background-color: #218838; }
+        .btn-add:disabled { background-color: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
-<h1>Danh sách sản phẩm</h1>
-<div>
-    <ul>
-        <li th:each="sp : ${sanPhams}" class="product-item">
-            <strong th:text="${sp.tenSanPham}">Tên sản phẩm</strong> -
-            <span th:text="${sp.moTa}">Mô tả</span> <br/>
+<h1>Trang Debug Dữ Liệu</h1>
+<div th:if="${listSPCT == null}">Danh sách đang NULL</div>
 
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID SPCT</th>
+        <th>Giá</th>
+        <th>Số lượng</th>
+        <th>Kiểm tra Quan hệ</th>
+        <th>Thao tác</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="spct : ${listSPCT}">
+        <td th:text="${spct.id}"></td>
+        <td th:text="${spct.donGia}"></td>
+        <td th:text="${spct.soLuong}"></td>
+        <td>
+            <span th:text="${spct.idSanPham != null ? 'Có SP' : 'NULL SP'}"></span> |
+            <span th:text="${spct.mauSac != null ? 'Có Màu' : 'NULL Màu'}"></span> |
+            <span th:text="${spct.kichThuoc != null ? 'Có Size' : 'NULL Size'}"></span>
+        </td>
+        <td>
             <form th:action="@{/khach-hang/gio-hang/add}" method="post">
-                <input type="hidden" name="productId" th:value="${sp.id}" />
-                <button type="submit" class="btn-add">Thêm vào giỏ hàng</button>
-            </form>
-        </li>
-    </ul>
-</div>
+                <input type="hidden" name="productId" th:value="${spct.id}" />
 
-<div th:if="${message}" style="color: blue;" th:text="${message}"></div>
+                <button type="submit" class="btn-add"
+                        th:disabled="${spct.soLuong == null or spct.soLuong <= 0}">
+                    Thêm vào giỏ
+                </button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div th:if="${message}" style="color: blue; margin-top: 20px;" th:text="${message}"></div>
+
 </body>
 </html>
