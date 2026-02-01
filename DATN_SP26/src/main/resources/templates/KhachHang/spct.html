@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách sản phẩm</title>
+    <style>
+        .product-item { border: 1px solid #ccc; padding: 10px; margin: 10px; list-style: none; }
+        .btn-add { background-color: #28a745; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<h1>Danh sách sản phẩm</h1>
+<div>
+    <ul>
+        <li th:each="sp : ${sanPhams}" class="product-item">
+            <strong th:text="${sp.tenSanPham}">Tên sản phẩm</strong> -
+            <span th:text="${sp.moTa}">Mô tả</span> <br/>
+
+            <form th:action="@{/khach-hang/gio-hang/add}" method="post">
+                <input type="hidden" name="productId" th:value="${sp.id}" />
+                <button type="submit" class="btn-add">Thêm vào giỏ hàng</button>
+            </form>
+        </li>
+    </ul>
+</div>
+
+<div th:if="${message}" style="color: blue;" th:text="${message}"></div>
+</body>
+</html>
