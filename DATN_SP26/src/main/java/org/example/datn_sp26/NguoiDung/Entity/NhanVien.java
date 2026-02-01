@@ -1,0 +1,42 @@
+package org.example.datn_sp26.NguoiDung.Entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name ="NhanVien")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class NhanVien {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Integer id;
+
+    @Column(name = "idTaiKhoan")
+    private Integer idTaiKhoan;
+
+    @Column(name = "maNhanVien")
+    private String maNhanVien;
+
+    @Column(name = "tenNhanVien")
+    private String tenNhanVien;
+
+    @Column(name = "sdt")
+    private String sdt;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "diaChi")
+    private String diaChi;
+
+    @Column(name = "trangThai")
+    private Integer trangThai;
+}
