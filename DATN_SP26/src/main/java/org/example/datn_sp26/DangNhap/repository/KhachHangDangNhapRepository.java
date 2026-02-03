@@ -8,8 +8,8 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface KhachHangRepository extends JpaRepository<KhachHang, Integer> {
-    Optional<KhachHang> findByTaiKhoan(TaiKhoan taiKhoan);
+public interface KhachHangDangNhapRepository extends JpaRepository<KhachHang, Integer> {
+    Optional<KhachHang> findByIdTaiKhoan(TaiKhoan taiKhoan);
 
     Optional<KhachHang> findFirstByEmail(String email);
 }

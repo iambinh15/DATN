@@ -4,8 +4,8 @@ import org.example.datn_sp26.DangNhap.dto.RegisterRequest;
 import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
 import org.example.datn_sp26.NguoiDung.Entity.NhanVien;
 import org.example.datn_sp26.NguoiDung.Entity.TaiKhoan;
-import org.example.datn_sp26.DangNhap.repository.KhachHangRepository;
-import org.example.datn_sp26.DangNhap.repository.NhanVienRepository;
+import org.example.datn_sp26.DangNhap.repository.KhachHangDangNhapRepository;
+import org.example.datn_sp26.DangNhap.repository.NhanVienDangNhapRepository;
 import org.example.datn_sp26.DangNhap.repository.TaiKhoanRepository;
 import org.example.datn_sp26.DangNhap.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,10 +28,10 @@ public class HomeController {
     private TaiKhoanRepository taiKhoanRepository;
 
     @Autowired
-    private KhachHangRepository khachHangRepository;
+    private KhachHangDangNhapRepository khachHangDangNhapRepository;
 
     @Autowired
-    private NhanVienRepository nhanVienRepository;
+    private NhanVienDangNhapRepository nhanVienDangNhapRepository;
 
     @Autowired
     private AuthService authService;
@@ -91,12 +91,12 @@ public class HomeController {
                 String displayName = username;
 
                 if ("USER".equals(role)) {
-                    Optional<KhachHang> kh = khachHangRepository.findByTaiKhoan(taiKhoan);
+                    Optional<KhachHang> kh = khachHangDangNhapRepository.findByIdTaiKhoan(taiKhoan);
                     if (kh.isPresent()) {
-                        displayName = kh.get().getTen();
+                        displayName = kh.get().getTenKhachHang();
                     }
                 } else if ("ADMIN".equals(role) || "STAFF".equals(role)) {
-                    Optional<NhanVien> nv = nhanVienRepository.findByTaiKhoan(taiKhoan);
+                    Optional<NhanVien> nv = nhanVienDangNhapRepository.findByTaiKhoan(taiKhoan);
                     if (nv.isPresent()) {
                         displayName = nv.get().getTen();
                     }

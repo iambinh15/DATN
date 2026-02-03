@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface NhanVienRepository extends JpaRepository<NhanVien, Long> {
+public interface NhanVienDangNhapRepository extends JpaRepository<NhanVien, Long> {
     Optional<NhanVien> findByTaiKhoan(TaiKhoan taiKhoan);
 }

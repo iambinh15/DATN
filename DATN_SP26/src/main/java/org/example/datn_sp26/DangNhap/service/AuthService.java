@@ -4,14 +4,13 @@ import org.example.datn_sp26.DangNhap.dto.RegisterRequest;
 import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
 import org.example.datn_sp26.NguoiDung.Entity.TaiKhoan;
 import org.example.datn_sp26.NguoiDung.Entity.VaiTro;
-import org.example.datn_sp26.DangNhap.repository.KhachHangRepository;
+import org.example.datn_sp26.DangNhap.repository.KhachHangDangNhapRepository;
 import org.example.datn_sp26.DangNhap.repository.TaiKhoanRepository;
 import org.example.datn_sp26.DangNhap.repository.VaiTroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.Date;
 import java.util.Random;
 
@@ -22,7 +21,7 @@ public class AuthService {
     private TaiKhoanRepository taiKhoanRepository;
 
     @Autowired
-    private KhachHangRepository khachHangRepository;
+    private KhachHangDangNhapRepository khachHangDangNhapRepository;
 
     @Autowired
     private VaiTroRepository vaiTroRepository;
@@ -47,7 +46,7 @@ public class AuthService {
             }
 
             // 2.1. Kiểm tra Email đã tồn tại chưa
-            if (khachHangRepository.findFirstByEmail(request.getEmail()).isPresent()) {
+            if (khachHangDangNhapRepository.findFirstByEmail(request.getEmail()).isPresent()) {
                 throw new Exception("Email '" + request.getEmail() + "' đã được sử dụng!");
             }
 
@@ -71,19 +70,19 @@ public class AuthService {
 
             // 5. Tạo Khách Hàng
             KhachHang khachHang = new KhachHang();
-            khachHang.setTen(request.getHoTen());
+            khachHang.setTenKhachHang(request.getHoTen());
             khachHang.setEmail(request.getEmail());
             khachHang.setSdt(request.getSdt());
-            khachHang.setTaiKhoan(savedTaiKhoan);
+            khachHang.setIdTaiKhoan(savedTaiKhoan);
             
-            khachHang.setNgayTao(new Date());
+            khachHang.setNgayTao(new Date().toInstant());
             khachHang.setTrangThai(1); 
             khachHang.setGioiTinh(true); 
             
             // Tạo mã khách hàng tự động
             khachHang.setMaKhachHang("KH" + System.currentTimeMillis()); 
 
-            KhachHang savedKhachHang = khachHangRepository.save(khachHang);
+            KhachHang savedKhachHang = khachHangDangNhapRepository.save(khachHang);
             System.out.println("Đã lưu Khách hàng ID: " + savedKhachHang.getId());
             
         } catch (Exception e) {
@@ -99,14 +98,14 @@ public class AuthService {
             System.out.println("Bắt đầu xử lý quên mật khẩu cho email: " + email);
             
             // 1. Tìm Khách Hàng theo Email
-            KhachHang khachHang = khachHangRepository.findFirstByEmail(email)
+            KhachHang khachHang = khachHangDangNhapRepository.findFirstByEmail(email)
                     .orElseThrow(() -> {
                         System.out.println("Không tìm thấy khách hàng với email: " + email);
                         return new Exception("Email này chưa được đăng ký!");
                     });
-            System.out.println("Tìm thấy khách hàng: " + khachHang.getTen());
+            System.out.println("Tìm thấy khách hàng: " + khachHang.getTenKhachHang());
 
-            TaiKhoan taiKhoan = khachHang.getTaiKhoan();
+            TaiKhoan taiKhoan = khachHang.getIdTaiKhoan();
             if (taiKhoan == null) {
                 System.out.println("Lỗi: Khách hàng không có tài khoản liên kết");
                 throw new Exception("Lỗi dữ liệu: Khách hàng không có tài khoản liên kết!");
