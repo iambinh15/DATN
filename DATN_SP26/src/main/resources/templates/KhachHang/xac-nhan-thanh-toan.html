@@ -43,6 +43,20 @@
     <span>Tổng thanh toán:</span>
     <span id="finalTotal">---</span>
   </div>
+  <!-- KHUYẾN MÃI -->
+  <div class="promotion-box" style="margin-bottom: 20px;">
+    <p style="font-weight: bold;">Chọn mã giảm giá:</p>
+
+    <select id="maGiamGiaSelect" onchange="apDungMaGiamGia()" style="width: 100%; padding: 8px;">
+      <option value="0" data-value="0">-- Không dùng mã --</option>
+
+      <option th:each="km : ${dsMaGiamGia}"
+              th:value="${km.id}"
+              th:data-value="${km.giaTri}"
+              th:text="|${km.ma} - Giảm ${#numbers.formatDecimal(km.giaTri,0,'COMMA',0,'POINT')} đ|">
+      </option>
+    </select>
+  </div>
 
   <div class="payment-methods">
     <p style="font-weight: bold;">Chọn phương thức thanh toán:</p>
@@ -62,7 +76,43 @@
 
 <script th:inline="javascript">
   let currentTongThanhToan = 0;
+  let phiShip = 0;
+  let giamGia = 0;
+  const tienHang = /*[[${tongTienHang}]]*/ 0;
 
+  (function() {
+    try {
+      const dataGHNRaw = /*[[${dataGHN}]]*/ '{}';
+      const resGHN = (typeof dataGHNRaw === 'string') ? JSON.parse(dataGHNRaw) : dataGHNRaw;
+
+      const shipFeeElem = document.getElementById('shipFee');
+      const finalTotalElem = document.getElementById('finalTotal');
+
+      if (resGHN && resGHN.code === 200 && resGHN.data) {
+        phiShip = resGHN.data.total;
+        currentTongThanhToan = tienHang + phiShip;
+        shipFeeElem.innerText = phiShip.toLocaleString('vi-VN') + ' đ';
+        finalTotalElem.innerText = currentTongThanhToan.toLocaleString('vi-VN') + ' đ';
+      }
+    } catch (e) { console.error(e); }
+  })();
+
+  // ✅ HÀM ÁP DỤNG MÃ GIẢM GIÁ
+  function apDungMaGiamGia() {
+    const select = document.getElementById("maGiamGiaSelect");
+    const selectedOption = select.options[select.selectedIndex];
+
+    giamGia = parseInt(selectedOption.getAttribute("data-value")) || 0;
+
+    // 🔥 Giảm giá CHỈ tiền hàng
+    let tienSauGiam = tienHang - giamGia;
+    if (tienSauGiam < 0) tienSauGiam = 0;
+
+    currentTongThanhToan = tienSauGiam + phiShip;
+
+    document.getElementById("finalTotal").innerText =
+            currentTongThanhToan.toLocaleString("vi-VN") + " đ";
+  }
   (function() {
     try {
       const dataGHNRaw = /*[[${dataGHN}]]*/ '{}';
@@ -73,7 +123,7 @@
       const finalTotalElem = document.getElementById('finalTotal');
 
       if (resGHN && resGHN.code === 200 && resGHN.data) {
-        const phiShip = resGHN.data.total;
+        phiShip = resGHN.data.total; //dòng này để cho phí ship ra ngoài không bị giám giá
         currentTongThanhToan = tienHang + phiShip;
         shipFeeElem.innerText = phiShip.toLocaleString('vi-VN') + ' đ';
         finalTotalElem.innerText = currentTongThanhToan.toLocaleString('vi-VN') + ' đ';
