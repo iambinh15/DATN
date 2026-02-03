@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm Sản Phẩm</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Thêm Sản Phẩm Mới</h1>
+            <a th:href="@{/san-pham}" class="btn btn-secondary">Quay Lại</a>
+        </div>
+
+        <form th:action="@{/san-pham/create}" th:object="${sanPham}" method="post" class="form">
+            <div class="form-group">
+                <label for="maSanPham">Mã Sản Phẩm:</label>
+                <input type="text" id="maSanPham" th:field="*{maSanPham}" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="tenSanPham">Tên Sản Phẩm:</label>
+                <input type="text" id="tenSanPham" th:field="*{tenSanPham}" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="moTa">Mô Tả:</label>
+                <textarea id="moTa" th:field="*{moTa}" class="form-control" rows="4"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="thuongHieu">Thương Hiệu:</label>
+                <select id="thuongHieu" th:field="*{thuongHieu.id}" class="form-control" required>
+                    <option value="">-- Chọn Thương Hiệu --</option>
+                    <option th:each="th : ${thuongHieus}" 
+                            th:value="${th.id}" 
+                            th:text="${th.tenThuongHieu}"></option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="trangThai">Trạng Thái:</label>
+                <select id="trangThai" th:field="*{trangThai}" class="form-control" required>
+                    <option value="1">Hoạt động</option>
+                    <option value="0">Ngừng hoạt động</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Thêm Mới</button>
+                <a th:href="@{/san-pham}" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

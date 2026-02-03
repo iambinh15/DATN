@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Sản Phẩm</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Chi Tiết Sản Phẩm</h1>
+            <a th:href="@{/san-pham}" class="btn btn-secondary">Quay Lại</a>
+        </div>
+
+        <div class="detail-card">
+            <div class="detail-row">
+                <span class="detail-label">ID:</span>
+                <span class="detail-value" th:text="${sanPham.id}"></span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Mã Sản Phẩm:</span>
+                <span class="detail-value" th:text="${sanPham.maSanPham}"></span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Tên Sản Phẩm:</span>
+                <span class="detail-value" th:text="${sanPham.tenSanPham}"></span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Mô Tả:</span>
+                <span class="detail-value" th:text="${sanPham.moTa}"></span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Thương Hiệu:</span>
+                <span class="detail-value" th:text="${sanPham.thuongHieu?.tenThuongHieu}"></span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Trạng Thái:</span>
+                <span th:if="${sanPham.trangThai == 1}" class="badge badge-active">Hoạt động</span>
+                <span th:if="${sanPham.trangThai == 0}" class="badge badge-inactive">Ngừng hoạt động</span>
+            </div>
+        </div>
+
+        <div class="detail-actions">
+            <a th:href="@{/san-pham/edit/{id}(id=${sanPham.id})}" class="btn btn-warning">Sửa</a>
+            <a th:href="@{/san-pham-chi-tiet(sanPhamId=${sanPham.id})}" class="btn btn-info">Xem Chi Tiết SP</a>
+        </div>
+    </div>
+</body>
+</html>
