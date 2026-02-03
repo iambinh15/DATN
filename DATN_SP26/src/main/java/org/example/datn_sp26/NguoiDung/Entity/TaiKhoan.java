@@ -1,38 +1,34 @@
 package org.example.datn_sp26.NguoiDung.Entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
+@Entity
+@Table(name = "TaiKhoan")
 @Getter
 @Setter
-@Entity
+@NoArgsConstructor
+@AllArgsConstructor
 public class TaiKhoan {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Integer id;
+    @Column(name = "id")
+    private Long id;
 
-    @Column(name = "username", length = 50)
-    private String username;
+    @Column(name = "username")
+    private String tenDangNhap;
 
-    @Column(name = "password", length = 100)
-    private String password;
+    @Column(name = "password")
+    private String matKhau;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "idVaiTro")
-    private VaiTro idVaiTro;
+    private VaiTro vaiTro;
 
     @Column(name = "trangThai")
     private Integer trangThai;
-
-    @OneToMany(mappedBy = "idTaiKhoan")
-    private Set<KhachHang> khachHangs = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "idTaiKhoan")
-    private Set<NhanVien> nhanViens = new LinkedHashSet<>();
-
 }
