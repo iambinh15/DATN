@@ -2,6 +2,7 @@ package org.example.datn_sp26.GiaoHang.Controller;
 
 import org.example.datn_sp26.GiaoHang.Service.GHNService;
 import org.example.datn_sp26.BanHang.Service.GioHangService;
+import org.example.datn_sp26.KhuyenMai.Service.MaGiamGiaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,7 +20,8 @@ public class GHNController {
 
     @Autowired
     private GioHangService gioHangService;
-
+    @Autowired
+    private MaGiamGiaService maGiamGiaService;
     @GetMapping("/thanh-toan")
     public String hienThiThanhToan(Model model) {
 
@@ -50,11 +52,12 @@ public class GHNController {
                 1000,           // trọng lượng (gram)
                 tongTienHang
         );
-
+        // 5️⃣ 🔥 LẤY DANH SÁCH MÃ GIẢM GIÁ
+        var dsMaGiamGia = maGiamGiaService.layMaDangHoatDong();
         // 5️⃣ Trả dữ liệu ra view
         model.addAttribute("tongTienHang", tongTienHang);
         model.addAttribute("dataGHN", responseGHN);
-
+        model.addAttribute("dsMaGiamGia", dsMaGiamGia);
         return "KhachHang/xac-nhan-thanh-toan";
     }
 }
