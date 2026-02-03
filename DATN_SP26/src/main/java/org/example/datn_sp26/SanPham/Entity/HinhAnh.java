@@ -1,34 +1,28 @@
 package org.example.datn_sp26.SanPham.Entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Nationalized;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
-public class ChatLieu {
+public class HinhAnh {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Integer id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idSanPham")
+    private SanPham idSanPham;
+
     @Nationalized
-    @Column(name = "tenChatLieu", length = 50)
-    private String tenChatLieu;
+    @Column(name = "hinhAnh")
+    private String hinhAnh;
 
     @Column(name = "trangThai")
     private Integer trangThai;
-
-    @OneToMany(mappedBy = "idChatLieu")
-    private Set<SanPhamChiTiet> sanPhamChiTiets = new LinkedHashSet<>();
 
 }

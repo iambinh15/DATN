@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết sản phẩm</title>
+    <style>
+        body { font-family: sans-serif; padding: 50px; background-color: #f4f4f4; }
+        .product-container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .btn-add { background: #e74c3c; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .btn-add:hover { background: #c0392b; }
+    </style>
+</head>
+<body>
+
+<div class="product-container">
+    <div th:if="${sp != null}">
+        <h1 th:text="${sp.tenSanPham}">Tên sản phẩm</h1>
+        <p>Mã sản phẩm: <span th:text="${sp.maSanPham}"></span></p>
+
+        <form th:action="@{/khach-hang/gio-hang/add}" method="post">
+            <div style="margin-bottom: 20px;">
+                <label>Chọn phiên bản:</label>
+                <select name="productId" required style="width: 100%; padding: 10px; margin-top: 5px;">
+                    <option value="">-- Chọn một phiên bản --</option>
+                    <option th:each="bt : ${listBienThe}"
+                            th:value="${bt.id}"
+                            th:text="${'Biến thể #' + bt.id + ' - Giá: ' + #numbers.formatDecimal(bt.donGia, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}">
+                    </option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-add">
+                🛒 THÊM VÀO GIỎ HÀNG
+            </button>
+        </form>
+    </div>
+
+    <hr style="margin-top: 20px;">
+    <a th:href="@{/khach-hang/trang-chu}" style="text-decoration: none; color: #3498db;">← Quay lại trang chủ</a>
+</div>
+
+</body>
+</html>

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.Date;
 
 @Controller
@@ -29,7 +30,7 @@ public class KhachHangController {
     @GetMapping("/add")
     public String add(Model model) {
         KhachHang kh = new KhachHang();
-        kh.setNgayTao(new Date());
+        kh.setNgayTao(Instant.now());
         kh.setTrangThai(1);
         model.addAttribute("kh", kh);
         return "KhachHang/form";
@@ -46,7 +47,7 @@ public class KhachHangController {
     @PostMapping("/save")
     public String save(@ModelAttribute KhachHang kh) {
         if (kh.getNgayTao() == null) {
-            kh.setNgayTao(new Date());
+            kh.setNgayTao(Instant.now()); // ✅ sửa ở đây
         }
         service.save(kh);
         return "redirect:/khach-hang";

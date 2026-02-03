@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Trang Chủ - Cửa Hàng Thời Trang</title>
+  <style>
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding: 20px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 15px; text-align: center; transition: 0.3s; }
+    .card:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .btn-detail { background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px; }
+  </style>
+</head>
+<body>
+<h1 style="text-align: center;">DANH SÁCH SẢN PHẨM</h1>
+<div class="product-grid">
+  <div th:each="sp : ${listSanPham}" class="card">
+    <div style="height: 200px; background: #eee; line-height: 200px;">IMAGE</div>
+    <h3 th:text="${sp.tenSanPham}">Tên sản phẩm</h3>
+    <p th:text="${sp.maSanPham}">Mã SP</p>
+    <a th:href="@{/khach-hang/san-pham/{id}(id=${sp.id})}" class="btn-detail">Xem Chi Tiết</a>
+  </div>
+</div>
+</body>
+</html>

@@ -1,9 +1,7 @@
-package org.example.datn_sp26.SanPham.Entity;
+package org.example.datn_sp26.NguoiDung.Entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Nationalized;
 
@@ -12,23 +10,24 @@ import java.util.Set;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
-public class ChatLieu {
+public class VaiTro {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Integer id;
 
+    @Column(name = "maVaiTro", length = 20)
+    private String maVaiTro;
+
     @Nationalized
-    @Column(name = "tenChatLieu", length = 50)
-    private String tenChatLieu;
+    @Column(name = "tenVaiTro", length = 50)
+    private String tenVaiTro;
 
     @Column(name = "trangThai")
     private Integer trangThai;
 
-    @OneToMany(mappedBy = "idChatLieu")
-    private Set<SanPhamChiTiet> sanPhamChiTiets = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "idVaiTro")
+    private Set<TaiKhoan> taiKhoans = new LinkedHashSet<>();
 
 }
