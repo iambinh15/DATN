@@ -2,149 +2,187 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>Xác nhận đơn hàng - DATN SP26</title>
+  <title>Xác nhận đơn hàng</title>
   <style>
-    body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .checkout-box {
-      max-width: 500px; margin: 50px auto; padding: 30px;
-      background: #fff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    body { background:#f4f7f6;font-family:Segoe UI }
+    .box {
+      max-width:550px;margin:40px auto;background:#fff;
+      padding:25px;border-radius:12px;
+      box-shadow:0 10px 25px rgba(0,0,0,.1)
     }
-    h2 { text-align: center; color: #333; margin-bottom: 25px; }
-    .row { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 16px; }
-    .total-row { border-top: 2px dashed #eee; padding-top: 20px; font-size: 20px; font-weight: bold; color: #d32f2f; }
-    .payment-option {
-      display: flex; align-items: center; padding: 12px; border: 1px solid #ddd;
-      border-radius: 8px; margin-bottom: 10px; cursor: pointer;
-    }
-    .payment-option input { margin-right: 15px; }
-    .btn-confirm {
-      width: 100%; padding: 16px; background: #f37021; color: white;
-      border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;
-    }
-    .error-msg { color: #d32f2f; font-size: 13px; text-align: center; margin-top: 10px; }
+    h2{text-align:center}
+    input,select,button{width:100%;padding:8px;margin-bottom:8px}
+    .row{display:flex;justify-content:space-between;margin:10px 0}
+    .total{font-size:20px;font-weight:bold;color:#d32f2f}
+    .addr-show{background:#f7f7f7;padding:10px;border-radius:8px}
+    button{background:#f37021;color:#fff;border:none;border-radius:8px}
   </style>
 </head>
-<body>
 
-<div class="checkout-box">
+<body>
+<div class="box">
   <h2>XÁC NHẬN ĐƠN HÀNG</h2>
 
-  <div class="row">
-    <span>Tiền hàng:</span>
-    <b id="labelTienHang" th:text="|${#numbers.formatDecimal(tongTienHang, 0, 'COMMA', 0, 'POINT')} đ|">0 đ</b>
-  </div>
+  <!-- ===== CHỌN ĐỊA CHỈ ===== -->
+  <p><b>Địa chỉ giao hàng</b></p>
+  <label><input type="radio" name="dc" checked onclick="chonDiaChiTK()"> Địa chỉ theo tài khoản</label><br>
+  <label><input type="radio" name="dc" onclick="chonDiaChiMoi()"> Nhập địa chỉ khác</label>
 
-  <div class="row">
-    <span>Phí giao hàng (GHN):</span>
-    <b id="shipFee" style="color: #27ae60;">Đang tính...</b>
-  </div>
-
-  <div class="row total-row">
-    <span>Tổng thanh toán:</span>
-    <span id="finalTotal">---</span>
-  </div>
-  <!-- KHUYẾN MÃI -->
-  <div class="promotion-box" style="margin-bottom: 20px;">
-    <p style="font-weight: bold;">Chọn mã giảm giá:</p>
-
-    <select id="maGiamGiaSelect" onchange="apDungMaGiamGia()" style="width: 100%; padding: 8px;">
-      <option value="0" data-value="0">-- Không dùng mã --</option>
-
-      <option th:each="km : ${dsMaGiamGia}"
-              th:value="${km.id}"
-              th:data-value="${km.giaTri}"
-              th:text="|${km.ma} - Giảm ${#numbers.formatDecimal(km.giaTri,0,'COMMA',0,'POINT')} đ|">
+  <!-- ===== ĐỊA CHỈ TÀI KHOẢN ===== -->
+  <div id="diaChiTK" class="addr-show" th:if="${dsDiaChi}">
+    <select id="diaChiMacDinh">
+      <option th:each="dc:${dsDiaChi}"
+              th:text="${dc.diaChi}">
       </option>
     </select>
   </div>
 
-  <div class="payment-methods">
-    <p style="font-weight: bold;">Chọn phương thức thanh toán:</p>
-    <div class="payment-option">
-      <input type="radio" id="payCOD" name="paymentMethod" value="COD" checked>
-      <label for="payCOD">Thanh toán tiền mặt (COD)</label>
-    </div>
-    <div class="payment-option">
-      <input type="radio" id="payVNPay" name="paymentMethod" value="VNPAY">
-      <label for="payVNPay">Thanh toán Online qua VNPay</label>
-    </div>
+  <!-- ===== ĐỊA CHỈ MỚI ===== -->
+  <div id="diaChiMoi" style="display:none">
+    <input id="soNha" placeholder="Số nhà, tên đường">
+
+    <select id="tinh"><option>-- Tỉnh --</option></select>
+    <select id="huyen"><option>-- Quận/Huyện --</option></select>
+    <select id="xa"><option>-- Phường/Xã --</option></select>
+
+    <button type="button" onclick="xacNhanDiaChi()">Xác nhận địa chỉ</button>
   </div>
 
-  <div id="errorArea" class="error-msg"></div>
-  <button class="btn-confirm" onclick="xuLyThanhToan()">XÁC NHẬN ĐẶT HÀNG</button>
+  <!-- ===== ĐỊA CHỈ ĐÃ XÁC NHẬN ===== -->
+  <div id="diaChiXacNhan" class="addr-show" style="display:none">
+    <b>Địa chỉ nhận hàng:</b>
+    <p id="labelDiaChi"></p>
+  </div>
+
+  <hr>
+
+  <!-- ===== TIỀN ===== -->
+  <div class="row">
+    <span>Tiền hàng</span>
+    <b th:text="|${#numbers.formatDecimal(tongTienHang,0,'COMMA',0,'POINT')} đ|"></b>
+  </div>
+
+  <div class="row">
+    <span>Phí ship</span>
+    <b id="ship">0 đ</b>
+  </div>
+
+  <!-- ===== KHUYẾN MÃI ===== -->
+  <p><b>Chọn mã giảm giá</b></p>
+  <select id="maGiamGiaSelect" onchange="apDungMaGiamGia()">
+    <option value="0" data-value="0">-- Không dùng mã --</option>
+    <option th:each="km : ${dsMaGiamGia}"
+            th:value="${km.id}"
+            th:data-value="${km.giaTri}"
+            th:text="|${km.ma} - Giảm ${#numbers.formatDecimal(km.giaTri,0,'COMMA',0,'POINT')} đ|">
+    </option>
+  </select>
+
+  <div class="row total">
+    <span>Tổng</span>
+    <span id="tong">0 đ</span>
+  </div>
+
+  <!-- ===== THANH TOÁN ===== -->
+  <label><input type="radio" name="pay" value="COD" checked> COD</label>
+  <label><input type="radio" name="pay" value="VNPAY"> VNPay</label>
+
+  <button type="button" onclick="thanhToan()">XÁC NHẬN ĐẶT HÀNG</button>
 </div>
 
 <script th:inline="javascript">
-  let currentTongThanhToan = 0;
-  let phiShip = 0;
-  let giamGia = 0;
+  const TOKEN = "0159688c-fb78-11f0-92cb-eef4825ef61b";
   const tienHang = /*[[${tongTienHang}]]*/ 0;
 
-  (function() {
-    try {
-      const dataGHNRaw = /*[[${dataGHN}]]*/ '{}';
-      const resGHN = (typeof dataGHNRaw === 'string') ? JSON.parse(dataGHNRaw) : dataGHNRaw;
+  let phiShip = 0;
+  let giamGia = 0;
+  let diaChiFinal = "";
 
-      const shipFeeElem = document.getElementById('shipFee');
-      const finalTotalElem = document.getElementById('finalTotal');
+  /* ===== LOAD GHN ===== */
+  fetch("https://online-gateway.ghn.vn/shiip/public-api/master-data/province",{headers:{Token:TOKEN}})
+          .then(r=>r.json()).then(d=>{
+    d.data.forEach(p=>tinh.innerHTML+=`<option value="${p.ProvinceID}">${p.ProvinceName}</option>`);
+  });
 
-      if (resGHN && resGHN.code === 200 && resGHN.data) {
-        phiShip = resGHN.data.total;
-        currentTongThanhToan = tienHang + phiShip;
-        shipFeeElem.innerText = phiShip.toLocaleString('vi-VN') + ' đ';
-        finalTotalElem.innerText = currentTongThanhToan.toLocaleString('vi-VN') + ' đ';
-      }
-    } catch (e) { console.error(e); }
-  })();
+  tinh.onchange=()=>fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/district?province_id=${tinh.value}`,{headers:{Token:TOKEN}})
+          .then(r=>r.json()).then(d=>{
+            huyen.innerHTML="<option>-- Quận/Huyện --</option>";
+            d.data.forEach(x=>huyen.innerHTML+=`<option value="${x.DistrictID}">${x.DistrictName}</option>`);
+          });
 
-  // ✅ HÀM ÁP DỤNG MÃ GIẢM GIÁ
-  function apDungMaGiamGia() {
-    const select = document.getElementById("maGiamGiaSelect");
-    const selectedOption = select.options[select.selectedIndex];
+  huyen.onchange=()=>fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${huyen.value}`,{headers:{Token:TOKEN}})
+          .then(r=>r.json()).then(d=>{
+            xa.innerHTML="<option>-- Phường/Xã --</option>";
+            d.data.forEach(x=>xa.innerHTML+=`<option value="${x.WardCode}">${x.WardName}</option>`);
+          });
 
-    giamGia = parseInt(selectedOption.getAttribute("data-value")) || 0;
-
-    // 🔥 Giảm giá CHỈ tiền hàng
-    let tienSauGiam = tienHang - giamGia;
-    if (tienSauGiam < 0) tienSauGiam = 0;
-
-    currentTongThanhToan = tienSauGiam + phiShip;
-
-    document.getElementById("finalTotal").innerText =
-            currentTongThanhToan.toLocaleString("vi-VN") + " đ";
+  function chonDiaChiMoi(){
+    diaChiMoi.style.display="block";
+    diaChiTK.style.display="none";
   }
-  (function() {
-    try {
-      const dataGHNRaw = /*[[${dataGHN}]]*/ '{}';
-      const tienHang = /*[[${tongTienHang}]]*/ 0;
-      const resGHN = (typeof dataGHNRaw === 'string') ? JSON.parse(dataGHNRaw) : dataGHNRaw;
 
-      const shipFeeElem = document.getElementById('shipFee');
-      const finalTotalElem = document.getElementById('finalTotal');
+  function chonDiaChiTK(){
+    diaChiMoi.style.display="none";
+    diaChiTK.style.display="block";
+    diaChiFinal = diaChiMacDinh.value;
+    labelDiaChi.innerText = diaChiFinal;
+    diaChiXacNhan.style.display="block";
+  }
 
-      if (resGHN && resGHN.code === 200 && resGHN.data) {
-        phiShip = resGHN.data.total; //dòng này để cho phí ship ra ngoài không bị giám giá
-        currentTongThanhToan = tienHang + phiShip;
-        shipFeeElem.innerText = phiShip.toLocaleString('vi-VN') + ' đ';
-        finalTotalElem.innerText = currentTongThanhToan.toLocaleString('vi-VN') + ' đ';
-      } else {
-        currentTongThanhToan = tienHang;
-        finalTotalElem.innerText = tienHang.toLocaleString('vi-VN') + ' đ';
-        document.getElementById('errorArea').innerText = "Không thể tính phí ship GHN.";
-      }
-    } catch (e) { console.error(e); }
-  })();
+  function xacNhanDiaChi(){
+    fetch("/khach-hang/tinh-phi-ship-dia-chi-moi",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        districtId:huyen.value,
+        wardCode:xa.value
+      })
+    }).then(r=>r.json()).then(d=>{
+      phiShip = d.phiShip;
+      diaChiFinal = `${soNha.value}, ${xa.options[xa.selectedIndex].text}, ${huyen.options[huyen.selectedIndex].text}`;
+      labelDiaChi.innerText = diaChiFinal;
+      diaChiXacNhan.style.display="block";
+      capNhatTien();
+    });
+  }
 
-  function xuLyThanhToan() {
-    const method = document.querySelector('input[name="paymentMethod"]:checked').value;
-    // Làm tròn để tránh lỗi định dạng dữ liệu VNPay
-    const cleanAmount = Math.floor(currentTongThanhToan);
+  function apDungMaGiamGia(){
+    const select = document.getElementById("maGiamGiaSelect");
+    const option = select.options[select.selectedIndex];
+    giamGia = parseInt(option.getAttribute("data-value")) || 0;
+    capNhatTien();
+  }
 
-    if (method === "VNPAY") {
-      window.location.href = "/api/vnpay/pay?amount=" + cleanAmount;
-    } else {
-      window.location.href = "/api/order/create-cod?amount=" + cleanAmount;
+  function capNhatTien(){
+    ship.innerText = phiShip.toLocaleString("vi-VN") + " đ";
+    let tienSauGiam = tienHang - giamGia;
+    if(tienSauGiam < 0) tienSauGiam = 0;
+    tong.innerText = (tienSauGiam + phiShip).toLocaleString("vi-VN") + " đ";
+  }
+
+  function thanhToan(){
+    if(!diaChiFinal){
+      alert("Vui lòng xác nhận địa chỉ giao hàng");
+      return;
     }
+
+    let tienSauGiam = tienHang - giamGia;
+    if(tienSauGiam < 0) tienSauGiam = 0;
+    const tongTien = tienSauGiam + phiShip;
+
+    fetch("/khach-hang/luu-dia-chi-tam",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        diaChi: diaChiFinal,
+        phiShip: phiShip
+      })
+    }).then(()=>{
+      const payType = document.querySelector("input[name='pay']:checked").value;
+      if(payType === "VNPAY"){
+        location.href = "/api/vnpay/pay?amount=" + Math.floor(tongTien);
+      }
+    });
   }
 </script>
 </body>

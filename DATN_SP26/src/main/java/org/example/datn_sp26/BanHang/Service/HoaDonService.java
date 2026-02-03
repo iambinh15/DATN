@@ -1,62 +1,107 @@
-package org.example.datn_sp26.BanHang.Service;
+    package org.example.datn_sp26.BanHang.Service;
 
-import org.example.datn_sp26.BanHang.Entity.LoaiThanhToan;
-import org.example.datn_sp26.BanHang.Entity.TrangThaiHoaDon;
-import org.example.datn_sp26.BanHang.Repository.HoaDonRepository;
-import org.example.datn_sp26.BanHang.Repository.LoaiThanhToanRepository;
-import org.example.datn_sp26.BanHang.Repository.TrangThaiHoaDonRepository;
-import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.example.datn_sp26.BanHang.Entity.HoaDon;
+    import jakarta.transaction.Transactional;
+    import org.example.datn_sp26.BanHang.Entity.HoaDon;
+    import org.example.datn_sp26.BanHang.Entity.LoaiThanhToan;
+    import org.example.datn_sp26.BanHang.Entity.TrangThaiHoaDon;
+    import org.example.datn_sp26.BanHang.Repository.HoaDonRepository;
+    import org.example.datn_sp26.BanHang.Repository.LoaiThanhToanRepository;
+    import org.example.datn_sp26.BanHang.Repository.TrangThaiHoaDonRepository;
+    import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.time.Instant;
+    import java.math.BigDecimal;
+    import java.time.Instant;
 
-@Service
-public class HoaDonService {
-    @Autowired
-    private LoaiThanhToanRepository loaiThanhToanRepository;
+    @Service
+    @Transactional
+    public class HoaDonService {
 
-    private final HoaDonRepository hoaDonRepository;
-    private final TrangThaiHoaDonRepository trangThaiHoaDonRepository;
+        @Autowired
+        private HoaDonRepository hoaDonRepository;
 
-    public HoaDonService(HoaDonRepository hoaDonRepository,
-                         TrangThaiHoaDonRepository trangThaiHoaDonRepository) {
-        this.hoaDonRepository = hoaDonRepository;
-        this.trangThaiHoaDonRepository = trangThaiHoaDonRepository;
-    }
+        @Autowired
+        private TrangThaiHoaDonRepository trangThaiHoaDonRepository;
 
-    public HoaDon taoHoaDonSauThanhToan(KhachHang khachHang,
-                                        BigDecimal tongThanhToan) {
+        @Autowired
+        private LoaiThanhToanRepository loaiThanhToanRepository;
 
-        HoaDon hoaDon = new HoaDon();
+        // ===============================
+        // HÀM CŨ (GIỮ NGUYÊN)
+        // ===============================
+        public HoaDon taoHoaDonSauThanhToan(
+                KhachHang khachHang,
+                BigDecimal tongThanhToan) {
 
-        hoaDon.setMaHoaDon(taoMaHoaDon());
-        hoaDon.setIdKhachHang(khachHang);
-        hoaDon.setNgayTao(Instant.now());
-        hoaDon.setTongThanhToan(tongThanhToan);
+            HoaDon hoaDon = new HoaDon();
+            hoaDon.setMaHoaDon(taoMaHoaDon());
+            hoaDon.setIdKhachHang(khachHang);
+            hoaDon.setNgayTao(Instant.now());
+            hoaDon.setTongThanhToan(tongThanhToan);
 
-        // 🔥 TRẠNG THÁI MẶC ĐỊNH: "MỚI TẠO"
-        TrangThaiHoaDon trangThai =
-                trangThaiHoaDonRepository.findByTenTrangThai("Chờ Thanh Toán")
-                        .orElseThrow(() ->
-                                new RuntimeException("Không tìm thấy trạng thái Chờ Thanh Toán"));
+            TrangThaiHoaDon trangThai =
+                    trangThaiHoaDonRepository.findByTenTrangThai("Chờ Thanh Toán")
+                            .orElseThrow(() ->
+                                    new RuntimeException("Không tìm thấy trạng thái"));
 
-        hoaDon.setIdTrangThaiHoaDon(trangThai);
-        // ===== LOẠI THANH TOÁN: CHUYỂN KHOẢN =====
-        LoaiThanhToan loaiThanhToan =
-                loaiThanhToanRepository.findByTenLoai("CK")
-                        .orElseThrow(() ->
-                                new RuntimeException("Không tìm thấy loại thanh toán Chuyển khoản"));
+            hoaDon.setIdTrangThaiHoaDon(trangThai);
 
+            LoaiThanhToan loaiThanhToan =
+                    loaiThanhToanRepository.findByTenLoai("CK")
+                            .orElseThrow(() ->
+                                    new RuntimeException("Không tìm thấy loại thanh toán"));
 
-        hoaDon.setIdLoaiThanhToan(loaiThanhToan);
-        return hoaDonRepository.save(hoaDon);
-    }
-        private String taoMaHoaDon () {
+            hoaDon.setIdLoaiThanhToan(loaiThanhToan);
+
+            return hoaDonRepository.save(hoaDon);
+        }
+
+        // ===============================
+        // 🔥 HÀM MỚI – KHÔNG CỘNG PHÍ SHIP
+        // ===============================
+        public HoaDon taoHoaDonSauThanhToan(
+                KhachHang khachHang,
+                BigDecimal tongTienHang,
+                String diaChiGiaoHang,
+                BigDecimal phiShip) {
+
+            if (diaChiGiaoHang == null || diaChiGiaoHang.isBlank()) {
+                throw new RuntimeException("❌ Địa chỉ giao hàng không hợp lệ");
+            }
+
+            HoaDon hoaDon = new HoaDon();
+            hoaDon.setMaHoaDon(taoMaHoaDon());
+            hoaDon.setIdKhachHang(khachHang);
+            hoaDon.setNgayTao(Instant.now());
+
+            // ✅ LƯU ĐỊA CHỈ
+            hoaDon.setDiaChi(diaChiGiaoHang);
+
+            // ✅ CHỈ LƯU TIỀN HÀNG (KHÔNG CỘNG SHIP)
+            hoaDon.setTongThanhToan(tongTienHang);
+
+            // ❗ phiShip KHÔNG cộng – chỉ dùng để hiển thị / thu COD
+            // (nếu có cột phi_ship thì set riêng, còn không thì bỏ)
+
+            TrangThaiHoaDon trangThai =
+                    trangThaiHoaDonRepository.findByTenTrangThai("Chờ Thanh Toán")
+                            .orElseThrow(() ->
+                                    new RuntimeException("Không tìm thấy trạng thái"));
+
+            hoaDon.setIdTrangThaiHoaDon(trangThai);
+
+            LoaiThanhToan loaiThanhToan =
+                    loaiThanhToanRepository.findByTenLoai("CK")
+                            .orElseThrow(() ->
+                                    new RuntimeException("Không tìm thấy loại thanh toán"));
+
+            hoaDon.setIdLoaiThanhToan(loaiThanhToan);
+
+            return hoaDonRepository.saveAndFlush(hoaDon);
+        }
+
+        private String taoMaHoaDon() {
             return "HD" + System.currentTimeMillis();
         }
     }
-
-
