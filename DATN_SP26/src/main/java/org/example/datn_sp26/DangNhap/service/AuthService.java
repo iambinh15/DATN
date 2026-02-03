@@ -5,8 +5,8 @@ import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
 import org.example.datn_sp26.NguoiDung.Entity.TaiKhoan;
 import org.example.datn_sp26.NguoiDung.Entity.VaiTro;
 import org.example.datn_sp26.DangNhap.repository.KhachHangDangNhapRepository;
-import org.example.datn_sp26.DangNhap.repository.TaiKhoanRepository;
-import org.example.datn_sp26.DangNhap.repository.VaiTroRepository;
+import org.example.datn_sp26.DangNhap.repository.TaiKhoanDangNhapRepository;
+import org.example.datn_sp26.DangNhap.repository.VaiTroDangNhapRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +18,13 @@ import java.util.Random;
 public class AuthService {
 
     @Autowired
-    private TaiKhoanRepository taiKhoanRepository;
+    private TaiKhoanDangNhapRepository taiKhoanDangNhapRepository;
 
     @Autowired
     private KhachHangDangNhapRepository khachHangDangNhapRepository;
 
     @Autowired
-    private VaiTroRepository vaiTroRepository;
+    private VaiTroDangNhapRepository vaiTroDangNhapRepository;
 
     @Autowired
     private EmailService emailService;
@@ -41,7 +41,7 @@ public class AuthService {
             }
 
             // 2. Kiểm tra Username đã tồn tại chưa
-            if (taiKhoanRepository.findByTenDangNhap(request.getUsername()).isPresent()) {
+            if (taiKhoanDangNhapRepository.findByTenDangNhap(request.getUsername()).isPresent()) {
                 throw new Exception("Tên đăng nhập '" + request.getUsername() + "' đã tồn tại!");
             }
 
@@ -51,7 +51,7 @@ public class AuthService {
             }
 
             // 3. Lấy Role USER (Khách hàng)
-            VaiTro roleUser = vaiTroRepository.findFirstByMaVaiTro("USER")
+            VaiTro roleUser = vaiTroDangNhapRepository.findFirstByMaVaiTro("USER")
                     .orElseThrow(() -> {
                         System.out.println("Lỗi: Không tìm thấy role USER trong DB");
                         return new Exception("Lỗi hệ thống: Không tìm thấy quyền Khách hàng (USER)");
@@ -65,7 +65,7 @@ public class AuthService {
             taiKhoan.setVaiTro(roleUser);
             taiKhoan.setTrangThai(1); 
             
-            TaiKhoan savedTaiKhoan = taiKhoanRepository.save(taiKhoan);
+            TaiKhoan savedTaiKhoan = taiKhoanDangNhapRepository.save(taiKhoan);
             System.out.println("Đã lưu Tài khoản ID: " + savedTaiKhoan.getId());
 
             // 5. Tạo Khách Hàng
@@ -117,7 +117,7 @@ public class AuthService {
 
             // 3. Cập nhật mật khẩu vào DB
             taiKhoan.setMatKhau(newPassword);
-            taiKhoanRepository.save(taiKhoan);
+            taiKhoanDangNhapRepository.save(taiKhoan);
             System.out.println("Đã cập nhật mật khẩu mới vào DB");
 
             // 4. Gửi email

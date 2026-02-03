@@ -6,7 +6,7 @@ import org.example.datn_sp26.NguoiDung.Entity.NhanVien;
 import org.example.datn_sp26.NguoiDung.Entity.TaiKhoan;
 import org.example.datn_sp26.DangNhap.repository.KhachHangDangNhapRepository;
 import org.example.datn_sp26.DangNhap.repository.NhanVienDangNhapRepository;
-import org.example.datn_sp26.DangNhap.repository.TaiKhoanRepository;
+import org.example.datn_sp26.DangNhap.repository.TaiKhoanDangNhapRepository;
 import org.example.datn_sp26.DangNhap.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -25,7 +25,7 @@ import java.util.Optional;
 public class HomeController {
 
     @Autowired
-    private TaiKhoanRepository taiKhoanRepository;
+    private TaiKhoanDangNhapRepository taiKhoanDangNhapRepository;
 
     @Autowired
     private KhachHangDangNhapRepository khachHangDangNhapRepository;
@@ -83,7 +83,7 @@ public class HomeController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {
             String username = authentication.getName();
-            Optional<TaiKhoan> taiKhoanOpt = taiKhoanRepository.findByTenDangNhap(username);
+            Optional<TaiKhoan> taiKhoanOpt = taiKhoanDangNhapRepository.findByTenDangNhap(username);
 
             if (taiKhoanOpt.isPresent()) {
                 TaiKhoan taiKhoan = taiKhoanOpt.get();

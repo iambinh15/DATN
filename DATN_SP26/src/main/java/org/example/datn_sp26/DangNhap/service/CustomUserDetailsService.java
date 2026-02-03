@@ -1,7 +1,7 @@
 package org.example.datn_sp26.DangNhap.service;
 
 import org.example.datn_sp26.NguoiDung.Entity.TaiKhoan;
-import org.example.datn_sp26.DangNhap.repository.TaiKhoanRepository;
+import org.example.datn_sp26.DangNhap.repository.TaiKhoanDangNhapRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,13 +17,13 @@ import java.util.Collections;
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private TaiKhoanRepository taiKhoanRepository;
+    private TaiKhoanDangNhapRepository taiKhoanDangNhapRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         System.out.println("Dang kiem tra dang nhap cho user: " + username);
         
-        TaiKhoan taiKhoan = taiKhoanRepository.findByTenDangNhap(username)
+        TaiKhoan taiKhoan = taiKhoanDangNhapRepository.findByTenDangNhap(username)
                 .orElseThrow(() -> {
                     System.out.println("Khong tim thay user: " + username);
                     return new UsernameNotFoundException("User not found with username: " + username);

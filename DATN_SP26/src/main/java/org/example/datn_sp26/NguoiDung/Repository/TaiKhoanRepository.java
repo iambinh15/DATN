@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface TaiKhoanRepository extends JpaRepository<TaiKhoan, Long> {
-    Optional<TaiKhoan> findByUsername(String tenDangNhap);
+    Optional<TaiKhoan> findByTenDangNhap(String tenDangNhap);
 }

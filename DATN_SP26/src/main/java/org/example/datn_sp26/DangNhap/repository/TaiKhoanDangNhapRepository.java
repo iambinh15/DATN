@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface TaiKhoanRepository extends JpaRepository<TaiKhoan, Long> {
+public interface TaiKhoanDangNhapRepository extends JpaRepository<TaiKhoan, Long> {
     Optional<TaiKhoan> findByTenDangNhap(String tenDangNhap);
 }
