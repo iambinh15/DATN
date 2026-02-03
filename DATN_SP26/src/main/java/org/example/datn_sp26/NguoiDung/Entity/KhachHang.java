@@ -1,7 +1,9 @@
 package org.example.datn_sp26.NguoiDung.Entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.datn_sp26.BanHang.Entity.GioHang;
 import org.example.datn_sp26.HoTro.Entity.HoTroKhachHang;
@@ -14,6 +16,8 @@ import java.util.Set;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class KhachHang {
     @Id
