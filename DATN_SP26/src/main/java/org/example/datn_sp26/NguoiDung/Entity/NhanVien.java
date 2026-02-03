@@ -1,52 +1,43 @@
 package org.example.datn_sp26.NguoiDung.Entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.example.datn_sp26.HoTro.Entity.HoTroKhachHang;
-import org.example.datn_sp26.BanHang.Entity.HoaDon;
-import org.hibernate.annotations.Nationalized;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
+@Entity
+@Table(name = "NhanVien")
 @Getter
 @Setter
-@Entity
+@NoArgsConstructor
+@AllArgsConstructor
 public class NhanVien {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Integer id;
+    @Column(name = "id")
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idTaiKhoan")
-    private TaiKhoan idTaiKhoan;
-
-    @Column(name = "maNhanVien", length = 20)
+    @Column(name = "maNhanVien")
     private String maNhanVien;
 
-    @Nationalized
-    @Column(name = "tenNhanVien", length = 100)
-    private String tenNhanVien;
+    @Column(name = "tenNhanVien")
+    private String ten;
 
-    @Column(name = "sdt", length = 15)
+    @Column(name = "sdt")
     private String sdt;
 
-    @Column(name = "email", length = 100)
+    @Column(name = "email")
     private String email;
 
-    @Nationalized
     @Column(name = "diaChi")
     private String diaChi;
 
     @Column(name = "trangThai")
     private Integer trangThai;
 
-    @OneToMany(mappedBy = "idNhanVienTraLoi")
-    private Set<HoTroKhachHang> hoTroKhachHangs = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "idNhanVien")
-    private Set<HoaDon> hoaDons = new LinkedHashSet<>();
-
+    @OneToOne
+    @JoinColumn(name = "idTaiKhoan")
+    private TaiKhoan taiKhoan;
 }
