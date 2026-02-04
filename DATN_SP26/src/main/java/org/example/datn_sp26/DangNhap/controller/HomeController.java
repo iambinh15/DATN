@@ -47,7 +47,10 @@ public class HomeController {
         addUserToModel(model);
         return "index";
     }
-
+    @GetMapping("/trang-chu")
+    public String trangChu() {
+        return "KhachHang/trang-chu";
+    }
     @GetMapping("/login")
     public String login() {
         return "DangNhap/login";
