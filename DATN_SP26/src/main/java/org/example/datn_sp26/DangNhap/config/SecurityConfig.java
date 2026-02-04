@@ -11,7 +11,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -20,30 +19,28 @@ public class SecurityConfig {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    @Autowired
+    private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(requests -> requests
                         // Thêm "/home" vào danh sách permitAll()
-                        .requestMatchers("/", "/home", "/login", "/css/**", "/js/**", "/images/**", "/dang-ky", "/register", "/forgot-password").permitAll()
+                        .requestMatchers("/", "/trang-chu", "/home", "/login", "/css/**", "/js/**", "/images/**",
+                                "/dang-ky", "/register", "/forgot-password")
+                        .permitAll()
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "STAFF")
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/perform_login")
-                        .successHandler(myAuthenticationSuccessHandler())
-                        .permitAll()
-                )
+                        .successHandler(customAuthenticationSuccessHandler)
+                        .permitAll())
                 .logout(logout -> logout.permitAll())
                 .csrf(csrf -> csrf.disable());
 
         return http.build();
-    }
-
-    @Bean
-    public AuthenticationSuccessHandler myAuthenticationSuccessHandler(){
-        return new CustomAuthenticationSuccessHandler();
     }
 
     @Bean
