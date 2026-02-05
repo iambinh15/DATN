@@ -103,8 +103,14 @@ public class PaymentController {
                 BigDecimal.valueOf(Long.parseLong(amountStr) / 100);
 
         // 🔥 2️⃣ KHÁCH HÀNG
-        KhachHang khachHang = new KhachHang();
-        khachHang.setId(1); // TODO: lấy từ session login
+        KhachHang khachHang =
+                (KhachHang) session.getAttribute("khachHang");
+
+        if (khachHang == null) {
+            throw new RuntimeException("Chưa đăng nhập");
+        }
+
+
 
         // ✅ 3️⃣ GỌI ĐÚNG HÀM (4 THAM SỐ)
         hoaDonService.taoHoaDonSauThanhToan(
