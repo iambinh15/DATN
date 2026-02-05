@@ -26,11 +26,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(requests -> requests
-                        // Thêm "/home" vào danh sách permitAll()
+                        // Trang công khai
                         .requestMatchers("/", "/trang-chu", "/home", "/login", "/css/**", "/js/**", "/images/**",
-                                "/dang-ky", "/register", "/forgot-password")
+                                "/dang-ky", "/register", "/forgot-password", "/san-pham/**")
                         .permitAll()
+                        // Trang admin/staff
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "STAFF")
+                        // Trang dành cho khách hàng đã đăng nhập
+                        .requestMatchers("/khach-hang/**").hasRole("USER")
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
