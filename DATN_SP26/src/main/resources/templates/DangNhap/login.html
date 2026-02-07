@@ -1,143 +1,404 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - CotiT Store</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
+            justify-content: center;
+            padding: 20px;
         }
-        .card {
+
+        /* ===== CONTAINER ===== */
+        .auth-container {
+            max-width: 480px;
             width: 100%;
-            max-width: 500px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border: none;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         }
+
+        /* ===== HEADER ===== */
+        .form-header-brand {
+            background: #000;
+            color: #fff;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .brand-logo {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 3px;
+        }
+
+        /* ===== FORM PANEL ===== */
+        .form-panel {
+            padding: 40px;
+        }
+
         .form-section {
             display: none;
         }
+
         .form-section.active {
             display: block;
         }
-        .nav-link {
+
+        .form-header {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* ===== ALERTS ===== */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* ===== FORM ELEMENTS ===== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #000;
+        }
+
+        .input-icon-wrapper {
+            position: relative;
+        }
+
+        .input-icon-wrapper input {
+            padding-left: 45px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #333;
+        }
+
+        /* ===== LINKS ===== */
+        .form-footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .form-link {
+            color: #666;
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .form-link:hover {
+            color: #000;
+        }
+
+        .form-link.bold {
+            font-weight: 600;
+            color: #000;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #eee;
+        }
+
+        .divider span {
+            padding: 0 15px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        /* ===== FORM ROW ===== */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .form-panel {
+                padding: 30px 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
+
 <body>
 
-<div class="card p-4">
-    <!-- Thông báo lỗi hoặc thành công -->
-    <div th:if="${successMessage}" class="alert alert-success" role="alert">
-        <span th:text="${successMessage}"></span>
-    </div>
-    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
-        <span th:text="${errorMessage}"></span>
-    </div>
-    <div th:if="${param.error}" class="alert alert-danger">
-        Tên đăng nhập hoặc mật khẩu không đúng!
-    </div>
-    <div th:if="${param.logout}" class="alert alert-info">
-        Bạn đã đăng xuất thành công.
-    </div>
+    <div class="auth-container">
+        <!-- Logo Header -->
+        <div class="form-header-brand">
+            <div class="brand-logo">COTIT</div>
+        </div>
 
-    <!-- FORM ĐĂNG NHẬP -->
-    <div id="login-form" class="form-section active">
-        <h3 class="text-center mb-4">Đăng Nhập</h3>
-        <form th:action="@{/perform_login}" method="post">
-            <div class="mb-3">
-                <label class="form-label">Tên đăng nhập</label>
-                <input type="text" name="username" class="form-control" required>
+        <!-- Form Panel -->
+        <div class="form-panel">
+            <!-- Alerts -->
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${successMessage}"></span>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Mật khẩu</label>
-                <input type="password" name="password" class="form-control" required>
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <span th:text="${errorMessage}"></span>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Đăng Nhập</button>
-        </form>
-        <div class="mt-3 text-center">
-            <a onclick="showForm('forgot-form')" class="text-decoration-none nav-link d-inline">Quên mật khẩu?</a>
-            <hr>
-            <p>Chưa có tài khoản? <a onclick="showForm('register-form')" class="text-decoration-none nav-link d-inline fw-bold">Đăng ký ngay</a></p>
+            <div th:if="${param.error}" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                Tên đăng nhập hoặc mật khẩu không đúng!
+            </div>
+            <div th:if="${param.logout}" class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                Bạn đã đăng xuất thành công.
+            </div>
+
+            <!-- LOGIN FORM -->
+            <div id="login-form" class="form-section active">
+                <div class="form-header">
+                    <h2 class="form-title">Đăng nhập</h2>
+                    <p class="form-subtitle">Chào mừng bạn quay lại!</p>
+                </div>
+
+                <form th:action="@{/perform_login}" method="post">
+                    <div class="form-group">
+                        <label class="form-label">Tên đăng nhập</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" name="username" class="form-control" placeholder="Nhập tên đăng nhập"
+                                required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mật khẩu</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu"
+                                required>
+                        </div>
+                    </div>
+                    <div style="text-align: right; margin-bottom: 20px;">
+                        <a onclick="showForm('forgot-form')" class="form-link">Quên mật khẩu?</a>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                    </button>
+                </form>
+
+                <div class="divider">
+                    <span>HOẶC</span>
+                </div>
+
+                <div class="form-footer">
+                    <p>Chưa có tài khoản? <a onclick="showForm('register-form')" class="form-link bold">Đăng ký ngay</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- REGISTER FORM -->
+            <div id="register-form" class="form-section">
+                <div class="form-header">
+                    <h2 class="form-title">Đăng ký tài khoản</h2>
+                    <p class="form-subtitle">Tạo tài khoản để mua sắm</p>
+                </div>
+
+                <form th:action="@{/register}" method="post">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Tên đăng nhập *</label>
+                            <input type="text" name="username" class="form-control" placeholder="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Họ và tên *</label>
+                            <input type="text" name="hoTen" class="form-control" placeholder="Nguyễn Văn A" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Email *</label>
+                            <input type="email" name="email" class="form-control" placeholder="email@gmail.com"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="text" name="sdt" class="form-control" placeholder="0123456789">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Mật khẩu *</label>
+                            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nhập lại mật khẩu *</label>
+                            <input type="password" name="confirmPassword" class="form-control" placeholder="••••••••"
+                                required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-user-plus"></i> Đăng ký
+                    </button>
+                </form>
+
+                <div class="form-footer">
+                    <p>Đã có tài khoản? <a onclick="showForm('login-form')" class="form-link bold">Đăng nhập</a></p>
+                </div>
+            </div>
+
+            <!-- FORGOT PASSWORD FORM -->
+            <div id="forgot-form" class="form-section">
+                <div class="form-header">
+                    <h2 class="form-title">Quên mật khẩu</h2>
+                    <p class="form-subtitle">Nhập email để nhận mật khẩu mới</p>
+                </div>
+
+                <form th:action="@{/forgot-password}" method="post">
+                    <div class="form-group">
+                        <label class="form-label">Email đăng ký</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" name="email" class="form-control" placeholder="email@gmail.com"
+                                required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-paper-plane"></i> Gửi mật khẩu mới
+                    </button>
+                </form>
+
+                <div class="form-footer">
+                    <a onclick="showForm('login-form')" class="form-link">
+                        <i class="fas fa-arrow-left"></i> Quay lại đăng nhập
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- FORM ĐĂNG KÝ -->
-    <div id="register-form" class="form-section">
-        <h3 class="text-center mb-4">Đăng Ký Tài Khoản</h3>
-        <form th:action="@{/register}" method="post">
-            <div class="mb-3">
-                <label class="form-label">Tên đăng nhập (*)</label>
-                <input type="text" name="username" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Họ và tên</label>
-                <input type="text" name="hoTen" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Email (*)</label>
-                <input type="email" name="email" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Số điện thoại</label>
-                <input type="text" name="sdt" class="form-control">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Mật khẩu (*)</label>
-                <input type="password" name="password" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Nhập lại mật khẩu (*)</label>
-                <input type="password" name="confirmPassword" class="form-control" required>
-            </div>
-            <button type="submit" class="btn btn-success w-100">Đăng Ký</button>
-        </form>
-        <div class="mt-3 text-center">
-            <p>Đã có tài khoản? <a onclick="showForm('login-form')" class="text-decoration-none nav-link d-inline fw-bold">Đăng nhập</a></p>
-        </div>
-    </div>
-
-    <!-- FORM QUÊN MẬT KHẨU -->
-    <div id="forgot-form" class="form-section">
-        <h3 class="text-center mb-4">Quên Mật Khẩu</h3>
-        <p class="text-muted text-center">Nhập email của bạn để nhận mật khẩu mới.</p>
-        <form th:action="@{/forgot-password}" method="post">
-            <div class="mb-3">
-                <label class="form-label">Email đăng ký</label>
-                <input type="email" name="email" class="form-control" required>
-            </div>
-            <button type="submit" class="btn btn-warning w-100 text-white">Gửi Mật Khẩu Mới</button>
-        </form>
-        <div class="mt-3 text-center">
-            <a onclick="showForm('login-form')" class="text-decoration-none nav-link d-inline">Quay lại đăng nhập</a>
-        </div>
-    </div>
-
-</div>
-
-<script>
-    function showForm(formId) {
-        // Ẩn tất cả các form
-        document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
-        // Hiện form được chọn
-        document.getElementById(formId).classList.add('active');
-    }
-
-    // Kiểm tra URL hash để mở đúng tab khi redirect về
-    document.addEventListener("DOMContentLoaded", function() {
-        const hash = window.location.hash;
-        if (hash === '#register') {
-            showForm('register-form');
-        } else if (hash === '#forgot') {
-            showForm('forgot-form');
+    <script>
+        function showForm(formId) {
+            document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(formId).classList.add('active');
         }
-    });
-</script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const hash = window.location.hash;
+            if (hash === '#register') {
+                showForm('register-form');
+            } else if (hash === '#forgot') {
+                showForm('forgot-form');
+            }
+        });
+    </script>
 
 </body>
+
 </html>

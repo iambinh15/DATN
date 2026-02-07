@@ -30,10 +30,18 @@ public class SecurityConfig {
                         .requestMatchers("/", "/trang-chu", "/home", "/login", "/css/**", "/js/**", "/images/**",
                                 "/dang-ky", "/register", "/forgot-password", "/san-pham/**")
                         .permitAll()
-                        // Trang admin/staff
+                        // Trang quản lý nhân viên, chất liệu - chỉ ADMIN/STAFF
+                        .requestMatchers("/nhan-vien/**", "/chat-lieu/**").hasAnyRole("ADMIN", "STAFF")
+                        // Trang admin
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "STAFF")
-                        // Trang dành cho khách hàng đã đăng nhập
-                        .requestMatchers("/khach-hang/**").hasRole("USER")
+                        // Trang dành cho khách hàng đã đăng nhập (mua sắm)
+                        .requestMatchers("/khach-hang/trang-chu", "/khach-hang/san-pham/**",
+                                "/khach-hang/gio-hang/**", "/khach-hang/thanh-toan/**", "/khach-hang/don-hang/**")
+                        .hasRole("USER")
+                        // Trang quản lý khách hàng - ADMIN/STAFF
+                        .requestMatchers("/khach-hang", "/khach-hang/add", "/khach-hang/edit/**",
+                                "/khach-hang/save", "/khach-hang/delete/**")
+                        .hasAnyRole("ADMIN", "STAFF")
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
