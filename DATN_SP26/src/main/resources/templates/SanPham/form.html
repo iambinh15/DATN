@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${action == 'add' ? 'Thêm Sản Phẩm' : 'Sửa Sản Phẩm'}">Form Sản Phẩm</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-shield-alt"></i> QUẢN LÝ SẢN PHẨM
+        </a>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>
+                <i class="fas fa-box"></i>
+                <span th:text="${action == 'add' ? 'Thêm Sản Phẩm Mới' : 'Cập Nhật Sản Phẩm'}"></span>
+            </h4>
+        </div>
+        <div class="card-body">
+            <form th:action="${action == 'add' ? '/san-pham/add' : '/san-pham/edit/' + sanPham.id}" 
+                  th:object="${sanPham}" 
+                  method="post"
+                  enctype="multipart/form-data">
+
+                <div class="mb-3">
+                    <label for="maSanPham" class="form-label">Mã Sản Phẩm <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="maSanPham" th:field="*{maSanPham}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="tenSanPham" class="form-label">Tên Sản Phẩm <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="tenSanPham" th:field="*{tenSanPham}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="moTa" class="form-label">Mô Tả</label>
+                    <textarea class="form-control" id="moTa" th:field="*{moTa}" rows="3"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="hinhAnh" class="form-label">Hình Ảnh</label>
+                    
+                     <!-- Hiển thị ảnh hiện tại nếu có -->
+                    <div th:if="${currentImage != null}" class="mb-2">
+                        <img th:src="@{'/images/' + ${currentImage}}" 
+                             alt="Ảnh hiện tại" 
+                             class="img-thumbnail" 
+                             style="max-width: 200px; max-height: 200px;">
+                        <p class="text-muted small mt-1">Ảnh hiện tại</p>
+                    </div>
+
+                    <input type="file" class="form-control" id="hinhAnh" name="hinhAnhFile" accept="image/*" onchange="previewImage(event)">
+                    <small class="text-muted">Chọn ảnh sản phẩm (jpg, png, jpeg)</small>
+                    
+                    <!-- Preview ảnh mới -->
+                    <div id="imagePreview" class="mt-2" style="display: none;">
+                        <img id="preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                        <p class="text-muted small mt-1">Ảnh mới được chọn</p>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="idThuongHieu" class="form-label">Thương Hiệu <span class="text-danger">*</span></label>
+                    <select class="form-select" id="idThuongHieu" th:field="*{idThuongHieu}" required>
+                        <option value="">-- Chọn Thương Hiệu --</option>
+                        <option th:each="th : ${listThuongHieu}" 
+                                th:value="${th.id}" 
+                                th:text="${th.tenThuongHieu}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="trangThai" class="form-label">Trạng Thái <span class="text-danger">*</span></label>
+                    <select class="form-select" id="trangThai" th:field="*{trangThai}" required>
+                        <option value="1">Hoạt động</option>
+                        <option value="0">Ngừng</option>
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> 
+                        <span th:text="${action == 'add' ? 'Thêm' : 'Cập Nhật'}"></span>
+                    </button>
+                    <a th:href="@{/san-pham}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay Lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('preview');
+                preview.src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        } else {
+            document.getElementById('imagePreview').style.display = 'none';
+        }
+    }
+</script>
+</body>
+</html>
