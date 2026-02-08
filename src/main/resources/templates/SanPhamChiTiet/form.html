@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${action == 'add' ? 'Thêm Chi Tiết Sản Phẩm' : 'Sửa Chi Tiết Sản Phẩm'}">Form Chi Tiết</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-shield-alt"></i> QUẢN LÝ SẢN PHẨM
+        </a>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>
+                <i class="fas fa-list-alt"></i>
+                <span th:text="${action == 'add' ? 'Thêm Chi Tiết Sản Phẩm Mới' : 'Cập Nhật Chi Tiết Sản Phẩm'}"></span>
+            </h4>
+        </div>
+        <div class="card-body">
+            <form th:action="${action == 'add' ? '/san-pham-chi-tiet/add' : '/san-pham-chi-tiet/edit/' + sanPhamChiTiet.id}" 
+                  th:object="${sanPhamChiTiet}" method="post">
+
+                <div class="mb-3">
+                    <label for="idSanPham" class="form-label">Sản Phẩm <span class="text-danger">*</span></label>
+                    <select class="form-select" id="idSanPham" th:field="*{idSanPham}" required>
+                        <option value="">-- Chọn Sản Phẩm --</option>
+                        <option th:each="sp : ${listSanPham}" 
+                                th:value="${sp.id}" 
+                                th:text="${sp.tenSanPham}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="idMauSac" class="form-label">Màu Sắc <span class="text-danger">*</span></label>
+                        <select class="form-select" id="idMauSac" th:field="*{idMauSac}" required>
+                            <option value="">-- Chọn Màu --</option>
+                            <option th:each="ms : ${listMauSac}" 
+                                    th:value="${ms.id}" 
+                                    th:text="${ms.tenMau}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="idSize" class="form-label">Size <span class="text-danger">*</span></label>
+                        <select class="form-select" id="idSize" th:field="*{idSize}" required>
+                            <option value="">-- Chọn Size --</option>
+                            <option th:each="size : ${listSize}" 
+                                    th:value="${size.id}" 
+                                    th:text="${size.tenSize}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="idChatLieu" class="form-label">Chất Liệu <span class="text-danger">*</span></label>
+                        <select class="form-select" id="idChatLieu" th:field="*{idChatLieu}" required>
+                            <option value="">-- Chọn Chất Liệu --</option>
+                            <option th:each="cl : ${listChatLieu}" 
+                                    th:value="${cl.id}" 
+                                    th:text="${cl.tenChatLieu}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="donGia" class="form-label">Giá Bán <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="donGia" th:field="*{donGia}" required min="0" step="1000">
+                            <span class="input-group-text">đ</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="soLuong" class="form-label">Số Lượng <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="soLuong" th:field="*{soLuong}" required min="0">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="trangThai" class="form-label">Trạng Thái <span class="text-danger">*</span></label>
+                    <select class="form-select" id="trangThai" th:field="*{trangThai}" required>
+                        <option value="1">Hoạt động</option>
+                        <option value="0">Ngừng</option>
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> 
+                        <span th:text="${action == 'add' ? 'Thêm' : 'Cập Nhật'}"></span>
+                    </button>
+                    <a th:href="@{/san-pham-chi-tiet}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay Lại
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý chất liệu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">📦 Danh sách chất liệu</h5>
+            <a th:href="@{/chat-lieu/add}" class="btn btn-light btn-sm">
+                ➕ Thêm mới
+            </a>
+        </div>
+
+        <div class="card-body">
+            <table class="table table-hover align-middle text-center">
+                <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Tên chất liệu</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="cl : ${list}">
+                    <td th:text="${cl.id}"></td>
+                    <td th:text="${cl.tenChatLieu}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${cl.trangThai == 1 ? 'bg-success' : 'bg-danger'}"
+                              th:text="${cl.trangThai == 1 ? 'Còn hàng' : 'Hết hàng'}">
+                        </span>
+                    </td>
+                    <td>
+                        <a th:href="@{/chat-lieu/edit/{id}(id=${cl.id})}"
+                           class="btn btn-warning btn-sm">✏ Sửa</a>
+                        <a th:href="@{/chat-lieu/delete/{id}(id=${cl.id})}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Bạn có chắc muốn xóa?')">🗑 Xóa</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

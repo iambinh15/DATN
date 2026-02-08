@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Sản Phẩm - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-shield-alt"></i> QUẢN LÝ SẢN PHẨM
+        </a>
+        <div class="d-flex">
+            <a href="/" class="btn btn-outline-light me-2">
+                <i class="fas fa-home"></i> Trang Chủ
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-2">
+            <div class="list-group">
+                <a href="/" class="list-group-item list-group-item-action">
+                    <i class="fas fa-tachometer-alt"></i> Tổng quan
+                </a>
+                <a href="/san-pham" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-box"></i> Quản lý Sản phẩm
+                </a>
+                <a href="/san-pham-chi-tiet" class="list-group-item list-group-item-action">
+                    <i class="fas fa-list-alt"></i> Chi tiết Sản phẩm
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4><i class="fas fa-box"></i> Quản Lý Sản Phẩm</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Alert Messages -->
+                    <div th:if="${message}" th:class="'alert alert-' + ${alertType} + ' alert-dismissible fade show'" role="alert">
+                        <span th:text="${message}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mb-3">
+                        <a th:href="@{/san-pham/add}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Thêm Sản Phẩm
+                        </a>
+                    </div>
+
+                    <!-- Product Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Hình Ảnh</th>
+                                <th>Mã SP</th>
+                                <th>Tên Sản Phẩm</th>
+                                <th>Mô Tả</th>
+                                <th>Thương Hiệu</th>
+                                <th>Trạng Thái</th>
+                                <th style="width: 150px;">Hành Động</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="sp : ${listSanPham}">
+                                <td th:text="${sp.id}"></td>
+                                <td>
+                                    <img th:if="${sp.firstImage != null}" 
+                                         th:src="@{'/images/' + ${sp.firstImage}}" 
+                                         alt="Product" 
+                                         style="width: 50px; height: 50px; object-fit: cover;">
+                                    <span th:if="${sp.firstImage == null}" class="text-muted">Chưa có ảnh</span>
+                                </td>
+                                <td th:text="${sp.maSanPham}"></td>
+                                <td th:text="${sp.tenSanPham}"></td>
+                                <td th:text="${sp.moTa}"></td>
+                                <td th:text="${sp.idThuongHieu?.tenThuongHieu}"></td>
+                                <td>
+                                    <span th:if="${sp.trangThai == 1}" class="badge bg-success">Hoạt động</span>
+                                    <span th:if="${sp.trangThai == 0}" class="badge bg-danger">Ngừng</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/san-pham/edit/{id}(id=${sp.id})}" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a th:href="@{/san-pham/delete/{id}(id=${sp.id})}" 
+                                       class="btn btn-danger btn-sm"
+                                       onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
