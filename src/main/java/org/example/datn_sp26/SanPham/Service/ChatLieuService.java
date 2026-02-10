@@ -30,13 +30,4 @@ public class ChatLieuService {
     public void delete(Integer id) {
         repository.deleteById(id);
     }
-
-    // 🔥 CHECK TRÙNG TÊN
-    public boolean isTenChatLieuExists(ChatLieu chatLieu) {
-        ChatLieu existing = repository.findByTenChatLieu(chatLieu.getTenChatLieu());
-        if (existing == null) return false;
-
-        // sửa thì được trùng chính nó
-        return !existing.getId().equals(chatLieu.getId());
-    }
 }

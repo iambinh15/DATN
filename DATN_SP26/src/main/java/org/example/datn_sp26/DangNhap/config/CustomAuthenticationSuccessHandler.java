@@ -79,7 +79,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                 if (nhanVien != null) {
                     session.setAttribute("nhanVien", nhanVien);
                     session.setAttribute("idNhanVien", nhanVien.getId());
-                    session.setAttribute("tenNhanVien", nhanVien.getTen());
+                    session.setAttribute("tenNhanVien", nhanVien.getTenNhanVien());
                 }
                 // Redirect đến trang admin
                 response.sendRedirect("/admin");
