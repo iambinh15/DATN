@@ -1,6 +1,7 @@
 package org.example.datn_sp26.NguoiDung.Entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,34 +11,56 @@ import lombok.Setter;
 @Table(name = "NhanVien")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Entity
+@Table(
+        name = "NhanVien",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "maNhanVien"),
+                @UniqueConstraint(columnNames = "email"),
+                @UniqueConstraint(columnNames = "sdt")
+        }
+)
 public class NhanVien {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    private Integer id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idTaiKhoan")
+    private TaiKhoan idTaiKhoan;
 
-    @Column(name = "maNhanVien")
+    @NotBlank(message = "Mã nhân viên không được để trống")
+    @Size(max = 20, message = "Mã nhân viên tối đa 20 ký tự")
+    @Column(name = "maNhanVien", length = 20, nullable = false)
     private String maNhanVien;
 
-    @Column(name = "tenNhanVien")
-    private String ten;
+    @NotBlank(message = "Tên nhân viên không được để trống")
+    @Size(max = 100)
+    @Nationalized
+    @Column(name = "tenNhanVien", length = 100, nullable = false)
+    private String tenNhanVien;
 
-    @Column(name = "sdt")
+    @NotBlank(message = "SĐT không được để trống")
+    @Pattern(regexp = "0[0-9]{9}", message = "SĐT phải 10 số, bắt đầu bằng 0")
+    @Column(name = "sdt", length = 15, nullable = false)
     private String sdt;
 
-    @Column(name = "email")
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Email không đúng định dạng")
+    @Column(name = "email", length = 100, nullable = false)
     private String email;
 
-    @Column(name = "diaChi")
+    @NotBlank(message = "Địa chỉ không được để trống")
+    @Nationalized
+    @Column(name = "diaChi", nullable = false)
     private String diaChi;
 
-    @Column(name = "trangThai")
-    private Integer trangThai;
+    @NotNull(message = "Vui lòng chọn trạng thái")
+    @Column(name = "trangThai", nullable = false)
+    private Integer trangThai; // 1: Hoạt động | 0: Ngưng
 
-    @OneToOne
-    @JoinColumn(name = "idTaiKhoan")
-    private TaiKhoan taiKhoan;
+    @OneToMany(mappedBy = "idNhanVienTraLoi")
+    private Set<HoTroKhachHang> hoTroKhachHangs = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "idNhanVien")
+    private Set<HoaDon> hoaDons = new LinkedHashSet<>();
 }
