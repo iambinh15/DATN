@@ -6,9 +6,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.datn_sp26.BanHang.Entity.HoaDon;
+import org.example.datn_sp26.HoTro.Entity.HoTroKhachHang;
+import org.hibernate.annotations.Nationalized;
 
-@Entity
-@Table(name = "NhanVien")
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 @Getter
 @Setter
 @Entity
@@ -25,9 +29,10 @@ public class NhanVien {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idTaiKhoan")
-    private TaiKhoan idTaiKhoan;
+    private TaiKhoan taiKhoan;
 
     @NotBlank(message = "Mã nhân viên không được để trống")
     @Size(max = 20, message = "Mã nhân viên tối đa 20 ký tự")
