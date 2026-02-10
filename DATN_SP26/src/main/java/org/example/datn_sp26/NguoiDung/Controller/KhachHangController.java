@@ -1,13 +1,13 @@
 package org.example.datn_sp26.NguoiDung.Controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.ValidationException;
 import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
 import org.example.datn_sp26.NguoiDung.Service.KhachHangService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.Instant;
-import java.util.Date;
 
 @Controller
 @RequestMapping("/khach-hang")
@@ -19,41 +19,56 @@ public class KhachHangController {
         this.service = service;
     }
 
-    // 📄 List
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("list", service.findAll());
-        return "KhachHang/list";
+    public String list(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            Model model
+    ) {
+        model.addAttribute("list", service.search(keyword));
+        model.addAttribute("keyword", keyword);
+        return "khachhang/list";
     }
 
-    // ➕ Add
     @GetMapping("/add")
     public String add(Model model) {
-        KhachHang kh = new KhachHang();
-        kh.setNgayTao(Instant.now());
-        kh.setTrangThai(1);
-        model.addAttribute("kh", kh);
-        return "KhachHang/form";
+        model.addAttribute("kh", new KhachHang());
+        return "khachhang/form";
     }
 
-    // ✏ Edit
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
-        model.addAttribute("kh", service.findById(id));
-        return "KhachHang/form";
+        model.addAttribute("kh", service.getById(id));
+        return "khachhang/form";
     }
 
-    // 💾 Save
     @PostMapping("/save")
-    public String save(@ModelAttribute KhachHang kh) {
-        if (kh.getNgayTao() == null) {
-            kh.setNgayTao(Instant.now()); // ✅ sửa ở đây
+    public String save(
+            @Valid @ModelAttribute("kh") KhachHang kh,
+            BindingResult result
+    ) {
+
+        if (result.hasErrors()) {
+            return "khachhang/form";
         }
-        service.save(kh);
+
+        try {
+            service.save(kh);
+        } catch (ValidationException e) {
+            String msg = e.getMessage();
+
+            if (msg.contains("Mã"))
+                result.rejectValue("maKhachHang", "error.maKhachHang", msg);
+            else if (msg.contains("Email"))
+                result.rejectValue("email", "error.email", msg);
+            else if (msg.contains("Số"))
+                result.rejectValue("sdt", "error.sdt", msg);
+
+            return "khachhang/form";
+        }
+
         return "redirect:/khach-hang";
     }
 
-    // ❌ Delete
     @GetMapping("/delete/{id}")
     public String delete(@PathVariable Integer id) {
         service.delete(id);
