@@ -1,151 +1,702 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8">
-  <title>Xác nhận đơn hàng - DATN SP26</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thanh toán - CotiT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .checkout-box {
-      max-width: 500px; margin: 50px auto; padding: 30px;
-      background: #fff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    h2 { text-align: center; color: #333; margin-bottom: 25px; }
-    .row { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 16px; }
-    .total-row { border-top: 2px dashed #eee; padding-top: 20px; font-size: 20px; font-weight: bold; color: #d32f2f; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f9f9f9;
+      color: #111;
+      line-height: 1.6;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: #000;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 70px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .secure-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #999;
+      font-size: 13px;
+    }
+
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      padding: 30px 20px;
+    }
+
+    .page-header-content {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: 2px;
+    }
+
+    /* ===== CHECKOUT LAYOUT ===== */
+    .checkout-layout {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 40px;
+    }
+
+    /* ===== CHECKOUT SECTIONS ===== */
+    .checkout-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 25px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title .number {
+      width: 28px;
+      height: 28px;
+      background: #000;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* ===== ADDRESS OPTIONS ===== */
+    .address-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .address-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px;
+      border: 2px solid #eee;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .address-option:hover {
+      border-color: #ccc;
+    }
+
+    .address-option.active {
+      border-color: #000;
+      background: #fafafa;
+    }
+
+    .address-option input[type="radio"] {
+      display: none;
+    }
+
+    .radio-circle {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ccc;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .address-option.active .radio-circle {
+      border-color: #000;
+    }
+
+    .radio-circle::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: #000;
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .address-option.active .radio-circle::after {
+      opacity: 1;
+    }
+
+    .option-text {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* ===== ADDRESS SELECT ===== */
+    .address-select-box {
+      margin-top: 20px;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #eee;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fff;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 15px center;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: #000;
+    }
+
+    /* ===== NEW ADDRESS FORM ===== */
+    .new-address-form {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .new-address-form.active {
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #eee;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #000;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn-confirm-address {
+      width: 100%;
+      padding: 15px;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+
+    .btn-confirm-address:hover {
+      background: #333;
+    }
+
+    /* ===== CONFIRMED ADDRESS ===== */
+    .confirmed-address {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border-left: 4px solid #000;
+    }
+
+    .confirmed-address.active {
+      display: block;
+    }
+
+    .confirmed-address-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .confirmed-address-text {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* ===== PAYMENT METHODS ===== */
+    .payment-methods {
+      display: flex;
+      gap: 15px;
+    }
+
     .payment-option {
-      display: flex; align-items: center; padding: 12px; border: 1px solid #ddd;
-      border-radius: 8px; margin-bottom: 10px; cursor: pointer;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      border: 2px solid #eee;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
-    .payment-option input { margin-right: 15px; }
-    .btn-confirm {
-      width: 100%; padding: 16px; background: #f37021; color: white;
-      border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer;
+
+    .payment-option:hover {
+      border-color: #ccc;
     }
-    .error-msg { color: #d32f2f; font-size: 13px; text-align: center; margin-top: 10px; }
+
+    .payment-option.active {
+      border-color: #000;
+      background: #fafafa;
+    }
+
+    .payment-option input[type="radio"] {
+      display: none;
+    }
+
+    .payment-option i {
+      font-size: 24px;
+    }
+
+    .payment-option span {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* ===== ORDER SUMMARY ===== */
+    .order-summary {
+      background: #fff;
+      border-radius: 12px;
+      padding: 30px;
+      height: fit-content;
+      position: sticky;
+      top: 100px;
+    }
+
+    .summary-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 25px;
+      letter-spacing: 1px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .summary-row .label {
+      color: #666;
+    }
+
+    .summary-row.discount .value {
+      color: #27ae60;
+    }
+
+    .summary-row.total {
+      border-top: 2px solid #000;
+      padding-top: 20px;
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .summary-row.total .label {
+      color: #000;
+    }
+
+    /* ===== DISCOUNT SELECT ===== */
+    .discount-section {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .discount-label {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    /* ===== CHECKOUT BUTTON ===== */
+    .btn-checkout {
+      width: 100%;
+      padding: 18px;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 25px;
+    }
+
+    .btn-checkout:hover {
+      background: #333;
+    }
+
+    .secure-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+      color: #999;
+      font-size: 12px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 992px) {
+      .checkout-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .order-summary {
+        position: static;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .payment-methods {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
+
 <body>
 
-<div class="checkout-box">
-  <h2>XÁC NHẬN ĐƠN HÀNG</h2>
+  <!-- Header -->
+  <header class="header">
+    <nav class="nav-container">
+      <a th:href="@{/khach-hang/trang-chu}" class="logo">COTIT</a>
+      <div class="secure-text">
+        <i class="fas fa-lock"></i>
+        Thanh toán bảo mật
+      </div>
+    </nav>
+  </header>
 
-  <div class="row">
-    <span>Tiền hàng:</span>
-    <b id="labelTienHang" th:text="|${#numbers.formatDecimal(tongTienHang, 0, 'COMMA', 0, 'POINT')} đ|">0 đ</b>
-  </div>
-
-  <div class="row">
-    <span>Phí giao hàng (GHN):</span>
-    <b id="shipFee" style="color: #27ae60;">Đang tính...</b>
-  </div>
-
-  <div class="row total-row">
-    <span>Tổng thanh toán:</span>
-    <span id="finalTotal">---</span>
-  </div>
-  <!-- KHUYẾN MÃI -->
-  <div class="promotion-box" style="margin-bottom: 20px;">
-    <p style="font-weight: bold;">Chọn mã giảm giá:</p>
-
-    <select id="maGiamGiaSelect" onchange="apDungMaGiamGia()" style="width: 100%; padding: 8px;">
-      <option value="0" data-value="0">-- Không dùng mã --</option>
-
-      <option th:each="km : ${dsMaGiamGia}"
-              th:value="${km.id}"
-              th:data-value="${km.giaTri}"
-              th:text="|${km.ma} - Giảm ${#numbers.formatDecimal(km.giaTri,0,'COMMA',0,'POINT')} đ|">
-      </option>
-    </select>
-  </div>
-
-  <div class="payment-methods">
-    <p style="font-weight: bold;">Chọn phương thức thanh toán:</p>
-    <div class="payment-option">
-      <input type="radio" id="payCOD" name="paymentMethod" value="COD" checked>
-      <label for="payCOD">Thanh toán tiền mặt (COD)</label>
-    </div>
-    <div class="payment-option">
-      <input type="radio" id="payVNPay" name="paymentMethod" value="VNPAY">
-      <label for="payVNPay">Thanh toán Online qua VNPay</label>
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-content">
+      <h1 class="page-title">Xác nhận đơn hàng</h1>
     </div>
   </div>
 
-  <div id="errorArea" class="error-msg"></div>
-  <button class="btn-confirm" onclick="xuLyThanhToan()">XÁC NHẬN ĐẶT HÀNG</button>
-</div>
+  <!-- Checkout Layout -->
+  <div class="checkout-layout">
+    <!-- Left Column -->
+    <div class="checkout-main">
 
-<script th:inline="javascript">
-  let currentTongThanhToan = 0;
-  let phiShip = 0;
-  let giamGia = 0;
-  const tienHang = /*[[${tongTienHang}]]*/ 0;
+      <!-- Address Section -->
+      <div class="checkout-section">
+        <h2 class="section-title">
+          <span class="number">1</span>
+          Địa chỉ giao hàng
+        </h2>
 
-  (function() {
-    try {
-      const dataGHNRaw = /*[[${dataGHN}]]*/ '{}';
-      const resGHN = (typeof dataGHNRaw === 'string') ? JSON.parse(dataGHNRaw) : dataGHNRaw;
+        <div class="address-options">
+          <label class="address-option active" id="optionTK" onclick="chonDiaChiTK()">
+            <input type="radio" name="dc" checked>
+            <div class="radio-circle"></div>
+            <span class="option-text">Địa chỉ theo tài khoản</span>
+          </label>
+          <label class="address-option" id="optionMoi" onclick="chonDiaChiMoi()">
+            <input type="radio" name="dc">
+            <div class="radio-circle"></div>
+            <span class="option-text">Nhập địa chỉ khác</span>
+          </label>
+        </div>
 
-      const shipFeeElem = document.getElementById('shipFee');
-      const finalTotalElem = document.getElementById('finalTotal');
+        <!-- Địa chỉ tài khoản -->
+        <div id="diaChiTK" class="address-select-box" th:if="${dsDiaChi}">
+          <select id="diaChiMacDinh" class="form-select">
+            <option th:each="dc:${dsDiaChi}" th:text="${dc.diaChi}"></option>
+          </select>
+        </div>
 
-      if (resGHN && resGHN.code === 200 && resGHN.data) {
-        phiShip = resGHN.data.total;
-        currentTongThanhToan = tienHang + phiShip;
-        shipFeeElem.innerText = phiShip.toLocaleString('vi-VN') + ' đ';
-        finalTotalElem.innerText = currentTongThanhToan.toLocaleString('vi-VN') + ' đ';
-      }
-    } catch (e) { console.error(e); }
-  })();
+        <!-- Địa chỉ mới -->
+        <div id="diaChiMoi" class="new-address-form">
+          <input id="soNha" class="form-input" placeholder="Số nhà, tên đường...">
+          <div class="form-row">
+            <select id="tinh" class="form-select">
+              <option>-- Tỉnh/TP --</option>
+            </select>
+            <select id="huyen" class="form-select">
+              <option>-- Quận/Huyện --</option>
+            </select>
+            <select id="xa" class="form-select">
+              <option>-- Phường/Xã --</option>
+            </select>
+          </div>
+          <button type="button" class="btn-confirm-address" onclick="xacNhanDiaChi()">
+            <i class="fas fa-check"></i> Xác nhận địa chỉ
+          </button>
+        </div>
 
-  // ✅ HÀM ÁP DỤNG MÃ GIẢM GIÁ
-  function apDungMaGiamGia() {
-    const select = document.getElementById("maGiamGiaSelect");
-    const selectedOption = select.options[select.selectedIndex];
+        <!-- Địa chỉ đã xác nhận -->
+        <div id="diaChiXacNhan" class="confirmed-address">
+          <p class="confirmed-address-label">Địa chỉ nhận hàng</p>
+          <p id="labelDiaChi" class="confirmed-address-text"></p>
+        </div>
+      </div>
 
-    giamGia = parseInt(selectedOption.getAttribute("data-value")) || 0;
+      <!-- Payment Method Section -->
+      <div class="checkout-section">
+        <h2 class="section-title">
+          <span class="number">2</span>
+          Phương thức thanh toán
+        </h2>
 
-    // 🔥 Giảm giá CHỈ tiền hàng
-    let tienSauGiam = tienHang - giamGia;
-    if (tienSauGiam < 0) tienSauGiam = 0;
+        <div class="payment-methods">
+          <label class="payment-option active" onclick="selectPayment(this, 'COD')">
+            <input type="radio" name="pay" value="COD" checked>
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Thanh toán khi nhận hàng (COD)</span>
+          </label>
+          <label class="payment-option" onclick="selectPayment(this, 'VNPAY')">
+            <input type="radio" name="pay" value="VNPAY">
+            <i class="fas fa-credit-card"></i>
+            <span>VNPay</span>
+          </label>
+        </div>
+      </div>
 
-    currentTongThanhToan = tienSauGiam + phiShip;
+    </div>
 
-    document.getElementById("finalTotal").innerText =
-            currentTongThanhToan.toLocaleString("vi-VN") + " đ";
-  }
-  (function() {
-    try {
-      const dataGHNRaw = /*[[${dataGHN}]]*/ '{}';
-      const tienHang = /*[[${tongTienHang}]]*/ 0;
-      const resGHN = (typeof dataGHNRaw === 'string') ? JSON.parse(dataGHNRaw) : dataGHNRaw;
+    <!-- Order Summary -->
+    <div class="order-summary">
+      <h3 class="summary-title">ĐƠN HÀNG</h3>
 
-      const shipFeeElem = document.getElementById('shipFee');
-      const finalTotalElem = document.getElementById('finalTotal');
+      <div class="summary-row">
+        <span class="label">Tiền hàng</span>
+        <span th:text="|${#numbers.formatDecimal(tongTienHang,0,'COMMA',0,'POINT')} đ|"></span>
+      </div>
 
-      if (resGHN && resGHN.code === 200 && resGHN.data) {
-        phiShip = resGHN.data.total; //dòng này để cho phí ship ra ngoài không bị giám giá
-        currentTongThanhToan = tienHang + phiShip;
-        shipFeeElem.innerText = phiShip.toLocaleString('vi-VN') + ' đ';
-        finalTotalElem.innerText = currentTongThanhToan.toLocaleString('vi-VN') + ' đ';
-      } else {
-        currentTongThanhToan = tienHang;
-        finalTotalElem.innerText = tienHang.toLocaleString('vi-VN') + ' đ';
-        document.getElementById('errorArea').innerText = "Không thể tính phí ship GHN.";
-      }
-    } catch (e) { console.error(e); }
-  })();
+      <div class="summary-row">
+        <span class="label">Phí vận chuyển</span>
+        <span id="ship">0 đ</span>
+      </div>
 
-  function xuLyThanhToan() {
-    const method = document.querySelector('input[name="paymentMethod"]:checked').value;
-    // Làm tròn để tránh lỗi định dạng dữ liệu VNPay
-    const cleanAmount = Math.floor(currentTongThanhToan);
+      <!-- Discount Section -->
+      <div class="discount-section">
+        <p class="discount-label">Mã giảm giá</p>
+        <select id="maGiamGiaSelect" class="form-select" onchange="apDungMaGiamGia()">
+          <option value="0" data-value="0">-- Không dùng mã --</option>
+          <option th:each="km : ${dsMaGiamGia}" th:value="${km.id}" th:data-value="${km.giaTri}"
+            th:text="|${km.ma} - Giảm ${#numbers.formatDecimal(km.giaTri,0,'COMMA',0,'POINT')} đ|">
+          </option>
+        </select>
+      </div>
 
-    if (method === "VNPAY") {
-      window.location.href = "/api/vnpay/pay?amount=" + cleanAmount;
-    } else {
-      window.location.href = "/api/order/create-cod?amount=" + cleanAmount;
+      <div class="summary-row total">
+        <span class="label">Tổng cộng</span>
+        <span id="tong">0 đ</span>
+      </div>
+
+      <button type="button" class="btn-checkout" onclick="thanhToan()">
+        Đặt hàng
+      </button>
+
+      <div class="secure-badge">
+        <i class="fas fa-shield-alt"></i>
+        Đảm bảo thanh toán an toàn
+      </div>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    const TOKEN = "0159688c-fb78-11f0-92cb-eef4825ef61b";
+    const tienHang = /*[[${tongTienHang}]]*/ 0;
+
+    let phiShip = 0;
+    let giamGia = 0;
+    let diaChiFinal = "";
+
+    // Initialize total
+    document.addEventListener('DOMContentLoaded', function () {
+      capNhatTien();
+    });
+
+    /* ===== LOAD GHN PROVINCES ===== */
+    fetch("https://online-gateway.ghn.vn/shiip/public-api/master-data/province", { headers: { Token: TOKEN } })
+      .then(r => r.json()).then(d => {
+        d.data.forEach(p => tinh.innerHTML += `<option value="${p.ProvinceID}">${p.ProvinceName}</option>`);
+      });
+
+    tinh.onchange = () => fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/district?province_id=${tinh.value}`, { headers: { Token: TOKEN } })
+      .then(r => r.json()).then(d => {
+        huyen.innerHTML = "<option>-- Quận/Huyện --</option>";
+        d.data.forEach(x => huyen.innerHTML += `<option value="${x.DistrictID}">${x.DistrictName}</option>`);
+      });
+
+    huyen.onchange = () => fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${huyen.value}`, { headers: { Token: TOKEN } })
+      .then(r => r.json()).then(d => {
+        xa.innerHTML = "<option>-- Phường/Xã --</option>";
+        d.data.forEach(x => xa.innerHTML += `<option value="${x.WardCode}">${x.WardName}</option>`);
+      });
+
+    /* ===== ADDRESS SELECTION ===== */
+    function chonDiaChiMoi() {
+      document.getElementById('diaChiMoi').classList.add('active');
+      document.getElementById('diaChiTK').style.display = 'none';
+      document.getElementById('optionTK').classList.remove('active');
+      document.getElementById('optionMoi').classList.add('active');
     }
-  }
-</script>
+
+    function chonDiaChiTK() {
+      document.getElementById('diaChiMoi').classList.remove('active');
+      const diaChiTK = document.getElementById('diaChiTK');
+      if (diaChiTK) diaChiTK.style.display = 'block';
+      document.getElementById('optionTK').classList.add('active');
+      document.getElementById('optionMoi').classList.remove('active');
+
+      const diaChiMacDinh = document.getElementById('diaChiMacDinh');
+      if (diaChiMacDinh) {
+        diaChiFinal = diaChiMacDinh.value;
+        document.getElementById('labelDiaChi').innerText = diaChiFinal;
+        document.getElementById('diaChiXacNhan').classList.add('active');
+      }
+    }
+
+    function xacNhanDiaChi() {
+      fetch("/khach-hang/tinh-phi-ship-dia-chi-moi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          districtId: huyen.value,
+          wardCode: xa.value
+        })
+      }).then(r => r.json()).then(d => {
+        phiShip = d.phiShip;
+        diaChiFinal = `${soNha.value}, ${xa.options[xa.selectedIndex].text}, ${huyen.options[huyen.selectedIndex].text}`;
+        document.getElementById('labelDiaChi').innerText = diaChiFinal;
+        document.getElementById('diaChiXacNhan').classList.add('active');
+        capNhatTien();
+      });
+    }
+
+    /* ===== PAYMENT SELECTION ===== */
+    function selectPayment(element, value) {
+      document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('active'));
+      element.classList.add('active');
+      element.querySelector('input').checked = true;
+    }
+
+    /* ===== DISCOUNT ===== */
+    function apDungMaGiamGia() {
+      const select = document.getElementById("maGiamGiaSelect");
+      const option = select.options[select.selectedIndex];
+      giamGia = parseInt(option.getAttribute("data-value")) || 0;
+      capNhatTien();
+    }
+
+    /* ===== UPDATE TOTAL ===== */
+    function capNhatTien() {
+      document.getElementById('ship').innerText = phiShip.toLocaleString("vi-VN") + " đ";
+      let tienSauGiam = tienHang - giamGia;
+      if (tienSauGiam < 0) tienSauGiam = 0;
+      document.getElementById('tong').innerText = (tienSauGiam + phiShip).toLocaleString("vi-VN") + " đ";
+    }
+
+    /* ===== CHECKOUT ===== */
+    function thanhToan() {
+      if (!diaChiFinal) {
+        alert("Vui lòng xác nhận địa chỉ giao hàng");
+        return;
+      }
+
+      let tienSauGiam = tienHang - giamGia;
+      if (tienSauGiam < 0) tienSauGiam = 0;
+      const tongTien = tienSauGiam + phiShip;
+
+      fetch("/khach-hang/luu-dia-chi-tam", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          diaChi: diaChiFinal,
+          phiShip: phiShip
+        })
+      }).then(() => {
+        const payType = document.querySelector("input[name='pay']:checked").value;
+        if (payType === "VNPAY") {
+          location.href = "/api/vnpay/pay?amount=" + Math.floor(tongTien);
+        } else {
+          // COD - redirect to success or handle COD order
+          alert("Đơn hàng COD đã được đặt thành công!");
+          location.href = "/khach-hang/trang-chu";
+        }
+      });
+    }
+  </script>
+
 </body>
+
 </html>

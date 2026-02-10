@@ -1,5 +1,6 @@
 package org.example.datn_sp26.ThanhToan.Controller;
 
+import jakarta.servlet.http.HttpSession;
 import org.example.datn_sp26.BanHang.Service.HoaDonService;
 import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
 import org.springframework.stereotype.Controller;
@@ -78,30 +79,54 @@ public class PaymentController {
         return "redirect:" + vnp_Url + "?" + queryUrl;
     }
 
-    // ===== CALLBACK (FIX 500 TẠI ĐÂY) =====
     @GetMapping("/api/vnpay/callback")
-    public String vnpayCallback(HttpServletRequest request) {
+    public String vnpayCallback(HttpServletRequest request,
+                                HttpSession session) {
 
         String responseCode = request.getParameter("vnp_ResponseCode");
         String amountStr = request.getParameter("vnp_Amount");
 
-        // An toàn tuyệt đối
         if (!"00".equals(responseCode) || amountStr == null) {
             return "payment-fail";
         }
 
-        Long amount = Long.parseLong(amountStr) / 100;
+        // 🔥 1️⃣ LẤY ĐỊA CHỈ + PHÍ SHIP TỪ SESSION
+        String diaChi = (String) session.getAttribute("DIA_CHI_TAM");
+        Object phiShipObj = session.getAttribute("PHI_SHIP");
 
-        KhachHang khachHang = new KhachHang();
-        khachHang.setId(1);
+        if (diaChi == null || phiShipObj == null) {
+            throw new RuntimeException("❌ MẤT SESSION ĐỊA CHỈ / PHÍ SHIP");
+        }
 
+        BigDecimal phiShip = new BigDecimal(phiShipObj.toString());
+        BigDecimal tongTienHang =
+                BigDecimal.valueOf(Long.parseLong(amountStr) / 100);
+
+        // 🔥 2️⃣ KHÁCH HÀNG
+        KhachHang khachHang =
+                (KhachHang) session.getAttribute("khachHang");
+
+        if (khachHang == null) {
+            throw new RuntimeException("Chưa đăng nhập");
+        }
+
+
+
+        // ✅ 3️⃣ GỌI ĐÚNG HÀM (4 THAM SỐ)
         hoaDonService.taoHoaDonSauThanhToan(
                 khachHang,
-                BigDecimal.valueOf(amount)
+                tongTienHang,
+                diaChi,
+                phiShip
         );
+
+        // 🔥 4️⃣ XÓA SESSION
+        session.removeAttribute("DIA_CHI_TAM");
+        session.removeAttribute("PHI_SHIP");
 
         return "payment-success";
     }
+
 
     private String hmacSHA512(String key, String data) {
         try {

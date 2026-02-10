@@ -2,15 +2,13 @@ package org.example.datn_sp26.NguoiDung.Entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.example.datn_sp26.HoTro.Entity.HoTroKhachHang;
-import org.example.datn_sp26.BanHang.Entity.HoaDon;
-import org.hibernate.annotations.Nationalized;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
+@Entity
+@Table(name = "NhanVien")
 @Getter
 @Setter
 @Entity

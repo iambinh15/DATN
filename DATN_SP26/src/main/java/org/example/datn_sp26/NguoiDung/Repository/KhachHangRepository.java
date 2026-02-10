@@ -7,6 +7,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+import java.util.List;
+
 public interface KhachHangRepository extends JpaRepository<KhachHang, Integer> {
 
     boolean existsByMaKhachHang(String maKhachHang);
