@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Form chất liệu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">📝 Thông tin chất liệu</h5>
+                </div>
+
+                <div class="card-body">
+                    <form th:action="@{/chat-lieu/save}" th:object="${cl}" method="post">
+                        <input type="hidden" th:field="*{id}"/>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tên chất liệu</label>
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="Nhập tên chất liệu"
+                                   th:field="*{tenChatLieu}"
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" th:field="*{trangThai}">
+                                <option value="1">Còn hàng</option>
+                                <option value="0">Hết hàng</option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a th:href="@{/chat-lieu}" class="btn btn-secondary">⬅ Quay lại</a>
+                            <button type="submit" class="btn btn-success">💾 Lưu</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
