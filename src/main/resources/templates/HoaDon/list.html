@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Nhân viên - CotiT Admin</title>
+    <title>Quản lý Hóa đơn - CotiT Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -200,38 +200,71 @@
             font-weight: 600;
         }
 
-        .header-actions {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .search-box {
-            display: flex;
-            align-items: center;
+        /* ===== FILTER BAR ===== */
+        .filter-bar {
             background: #fff;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 10px 15px;
-            gap: 10px;
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
         }
 
-        .search-box input {
-            border: none;
-            outline: none;
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 10px 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
             font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            border-color: #000;
+        }
+
+        .filter-group input[type="text"] {
             width: 200px;
         }
 
-        .search-box i {
-            color: #999;
+        .filter-group select {
+            min-width: 180px;
         }
 
-        .btn-primary-custom {
+        .filter-group input[type="date"] {
+            width: 160px;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .btn-filter {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 12px 20px;
+            padding: 10px 20px;
             background: #000;
             color: #fff;
             border: none;
@@ -239,13 +272,33 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
-            text-decoration: none;
-            transition: background 0.3s;
+            transition: background 0.2s;
         }
 
-        .btn-primary-custom:hover {
+        .btn-filter:hover {
             background: #333;
-            color: #fff;
+        }
+
+        .btn-clear {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: transparent;
+            color: #666;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-clear:hover {
+            background: #f5f5f5;
+            color: #333;
+            border-color: #ccc;
         }
 
         /* ===== TABLE ===== */
@@ -268,16 +321,27 @@
             font-weight: 600;
         }
 
+        .record-count {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 1100px;
         }
 
         .data-table th,
         .data-table td {
-            padding: 15px 20px;
+            padding: 15px 16px;
             text-align: left;
             border-bottom: 1px solid #eee;
+            white-space: nowrap;
         }
 
         .data-table th {
@@ -303,65 +367,67 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
+            white-space: nowrap;
         }
 
-        .status-badge.active {
+        .status-badge.paid {
             background: #d4edda;
             color: #155724;
         }
 
-        .status-badge.inactive {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-edit,
-        .btn-delete {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .btn-edit {
+        .status-badge.pending {
             background: #fff3cd;
             color: #856404;
         }
 
-        .btn-edit:hover {
-            background: #ffc107;
-            color: #000;
+        .status-badge.shipping {
+            background: #cce5ff;
+            color: #004085;
         }
 
-        .btn-delete {
+        .status-badge.cancelled {
             background: #f8d7da;
             color: #721c24;
         }
 
-        .btn-delete:hover {
-            background: #dc3545;
-            color: #fff;
+        .status-badge.default {
+            background: #e2e3e5;
+            color: #383d41;
         }
 
+        .money {
+            font-weight: 600;
+            color: #dc2626;
+            white-space: nowrap;
+        }
+
+        .text-muted {
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .cell-address {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
+            padding: 80px 20px;
             color: #999;
         }
 
         .empty-state i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            opacity: 0.5;
+            font-size: 50px;
+            margin-bottom: 16px;
+            color: #ddd;
+        }
+
+        .empty-state p {
+            font-size: 16px;
         }
 
         /* ===== RESPONSIVE ===== */
@@ -390,6 +456,17 @@
             .main-content {
                 margin-left: 80px;
             }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group input[type="text"],
+            .filter-group select,
+            .filter-group input[type="date"] {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -416,7 +493,7 @@
                         <i class="fas fa-shopping-cart"></i>
                         <span>Quản lý bán hàng</span>
                     </a>
-                    <a th:href="@{/hoa-don}" class="nav-item">
+                    <a th:href="@{/hoa-don}" class="nav-item active">
                         <i class="fas fa-file-invoice"></i>
                         <span>Quản lý hóa đơn</span>
                     </a>
@@ -436,7 +513,7 @@
                         <i class="fas fa-users"></i>
                         <span>Quản lý khách hàng</span>
                     </a>
-                    <a th:href="@{/nhan-vien}" class="nav-item active">
+                    <a th:href="@{/nhan-vien}" class="nav-item">
                         <i class="fas fa-user-tie"></i>
                         <span>Quản lý nhân viên</span>
                     </a>
@@ -478,69 +555,109 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="content-header">
-                <h1 class="page-title">Quản lý Nhân viên</h1>
-                <div class="header-actions">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Tìm kiếm nhân viên...">
-                    </div>
-                    <a th:href="@{/nhan-vien/add}" class="btn-primary-custom">
-                        <i class="fas fa-plus"></i>
-                        Thêm nhân viên
+                <h1 class="page-title">Quản lý Hóa đơn</h1>
+            </div>
+
+            <!-- Filter Bar -->
+            <form th:action="@{/hoa-don}" method="get" class="filter-bar">
+                <div class="filter-group">
+                    <label>Tên khách hàng</label>
+                    <input type="text" name="tenKH" th:value="${tenKH}" placeholder="Nhập tên khách hàng...">
+                </div>
+
+                <div class="filter-group">
+                    <label>Trạng thái</label>
+                    <select name="trangThai">
+                        <option value="">— Tất cả —</option>
+                        <option th:each="tt : ${dsTrangThai}" th:value="${tt.tenTrangThai}" th:text="${tt.tenTrangThai}"
+                            th:selected="${trangThai != null and trangThai == tt.tenTrangThai}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Từ ngày</label>
+                    <input type="date" name="tuNgay" th:value="${tuNgay}">
+                </div>
+
+                <div class="filter-group">
+                    <label>Đến ngày</label>
+                    <input type="date" name="denNgay" th:value="${denNgay}">
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter">
+                        <i class="fas fa-search"></i> Lọc
+                    </button>
+                    <a th:href="@{/hoa-don}" class="btn-clear">
+                        <i class="fas fa-times"></i> Xóa lọc
                     </a>
                 </div>
-            </div>
+            </form>
 
             <!-- Data Table -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Danh sách nhân viên</h3>
+                    <h3 class="card-title">Danh sách hóa đơn</h3>
+                    <span class="record-count" th:text="${list != null ? list.size() : 0} + ' bản ghi'"></span>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Mã NV</th>
-                            <th>Tên nhân viên</th>
-                            <th>Số điện thoại</th>
-                            <th>Email</th>
-                            <th>Địa chỉ</th>
-                            <th>Trạng thái</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="nv : ${list}">
-                            <td th:text="${nv.maNhanVien}"></td>
-                            <td th:text="${nv.ten}"></td>
-                            <td th:text="${nv.sdt}"></td>
-                            <td th:text="${nv.email}"></td>
-                            <td th:text="${nv.diaChi}"></td>
-                            <td>
-                                <span class="status-badge" th:classappend="${nv.trangThai == 1 ? 'active' : 'inactive'}"
-                                    th:text="${nv.trangThai == 1 ? 'Hoạt động' : 'Ngưng'}"></span>
-                            </td>
-                            <td>
-                                <div class="action-btns">
-                                    <a th:href="@{/nhan-vien/edit/{id}(id=${nv.id})}" class="btn-edit">
-                                        <i class="fas fa-edit"></i> Sửa
-                                    </a>
-                                    <a th:href="@{/nhan-vien/delete/{id}(id=${nv.id})}" class="btn-delete"
-                                        onclick="return confirm('Bạn có chắc muốn xóa nhân viên này?')">
-                                        <i class="fas fa-trash"></i> Xóa
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr th:if="${list.isEmpty()}">
-                            <td colspan="7">
-                                <div class="empty-state">
-                                    <i class="fas fa-users"></i>
-                                    <p>Không có dữ liệu nhân viên</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+
+                <div class="table-wrapper" th:if="${list != null and !list.isEmpty()}">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Mã hóa đơn</th>
+                                <th>Nhân viên</th>
+                                <th>Khách hàng</th>
+                                <th>Mã giảm giá</th>
+                                <th>Loại thanh toán</th>
+                                <th>Trạng thái</th>
+                                <th>Địa chỉ</th>
+                                <th>Ngày tạo</th>
+                                <th>Tổng thanh toán</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="hd : ${list}">
+                                <td th:text="${hd.id}"></td>
+                                <td th:text="${hd.maHoaDon}"></td>
+                                <td th:text="${hd.nhanVien != null ? hd.nhanVien.tenNhanVien : '—'}"></td>
+                                <td th:text="${hd.idKhachHang != null ? hd.idKhachHang.tenKhachHang : '—'}"></td>
+                                <td>
+                                    <span th:if="${hd.idMaGiamGia != null}" th:text="${hd.idMaGiamGia.ma}"></span>
+                                    <span th:if="${hd.idMaGiamGia == null}" class="text-muted">Không có</span>
+                                </td>
+                                <td th:text="${hd.idLoaiThanhToan != null ? hd.idLoaiThanhToan.tenLoai : '—'}"></td>
+                                <td>
+                                    <span class="status-badge"
+                                        th:classappend="${hd.idTrangThaiHoaDon.tenTrangThai == 'Đã Thanh Toán' ? 'paid' :
+                                                          (hd.idTrangThaiHoaDon.tenTrangThai == 'Chờ Thanh Toán' ? 'pending' :
+                                                          (hd.idTrangThaiHoaDon.tenTrangThai == 'Đang Giao' ? 'shipping' :
+                                                          (hd.idTrangThaiHoaDon.tenTrangThai == 'Đã Hủy' ? 'cancelled' : 'default')))}"
+                                        th:text="${hd.idTrangThaiHoaDon.tenTrangThai}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="cell-address" th:text="${hd.diaChi != null ? hd.diaChi : '—'}"
+                                        th:title="${hd.diaChi}"></div>
+                                </td>
+                                <td
+                                    th:text="${hd.ngayTao != null ? #temporals.format(hd.ngayTao, 'dd/MM/yyyy HH:mm') : '—'}">
+                                </td>
+                                <td class="money"
+                                    th:text="${hd.tongThanhToan != null ? #numbers.formatDecimal(hd.tongThanhToan, 0, 'COMMA', 0, 'POINT') + ' ₫' : '—'}">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" th:if="${list == null or list.isEmpty()}">
+                    <i class="fas fa-file-invoice"></i>
+                    <p>Không tìm thấy hóa đơn nào.</p>
+                </div>
             </div>
         </main>
     </div>

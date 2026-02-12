@@ -25,9 +25,9 @@ public class HoaDon {
     @Column(name = "maHoaDon", length = 20)
     private String maHoaDon;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "idNhanVien")
-    private NhanVien idNhanVien;
+    private NhanVien nhanVien;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idKhachHang")

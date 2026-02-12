@@ -23,7 +23,7 @@ public class NhanVien {
     private String maNhanVien;
 
     @Column(name = "tenNhanVien")
-    private String ten;
+    private String tenNhanVien;
 
     @Column(name = "sdt")
     private String sdt;

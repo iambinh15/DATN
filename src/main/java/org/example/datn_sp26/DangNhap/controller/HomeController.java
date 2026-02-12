@@ -101,7 +101,7 @@ public class HomeController {
                 } else if ("ADMIN".equals(role) || "STAFF".equals(role)) {
                     Optional<NhanVien> nv = nhanVienDangNhapRepository.findByTaiKhoan(taiKhoan);
                     if (nv.isPresent()) {
-                        displayName = nv.get().getTen();
+                        displayName = nv.get().getTenNhanVien();
                     }
                 }
 
