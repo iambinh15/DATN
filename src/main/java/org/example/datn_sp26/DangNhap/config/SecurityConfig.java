@@ -16,54 +16,59 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
+        @Autowired
+        private CustomUserDetailsService userDetailsService;
 
-    @Autowired
-    private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+        @Autowired
+        private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests(requests -> requests
-                        // Trang công khai
-                        .requestMatchers("/", "/trang-chu", "/home", "/login", "/css/**", "/js/**", "/images/**",
-                                "/dang-ky", "/register", "/forgot-password", "/san-pham/**")
-                        .permitAll()
-                        // Trang quản lý nhân viên, chất liệu - chỉ ADMIN/STAFF
-                        .requestMatchers("/nhan-vien/**", "/chat-lieu/**").hasAnyRole("ADMIN", "STAFF")
-                        // Trang admin
-                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "STAFF")
-                        // Trang dành cho khách hàng đã đăng nhập (mua sắm)
-                        .requestMatchers("/khach-hang/trang-chu", "/khach-hang/san-pham/**",
-                                "/khach-hang/gio-hang/**", "/khach-hang/thanh-toan/**", "/khach-hang/don-hang/**")
-                        .hasRole("USER")
-                        // Trang quản lý khách hàng - ADMIN/STAFF
-                        .requestMatchers("/khach-hang", "/khach-hang/add", "/khach-hang/edit/**",
-                                "/khach-hang/save", "/khach-hang/delete/**")
-                        .hasAnyRole("ADMIN", "STAFF")
-                        .anyRequest().authenticated())
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .loginProcessingUrl("/perform_login")
-                        .successHandler(customAuthenticationSuccessHandler)
-                        .permitAll())
-                .logout(logout -> logout.permitAll())
-                .csrf(csrf -> csrf.disable());
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .authorizeHttpRequests(requests -> requests
+                                                // Trang công khai
+                                                .requestMatchers("/", "/trang-chu", "/home", "/login", "/css/**",
+                                                                "/js/**", "/images/**",
+                                                                "/dang-ky", "/register", "/forgot-password",
+                                                                "/san-pham/**")
+                                                .permitAll()
+                                                // Trang quản lý nhân viên, chất liệu - chỉ ADMIN/STAFF
+                                                .requestMatchers("/nhan-vien/**", "/chat-lieu/**", "/hoa-don/**")
+                                                .hasAnyRole("ADMIN", "STAFF")
+                                                // Trang admin
+                                                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "STAFF")
+                                                // Trang dành cho khách hàng đã đăng nhập (mua sắm)
+                                                .requestMatchers("/khach-hang/trang-chu", "/khach-hang/san-pham/**",
+                                                                "/khach-hang/gio-hang/**", "/khach-hang/thanh-toan/**",
+                                                                "/khach-hang/don-hang/**")
+                                                .hasRole("USER")
+                                                // Trang quản lý khách hàng - ADMIN/STAFF
+                                                .requestMatchers("/khach-hang", "/khach-hang/add",
+                                                                "/khach-hang/edit/**",
+                                                                "/khach-hang/save", "/khach-hang/delete/**")
+                                                .hasAnyRole("ADMIN", "STAFF")
+                                                .anyRequest().authenticated())
+                                .formLogin(form -> form
+                                                .loginPage("/login")
+                                                .loginProcessingUrl("/perform_login")
+                                                .successHandler(customAuthenticationSuccessHandler)
+                                                .permitAll())
+                                .logout(logout -> logout.permitAll())
+                                .csrf(csrf -> csrf.disable());
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
-    }
+        @Bean
+        public AuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+                provider.setUserDetailsService(userDetailsService);
+                provider.setPasswordEncoder(passwordEncoder());
+                return provider;
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return NoOpPasswordEncoder.getInstance();
+        }
 }
