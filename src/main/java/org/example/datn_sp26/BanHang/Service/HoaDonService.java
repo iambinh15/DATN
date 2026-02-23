@@ -33,15 +33,15 @@ public class HoaDonService {
         // HÀM CŨ (GIỮ NGUYÊN)
         // ===============================
         public HoaDon taoHoaDonSauThanhToan(
-                KhachHang khachHang,
-                BigDecimal tongThanhToan,
-                NhanVien nhanVienDangNhap ) {
+                        KhachHang khachHang,
+                        BigDecimal tongThanhToan,
+                        NhanVien nhanVienDangNhap) {
 
                 HoaDon hoaDon = new HoaDon();
                 hoaDon.setMaHoaDon(taoMaHoaDon());
-            hoaDon.setNhanVien(nhanVienDangNhap);
+                hoaDon.setNhanVien(nhanVienDangNhap);
 
-            hoaDon.setIdKhachHang(khachHang);
+                hoaDon.setIdKhachHang(khachHang);
                 hoaDon.setNgayTao(Instant.now());
                 hoaDon.setTongThanhToan(tongThanhToan);
 
@@ -121,6 +121,18 @@ public class HoaDonService {
 
         public List<TrangThaiHoaDon> getAllTrangThai() {
                 return trangThaiHoaDonRepository.findAll();
+        }
+
+        // ===============================
+        // ADMIN – CẬP NHẬT TRẠNG THÁI HÓA ĐƠN
+        // ===============================
+        public void capNhatTrangThai(Integer hoaDonId, Integer trangThaiId) {
+                HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
+                                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn #" + hoaDonId));
+                TrangThaiHoaDon trangThai = trangThaiHoaDonRepository.findById(trangThaiId)
+                                .orElseThrow(() -> new RuntimeException("Không tìm thấy trạng thái #" + trangThaiId));
+                hoaDon.setIdTrangThaiHoaDon(trangThai);
+                hoaDonRepository.save(hoaDon);
         }
 
         private String taoMaHoaDon() {
