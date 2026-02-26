@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface GioHangRepository extends JpaRepository<GioHang, Integer> {
     // Thêm _Id để trỏ vào thuộc tính id bên trong đối tượng idKhachHang
     Optional<GioHang> findByIdKhachHang_Id(Integer idKhachHang);
+
 }

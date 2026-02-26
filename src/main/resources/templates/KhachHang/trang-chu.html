@@ -517,7 +517,9 @@
             <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 5px;"></i>
           </a>
           <div class="user-menu" id="userMenu">
-            <a href="#"><i class="fas fa-user-circle"></i> Tài khoản</a>
+            <a th:href="@{/khach-hang/thong-tin-ca-nhan}">
+              <i class="fas fa-user-circle"></i> Tài khoản
+            </a>
             <a th:href="@{/khach-hang/don-hang}"><i class="fas fa-box"></i> Đơn hàng</a>
             <form th:action="@{/logout}" method="post" style="margin: 0;">
               <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>

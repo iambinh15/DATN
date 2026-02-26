@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import org.example.datn_sp26.GiaoHang.Service.GHNService;
 import org.example.datn_sp26.BanHang.Service.GioHangService;
 import org.example.datn_sp26.KhuyenMai.Service.MaGiamGiaService;
+import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
 import org.example.datn_sp26.NguoiDung.Service.DiaChiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -34,28 +35,46 @@ public class GHNController {
     // 1️⃣ TRANG THANH TOÁN
     // =======================
     @GetMapping("/thanh-toan")
-    public String hienThiThanhToan(Model model) {
+    public String hienThiThanhToan(Model model, HttpSession session) {
+        // 1. Kiểm tra chính xác tên biến Session
+        // Ghi chú: Hãy chắc chắn ở hàm Login bạn đã set: session.setAttribute("userLog", khách_hàng_đó)
+        KhachHang kh = (KhachHang) session.getAttribute("khachHang");
 
-        Integer idKhachHang = 1; // TODO lấy từ session đăng nhập
+        // DEBUG: Dòng này sẽ in ra console để bạn xem có lấy được khách hàng không
+        if (kh == null) {
+            System.out.println(">>> LỖI: Session 'userLog' bị NULL. Đang quay về trang Login.");
+            return "redirect:/login";
+        }
 
-        var items = gioHangService.layGioHangCuaKhach(idKhachHang);
+        System.out.println(">>> ĐANG THANH TOÁN CHO KHÁCH HÀNG ID: " + kh.getId());
 
-        long tongTienHang = items.stream()
-                .mapToLong(i ->
-                        i.getIdSanPhamChiTiet()
-                                .getDonGia()
-                                .multiply(BigDecimal.valueOf(i.getSoLuong()))
-                                .longValue()
-                ).sum();
+        try {
+            Integer idKhachHang = kh.getId();
 
-        var dsDiaChi = diaChiService.layDiaChiCuaKhach(idKhachHang);
-        var dsMaGiamGia = maGiamGiaService.layMaDangHoatDong();
+            var items = gioHangService.layGioHangCuaKhach(idKhachHang);
 
-        model.addAttribute("tongTienHang", tongTienHang);
-        model.addAttribute("dsDiaChi", dsDiaChi);
-        model.addAttribute("dsMaGiamGia", dsMaGiamGia);
+            // Tính tổng tiền hàng
+            long tongTienHang = items.stream()
+                    .mapToLong(i ->
+                            i.getIdSanPhamChiTiet()
+                                    .getDonGia()
+                                    .multiply(BigDecimal.valueOf(i.getSoLuong()))
+                                    .longValue()
+                    ).sum();
 
-        return "KhachHang/xac-nhan-thanh-toan";
+            var dsDiaChi = diaChiService.layDiaChiCuaKhach(idKhachHang);
+            var dsMaGiamGia = maGiamGiaService.layMaDangHoatDong();
+
+            model.addAttribute("tongTienHang", tongTienHang);
+            model.addAttribute("dsDiaChi", dsDiaChi);
+            model.addAttribute("dsMaGiamGia", dsMaGiamGia);
+
+            return "KhachHang/xac-nhan-thanh-toan";
+
+        } catch (Exception e) {
+            e.printStackTrace(); // In lỗi chi tiết ra console nếu có lỗi logic bên trong
+            return "redirect:/khach-hang/trang-chu";
+        }
     }
 
     // =======================
