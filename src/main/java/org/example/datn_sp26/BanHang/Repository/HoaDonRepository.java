@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -41,4 +42,31 @@ List<HoaDon> filterHoaDon(
             @Param("trangThai") String trangThai,
             @Param("tuNgay") Instant tuNgay,
             @Param("denNgay") Instant denNgay);
+
+    @Query("""
+       SELECT COALESCE(SUM(h.tongThanhToan), 0)
+       FROM HoaDon h
+       WHERE h.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
+       """)
+    Double sumDoanhThuHoanThanh();
+
+    @Query("""
+       SELECT COUNT(h)
+       FROM HoaDon h
+       WHERE h.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
+       """)
+    Long countHoaDonHoanThanh();
+
+    @Query("""
+        SELECT COALESCE(SUM(h.tongThanhToan),0)
+        FROM HoaDon h
+        WHERE (:tu IS NULL OR h.ngayTao >= :tu)
+        AND (:den IS NULL OR h.ngayTao <= :den)
+        AND h.idTrangThaiHoaDon.id = 4
+    """)
+    BigDecimal tongDoanhThu(
+            @Param("tu") Instant tu,
+            @Param("den") Instant den
+    );
 }
+

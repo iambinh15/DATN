@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body{font-family:Segoe UI;background:#eef2f7;margin:0}
+        .container{width:95%;max-width:1300px;margin:30px auto}
+        .card{background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+        button{padding:7px 14px;border:none;border-radius:6px;cursor:pointer}
+        .btn{background:#2c7be5;color:#fff}
+        .btn:hover{background:#1a68d1}
+        .btn-success{background:#28a745;color:#fff}
+        .money{font-size:30px;font-weight:bold;color:#2c7be5}
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h2>📊 Dashboard Doanh Thu</h2>
+
+    <div class="card">
+        <div class="money"
+             th:text="${#numbers.formatDecimal(doanhThu,0,'COMMA',0,'POINT')} + ' VNĐ'">
+        </div>
+        <br>
+        <a href="/thong-ke/export">
+            <button class="btn-success">Xuất Excel</button>
+        </a>
+    </div>
+
+    <div class="card">
+        <a href="/thong-ke?type=today"><button class="btn">Hôm nay</button></a>
+        <a href="/thong-ke?type=7days"><button class="btn">7 ngày</button></a>
+        <a href="/thong-ke?type=month"><button class="btn">Tháng này</button></a>
+        <a href="/thong-ke?type=year"><button class="btn">Năm nay</button></a>
+    </div>
+
+    <div class="card">
+        <form method="get" action="/thong-ke">
+            Từ:
+            <input type="datetime-local" name="tuNgay"
+                   th:value="${tuNgay != null} ? ${#temporals.format(tuNgay,'yyyy-MM-dd''T''HH:mm')} : ''">
+
+            Đến:
+            <input type="datetime-local" name="denNgay"
+                   th:value="${denNgay != null} ? ${#temporals.format(denNgay,'yyyy-MM-dd''T''HH:mm')} : ''">
+
+            <button class="btn">Lọc</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <canvas id="barChart"></canvas>
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+    let dataThang = [[${dataThang}]];
+
+    new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{
+    labels:['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
+    datasets:[{
+    data:dataThang,
+    backgroundColor:'#2c7be5',
+    borderRadius:6
+    }]
+    },
+    options:{
+    plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true}}
+    }
+    });
+</script>
+
+</body>
+</html>
