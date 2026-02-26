@@ -86,47 +86,53 @@ public class PaymentController {
         String responseCode = request.getParameter("vnp_ResponseCode");
         String amountStr = request.getParameter("vnp_Amount");
 
+        // Nếu thanh toán thất bại, trả về trang lỗi ngay
         if (!"00".equals(responseCode) || amountStr == null) {
             return "payment-fail";
         }
 
-        // 🔥 1️⃣ LẤY ĐỊA CHỈ + PHÍ SHIP TỪ SESSION
+        // 1. LẤY DỮ LIỆU TỪ SESSION
         String diaChi = (String) session.getAttribute("DIA_CHI_TAM");
         Object phiShipObj = session.getAttribute("PHI_SHIP");
+        KhachHang khachHang = (KhachHang) session.getAttribute("khachHang");
+
+        if (khachHang == null) {
+            return "redirect:/login";
+        }
 
         if (diaChi == null || phiShipObj == null) {
             throw new RuntimeException("❌ MẤT SESSION ĐỊA CHỈ / PHÍ SHIP");
         }
 
         BigDecimal phiShip = new BigDecimal(phiShipObj.toString());
-        BigDecimal tongTienHang =
-                BigDecimal.valueOf(Long.parseLong(amountStr) / 100);
+        // VNPay amount trả về là (số tiền * 100)
+        BigDecimal tongThanhToan = BigDecimal.valueOf(Long.parseLong(amountStr) / 100);
 
-        // 🔥 2️⃣ KHÁCH HÀNG
-        KhachHang khachHang =
-                (KhachHang) session.getAttribute("khachHang");
+        try {
+            // ✅ 2. TẠO HÓA ĐƠN (Header)
+            org.example.datn_sp26.BanHang.Entity.HoaDon hoaDon = hoaDonService.taoHoaDonSauThanhToan(
+                    khachHang,
+                    tongThanhToan,
+                    diaChi,
+                    phiShip
+            );
 
-        if (khachHang == null) {
-            throw new RuntimeException("Chưa đăng nhập");
+            // ✅ 3. XỬ LÝ CHI TIẾT + TRỪ KHO (QUAN TRỌNG NHẤT)
+            // Gọi hàm tổng hợp này để chuyển hàng từ giỏ sang hóa đơn chi tiết và cập nhật SPCT
+            hoaDonService.xuLyHoanTatHoaDon(khachHang.getId(), hoaDon);
+
+            // 4. XÓA SESSION SAU KHI HOÀN TẤT
+            session.removeAttribute("DIA_CHI_TAM");
+            session.removeAttribute("PHI_SHIP");
+
+            // Trả về trực tiếp tên file HTML như trong ảnh cấu trúc của bạn
+            return "payment-success";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "payment-fail";
         }
-
-
-
-        // ✅ 3️⃣ GỌI ĐÚNG HÀM (4 THAM SỐ)
-        hoaDonService.taoHoaDonSauThanhToan(
-                khachHang,
-                tongTienHang,
-                diaChi,
-                phiShip
-        );
-
-        // 🔥 4️⃣ XÓA SESSION
-        session.removeAttribute("DIA_CHI_TAM");
-        session.removeAttribute("PHI_SHIP");
-
-        return "payment-success";
     }
-
 
     private String hmacSHA512(String key, String data) {
         try {
