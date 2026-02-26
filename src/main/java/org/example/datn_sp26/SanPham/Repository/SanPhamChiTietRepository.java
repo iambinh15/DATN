@@ -23,12 +23,15 @@ public interface SanPhamChiTietRepository extends JpaRepository<SanPhamChiTiet, 
     """)
     List<SanPhamChiTiet> findAllWithDetailsBySanPhamId(@Param("id") Integer id);
 
-    // ✅ method này OK, giữ nguyên
-    Optional<SanPhamChiTiet> findFirstByIdSanPham_IdAndTrangThai(
+    // Tìm biến thể đầu tiên của sản phẩm mà còn hàng (soLuong > 0)
+    Optional<SanPhamChiTiet> findFirstByIdSanPham_IdAndTrangThaiAndSoLuongGreaterThan(
             Integer idSanPham,
-            Integer trangThai
+            Integer trangThai,
+            Integer soLuong
     );
     // Lọc bỏ các bản ghi có số lượng bằng 0
     @Query("SELECT s FROM SanPhamChiTiet s WHERE s.soLuong > 0")
     List<SanPhamChiTiet> hienThiSPCTConHang();
+    // Thêm dòng này vào để hết lỗi đỏ ở Service
+    List<SanPhamChiTiet> findAllByIdSanPham_Id(Integer idSanPham);
 }

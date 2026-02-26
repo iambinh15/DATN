@@ -24,11 +24,11 @@ public class SanPhamController {
     @Autowired
     private SanPhamChiTietRepository spctRepo;
 
-    // 1. TRANG CHỦ: Chỉ hiển thị danh sách sản phẩm đang hoạt động (trangThai = 1)
+    // 1. TRANG CHỦ: Chỉ hiển thị sản phẩm đang hoạt động VÀ còn ít nhất 1 size còn hàng
     @GetMapping("/trang-chu")
     public String trangChu(Model model) {
-        //1 là trạng thái sản phẩm đang hoat đông nếu đổi là 0 thì sex là sản phẩm không hoạt động
-        model.addAttribute("listSanPham", sanPhamRepo.findByTrangThai(1));
+        // Thay vì dùng findByTrangThai(1), hãy dùng hàm thông minh mình vừa viết trong Repository
+        model.addAttribute("listSanPham", sanPhamRepo.hienThiSanPhamTrenTrangChu());
         return "khachhang/trang-chu";
     }
     // 2. TRANG CHI TIẾT: Hiển thị 1 sản phẩm và các biến thể của nó

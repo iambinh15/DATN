@@ -1,6 +1,5 @@
 package org.example.datn_sp26.SanPham.Repository;
 
-
 import org.example.datn_sp26.SanPham.Entity.SanPham;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -10,14 +9,20 @@ import java.util.List;
 @Repository
 public interface SanPhamRepository extends JpaRepository<SanPham, Integer> {
 
-    // Lấy danh sách sản phẩm theo trạng thái (thường là 1 cho Active)
+    // 1. Lấy danh sách sản phẩm theo trạng thái (Giữ nguyên logic cũ)
     List<SanPham> findByTrangThai(int trangThai);
 
-    // Tìm kiếm sản phẩm theo tên (hữu ích cho thanh tìm kiếm ở trang chủ)
+    // 2. Tìm kiếm sản phẩm theo tên (Giữ nguyên logic cũ)
     List<SanPham> findByTenSanPhamContainingIgnoreCaseAndTrangThai(String ten, int trangThai);
 
-    // Truy vấn lấy sản phẩm kèm theo thông tin hãng hoặc loại (nếu bạn có quan hệ bảng)
-    // Giúp tối ưu hóa tốc độ tải trang chủ (tránh lỗi N+1)
+    // 3. Truy vấn lấy tất cả sản phẩm Active (Giữ nguyên logic cũ)
     @Query("SELECT s FROM SanPham s WHERE s.trangThai = 1")
     List<SanPham> findAllActive();
+
+    // 4. LOGIC MỚI: Chỉ hiển thị sản phẩm còn ít nhất 1 biến thể còn hàng (>0)
+    // Dùng cho trang chủ để ẩn các sản phẩm như "Bomber" khi đã bán hết sạch các size
+    @Query("SELECT s FROM SanPham s WHERE s.trangThai = 1 AND EXISTS " +
+            "(SELECT ct FROM SanPhamChiTiet ct WHERE ct.idSanPham.id = s.id " +
+            "AND ct.soLuong > 0 AND ct.trangThai = 1)")
+    List<SanPham> hienThiSanPhamTrenTrangChu();
 }
