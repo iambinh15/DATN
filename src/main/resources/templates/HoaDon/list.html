@@ -635,6 +635,18 @@
                 <h1 class="page-title">Quản lý Hóa đơn</h1>
             </div>
 
+            <!-- Alert Messages -->
+            <div th:if="${successMessage}"
+                style="background: #d4edda; color: #155724; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}"
+                style="background: #f8d7da; color: #721c24; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span th:text="${errorMessage}"></span>
+            </div>
+
             <!-- Filter Bar -->
             <form th:action="@{/hoa-don}" method="get" class="filter-bar">
                 <div class="filter-group">
@@ -713,13 +725,15 @@
                                     <form th:action="@{/hoa-don/cap-nhat-trang-thai}" method="post" style="margin:0;">
                                         <input type="hidden" name="hoaDonId" th:value="${hd.id}" />
                                         <select name="trangThaiId" class="status-select" onchange="this.form.submit()"
-                                            th:classappend="${hd.idTrangThaiHoaDon.tenTrangThai == 'Đã Thanh Toán' ? 'select-paid' :
-                                                              (hd.idTrangThaiHoaDon.tenTrangThai == 'Chờ Thanh Toán' ? 'select-pending' :
-                                                              (hd.idTrangThaiHoaDon.tenTrangThai == 'Đang Giao' ? 'select-shipping' :
-                                                              (hd.idTrangThaiHoaDon.tenTrangThai == 'Đã Hủy' ? 'select-cancelled' : 'select-default')))}">
+                                            th:data-loai-thanh-toan="${hd.idLoaiThanhToan != null ? hd.idLoaiThanhToan.tenLoai : ''}"
+                                            th:data-current-id="${hd.idTrangThaiHoaDon.id}"
+                                            th:classappend="${hd.idTrangThaiHoaDon.tenTrangThai == 'Hoàn tất' ? 'select-paid' :
+                                                              (hd.idTrangThaiHoaDon.tenTrangThai == 'Chờ xác nhận' || hd.idTrangThaiHoaDon.tenTrangThai == 'Chờ thanh toán' ? 'select-pending' :
+                                                              (hd.idTrangThaiHoaDon.tenTrangThai == 'Đang giao' ? 'select-shipping' :
+                                                              (hd.idTrangThaiHoaDon.tenTrangThai == 'Đã hủy' ? 'select-cancelled' : 'select-default')))}">
                                             <option th:each="tt : ${dsTrangThai}" th:value="${tt.id}"
                                                 th:text="${tt.tenTrangThai}"
-                                                th:selected="${tt.id == hd.idTrangThaiHoaDon.id}">
+                                                th:selected="${tt.id == hd.idTrangThaiHoaDon.id}" th:data-id="${tt.id}">
                                             </option>
                                         </select>
                                     </form>
@@ -774,8 +788,83 @@
             el.addEventListener('input', capNhatLinkExcel);
         });
 
-        // Cập nhật link ngay khi trang load (để giữ filter params nếu có)
+        // Cập nhật link ngay khi trang load
         capNhatLinkExcel();
+
+        // ===== Luồng trạng thái theo loại thanh toán =====
+        // COD (Tiền mặt): 1 → 13 → 2 → 3 → 4, hủy(5) được từ 1,13,2
+        // VN Pay (CK):   12 → 14 → 2 → 3 → 4, hủy(5) được từ 12,14,2
+        var COD_FLOW = [1, 13, 2, 3, 4];
+        var VNPAY_FLOW = [12, 14, 2, 3, 4];
+        var COD_HUY_DUOC = [1, 13, 2];
+        var VNPAY_HUY_DUOC = [12, 14, 2];
+        var ID_HUY = 5;
+        var ID_CU_BO_DI = 11; // "Chờ Thanh Toán" cũ, ẩn đi
+
+        document.querySelectorAll('.status-select').forEach(function (select) {
+            var loaiTT = select.getAttribute('data-loai-thanh-toan') || '';
+            var currentId = parseInt(select.getAttribute('data-current-id'));
+            var isCOD = (loaiTT === 'Tiền mặt');
+            var flow = isCOD ? COD_FLOW : VNPAY_FLOW;
+            var huyDuoc = isCOD ? COD_HUY_DUOC : VNPAY_HUY_DUOC;
+            var currentIndex = flow.indexOf(currentId);
+
+            for (var i = 0; i < select.options.length; i++) {
+                var opt = select.options[i];
+                var optId = parseInt(opt.getAttribute('data-id'));
+
+                // Ẩn trạng thái cũ ID 11
+                if (optId === ID_CU_BO_DI) {
+                    opt.style.display = 'none';
+                    opt.disabled = true;
+                    continue;
+                }
+
+                // Trạng thái đang chọn → luôn hiện
+                if (opt.selected) continue;
+
+                // Đã hủy hoặc Hoàn tất → không cho chọn gì nữa
+                if (currentId === ID_HUY || currentId === 4) {
+                    opt.style.display = 'none';
+                    opt.disabled = true;
+                    continue;
+                }
+
+                // Hủy (5) → chỉ hiện nếu đang ở trạng thái cho phép hủy
+                if (optId === ID_HUY) {
+                    if (!huyDuoc.includes(currentId)) {
+                        opt.style.display = 'none';
+                        opt.disabled = true;
+                    }
+                    continue;
+                }
+
+                // Các trạng thái không thuộc luồng này → ẩn
+                var optIndex = flow.indexOf(optId);
+                if (optIndex === -1) {
+                    opt.style.display = 'none';
+                    opt.disabled = true;
+                    continue;
+                }
+
+                // Ẩn trạng thái lùi hoặc bằng hiện tại
+                if (currentIndex !== -1 && optIndex <= currentIndex) {
+                    opt.style.display = 'none';
+                    opt.disabled = true;
+                }
+            }
+        });
+
+        // Tự động ẩn alert sau 5 giây
+        setTimeout(function () {
+            document.querySelectorAll('[th\\:if]').forEach(function (el) {
+                if (el.style.background === 'rgb(212, 237, 218)' || el.style.background === 'rgb(248, 215, 218)') {
+                    el.style.transition = 'opacity 0.5s';
+                    el.style.opacity = '0';
+                    setTimeout(function () { el.remove(); }, 500);
+                }
+            });
+        }, 5000);
     </script>
 
 </body>

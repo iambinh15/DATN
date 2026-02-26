@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -69,8 +71,14 @@ public class HoaDonAdminController {
     @PostMapping("/cap-nhat-trang-thai")
     public String capNhatTrangThai(
             @RequestParam Integer hoaDonId,
-            @RequestParam Integer trangThaiId) {
-        hoaDonService.capNhatTrangThai(hoaDonId, trangThaiId);
+            @RequestParam Integer trangThaiId,
+            RedirectAttributes redirectAttributes) {
+        try {
+            hoaDonService.capNhatTrangThai(hoaDonId, trangThaiId);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái thành công!");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
         return "redirect:/hoa-don";
     }
 
