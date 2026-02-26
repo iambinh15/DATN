@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -177,5 +178,16 @@ public class HoaDonService {
 
     private String taoMaHoaDon() {
         return "HD" + System.currentTimeMillis();
+    }
+    public Map<String, Object> thongKeHoanThanh() {
+
+        Double tongDoanhThu = hoaDonRepository.sumDoanhThuHoanThanh();
+        Long soHoaDon = hoaDonRepository.countHoaDonHoanThanh();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("tongDoanhThu", tongDoanhThu);
+        result.put("soHoaDonHoanThanh", soHoaDon);
+
+        return result;
     }
 }
