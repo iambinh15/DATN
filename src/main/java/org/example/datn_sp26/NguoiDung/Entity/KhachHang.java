@@ -12,6 +12,7 @@ import org.hibernate.annotations.Nationalized;
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -28,6 +29,12 @@ public class KhachHang {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idTaiKhoan")
     private TaiKhoan idTaiKhoan;
+
+
+    // Trong class KhachHang
+    @OneToMany(mappedBy = "idKhachHang", fetch = FetchType.LAZY)
+    private List<DiaChi> danhSachDiaChi;
+
 
     @Column(name = "maKhachHang", length = 20)
     private String maKhachHang;

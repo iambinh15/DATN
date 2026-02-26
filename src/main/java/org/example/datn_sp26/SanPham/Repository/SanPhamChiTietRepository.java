@@ -28,4 +28,7 @@ public interface SanPhamChiTietRepository extends JpaRepository<SanPhamChiTiet, 
             Integer idSanPham,
             Integer trangThai
     );
+    // Lọc bỏ các bản ghi có số lượng bằng 0
+    @Query("SELECT s FROM SanPhamChiTiet s WHERE s.soLuong > 0")
+    List<SanPhamChiTiet> hienThiSPCTConHang();
 }
