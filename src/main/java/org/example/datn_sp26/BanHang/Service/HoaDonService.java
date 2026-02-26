@@ -13,14 +13,13 @@ import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
 import org.example.datn_sp26.NguoiDung.Entity.NhanVien;
 import org.example.datn_sp26.SanPham.Entity.SanPhamChiTiet;
 import org.example.datn_sp26.SanPham.Repository.SanPhamChiTietRepository;
+import org.example.datn_sp26.SanPham.Service.SanPhamChiTietService; // Import service mới
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Service
 @Transactional
@@ -41,15 +40,17 @@ public class HoaDonService {
     @Autowired
     private HoaDonChiTietRepository hoaDonChiTietRepository;
 
-    // Tiêm thêm GioHangService để lấy dữ liệu sản phẩm khách đang mua
     @Autowired
     private GioHangService gioHangService;
+
+    // 1. Tiêm thêm SanPhamChiTietService để dùng hàm kiểm tra trạng thái
+    @Autowired
+    private SanPhamChiTietService sanPhamChiTietService;
 
     // ============================================================
     // 🔥 HÀM TỔNG HỢP: LƯU CHI TIẾT + TRỪ KHO + XÓA GIỎ HÀNG
     // ============================================================
     public void xuLyHoanTatHoaDon(Integer idKhachHang, HoaDon hoaDon) {
-        // 1. Lấy danh sách sản phẩm trong giỏ hàng của khách
         var listGioHang = gioHangService.layGioHangCuaKhach(idKhachHang);
 
         if (listGioHang == null || listGioHang.isEmpty()) {
@@ -58,7 +59,6 @@ public class HoaDonService {
         }
 
         for (var item : listGioHang) {
-            // 2. Lưu vào Hóa Đơn Chi Tiết
             HoaDonChiTiet hdct = new HoaDonChiTiet();
             hdct.setIdHoaDon(hoaDon);
             hdct.setIdSanPhamChiTiet(item.getIdSanPhamChiTiet());
@@ -66,7 +66,6 @@ public class HoaDonService {
             hdct.setDonGia(item.getIdSanPhamChiTiet().getDonGia());
             hoaDonChiTietRepository.save(hdct);
 
-            // 3. Trừ số lượng tồn kho trong Sản Phẩm Chi Tiết
             SanPhamChiTiet spct = item.getIdSanPhamChiTiet();
             int soLuongHienTai = spct.getSoLuong();
             int soLuongMua = item.getSoLuong();
@@ -78,11 +77,11 @@ public class HoaDonService {
             spct.setSoLuong(soLuongHienTai - soLuongMua);
             sanPhamChiTietRepository.save(spct);
 
+            // 2. Gọi hàm kiểm tra: Nếu hết sạch các size/màu thì ẩn sản phẩm cha
+            sanPhamChiTietService.checkAndDisableSanPham(spct.getIdSanPham().getId());
+
             System.out.println(">>> Đã trừ SP ID: " + spct.getId() + " | Còn lại: " + spct.getSoLuong());
         }
-
-        // 4. (Tùy chọn) Xóa giỏ hàng của khách sau khi đã thanh toán thành công
-        // gioHangService.xoaTatCaGioHangCuaKhach(idKhachHang);
     }
 
     // ==========================================
@@ -97,12 +96,16 @@ public class HoaDonService {
             int soLuongMoi = spct.getSoLuong() - chiTiet.getSoLuong();
             spct.setSoLuong(soLuongMoi);
             sanPhamChiTietRepository.save(spct);
+
+            // 3. Gọi hàm kiểm tra tại đây để đảm bảo đồng bộ
+            sanPhamChiTietService.checkAndDisableSanPham(spct.getIdSanPham().getId());
+
             System.out.println(">>> Đã trừ SP ID: " + spct.getId() + " còn: " + soLuongMoi);
         }
     }
 
     // ==========================================
-    // CÁC HÀM CŨ (GIỮ NGUYÊN LOGIC)
+    // CÁC HÀM CŨ (GIỮ NGUYÊN HOÀN TOÀN LOGIC)
     // ==========================================
     public HoaDon taoHoaDonSauThanhToan(KhachHang khachHang, BigDecimal tongThanhToan, NhanVien nhanVienDangNhap) {
         HoaDon hoaDon = new HoaDon();

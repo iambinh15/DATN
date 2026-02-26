@@ -28,8 +28,10 @@ public class GioHangService {
     /**
      * Hàm thêm sản phẩm vào giỏ hàng
      */
+
     @Transactional
-    public void themVaoGio(Integer idKhachHang, Integer idSanPham) {
+    public void themVaoGio(Integer idKhachHang, Integer idSPCT) {
+        // 1. Lấy hoặc tạo Giỏ hàng (Giữ nguyên logic cũ)
         GioHang gioHang = gioHangRepo.findByIdKhachHang_Id(idKhachHang)
                 .orElseGet(() -> {
                     GioHang newGH = new GioHang();
@@ -41,25 +43,32 @@ public class GioHangService {
                     return gioHangRepo.save(newGH);
                 });
 
-        SanPhamChiTiet spct = spctRepo.findFirstByIdSanPham_IdAndTrangThai(idSanPham, 1)
-                .orElseThrow(() -> new RuntimeException("Sản phẩm này hiện đang hết hàng hoặc ngừng kinh doanh!"));
+        // 2. Tìm ĐÍCH DANH biến thể mà khách hàng đã chọn (Size/Màu)
+        // Dùng findById để bốc đúng bản ghi có ID đó trong DB
+        SanPhamChiTiet spct = spctRepo.findById(idSPCT).orElse(null);
 
-        Optional<GioHangChiTiet> existingItem = ghctRepo.findByIdGioHang_IdAndIdSanPhamChiTiet_Id(gioHang.getId(), spct.getId());
+        if (spct != null) {
+            // Tìm xem trong giỏ hàng đã có chính xác bản ghi chi tiết này chưa
+            Optional<GioHangChiTiet> existingItem = ghctRepo.findByIdGioHang_IdAndIdSanPhamChiTiet_Id(
+                    gioHang.getId(),
+                    spct.getId()
+            );
 
-        if (existingItem.isPresent()) {
-            GioHangChiTiet item = existingItem.get();
-            item.setSoLuong(item.getSoLuong() + 1);
-            ghctRepo.save(item);
-        } else {
-            GioHangChiTiet newItem = new GioHangChiTiet();
-            newItem.setIdGioHang(gioHang);
-            newItem.setIdSanPhamChiTiet(spct);
-            newItem.setSoLuong(1);
-
-            ghctRepo.save(newItem);
+            if (existingItem.isPresent()) {
+                // Nếu đã có rồi thì tăng số lượng lên 1
+                GioHangChiTiet item = existingItem.get();
+                item.setSoLuong(item.getSoLuong() + 1);
+                ghctRepo.save(item);
+            } else {
+                // Nếu chưa có thì thêm mới vào giỏ hàng
+                GioHangChiTiet newItem = new GioHangChiTiet();
+                newItem.setIdGioHang(gioHang);
+                newItem.setIdSanPhamChiTiet(spct); // Lưu đúng thực thể chi tiết đã tìm được
+                newItem.setSoLuong(1);
+                ghctRepo.save(newItem);
+            }
         }
     }
-
     /**
      * Hàm tăng hoặc giảm số lượng sản phẩm trong giỏ (Dùng cho nút + và -)
      */
