@@ -241,7 +241,7 @@ public class HoaDonService {
     // Đã hủy (5): chỉ được chọn khi đang ở 3 trạng thái đầu của mỗi luồng
 
     private static final List<Integer> CK_VI_FLOW = Arrays.asList(1, 13, 2, 3, 4);
-    private static final List<Integer> TIEN_MAT_FLOW = Arrays.asList(11, 14, 2, 3, 4);
+    private static final List<Integer> TIEN_MAT_FLOW = Arrays.asList(11, 13, 2, 3, 4);
     private static final int ID_HUY = 5;
     private static final int ID_HOAN_TAT = 4;
 

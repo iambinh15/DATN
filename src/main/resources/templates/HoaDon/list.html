@@ -927,10 +927,10 @@
 
         // ===== Luồng trạng thái theo loại thanh toán =====
         // CK / Ví: 1(Chờ xác nhận) → 13(Đã xác nhận) → 2(Đang xử lý) → 3(Đang giao) → 4(Hoàn tất)
-        // Tiền mặt: 11(Chờ Thanh Toán) → 14(Đã Thanh Toán) → 2(Đang xử lý) → 3(Đang giao) → 4(Hoàn tất)
+        // Tiền mặt: 11(Chờ Thanh Toán) → 13(Đã Xác Nhận) → 2(Đang xử lý) → 3(Đang giao) → 4(Hoàn tất)
         // Đã hủy (5): chỉ khi đang ở 3 trạng thái đầu
         var CK_VI_FLOW = [1, 13, 2, 3, 4];
-        var TIEN_MAT_FLOW = [11, 14, 2, 3, 4];
+        var TIEN_MAT_FLOW = [11, 13, 2, 3, 4];
         var ID_HUY = 5;
         var ID_HOAN_TAT = 4;
 
