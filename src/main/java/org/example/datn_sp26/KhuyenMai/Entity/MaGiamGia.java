@@ -1,33 +1,39 @@
 package org.example.datn_sp26.KhuyenMai.Entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.example.datn_sp26.BanHang.Entity.HoaDon;
+import org.springframework.format.annotation.DateTimeFormat;
 
-import java.math.BigDecimal;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "MaGiamGia") // Tên bảng trong SQL của bạn
 @Getter
 @Setter
-@Entity
+@AllArgsConstructor
+@NoArgsConstructor
 public class MaGiamGia {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
     private Integer id;
 
-    @Column(name = "ma", length = 20)
     private String ma;
-
-    @Column(name = "giaTri", precision = 18, scale = 2)
-    private BigDecimal giaTri;
-
-    @Column(name = "trangThai")
+    private Double giaTri;
     private Integer trangThai;
+    private String tenGiamGia;
+    private Integer loaiGiam; // 0: Tiền mặt, 1: Phần trăm
+    private Double giamToiDa;
+    private String dieuKienGiam;
 
-    @OneToMany(mappedBy = "idMaGiamGia")
-    private Set<HoaDon> hoaDons = new LinkedHashSet<>();
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime ngayBatDau;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime ngayKetThuc;
+
+    private Integer soLuong;
+    private Double giamToiThieu; // Điều kiện đơn hàng tối thiểu
 }

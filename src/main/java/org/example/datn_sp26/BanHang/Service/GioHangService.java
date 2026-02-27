@@ -44,41 +44,79 @@ public class GioHangService {
                 });
 
         // 2. Tìm ĐÍCH DANH biến thể mà khách hàng đã chọn (Size/Màu)
-        // Dùng findById để bốc đúng bản ghi có ID đó trong DB
         SanPhamChiTiet spct = spctRepo.findById(idSPCT).orElse(null);
 
         if (spct != null) {
-            // Tìm xem trong giỏ hàng đã có chính xác bản ghi chi tiết này chưa
+            // Tìm xem trong giỏ hàng đã có sản phẩm này chưa
             Optional<GioHangChiTiet> existingItem = ghctRepo.findByIdGioHang_IdAndIdSanPhamChiTiet_Id(
                     gioHang.getId(),
                     spct.getId()
             );
 
+            // --- BẮT ĐẦU LOGIC KIỂM TRA TỒN KHO ---
+            // Lấy số lượng hiện tại khách đã có trong giỏ (nếu chưa có thì là 0)
+            int soLuongHienTaiTrongGio = existingItem.isPresent() ? existingItem.get().getSoLuong() : 0;
+
+            // Tổng số lượng sau khi khách nhấn thêm 1 món
+            int soLuongDuKien = soLuongHienTaiTrongGio + 1;
+
+            // KIỂM TRA: Nếu tổng dự kiến > tồn kho thì chặn lại ngay
+            if (soLuongDuKien > spct.getSoLuong()) {
+                throw new RuntimeException("Không thể thêm! Trong giỏ đã có " + soLuongHienTaiTrongGio +
+                        " sản phẩm, mà kho chỉ còn " + spct.getSoLuong() + " sản phẩm.");
+            }
+            // --- KẾT THÚC LOGIC KIỂM TRA TỒN KHO ---
+
             if (existingItem.isPresent()) {
                 // Nếu đã có rồi thì tăng số lượng lên 1
                 GioHangChiTiet item = existingItem.get();
-                item.setSoLuong(item.getSoLuong() + 1);
+                item.setSoLuong(soLuongDuKien); // Sử dụng biến đã cộng ở trên
                 ghctRepo.save(item);
             } else {
                 // Nếu chưa có thì thêm mới vào giỏ hàng
                 GioHangChiTiet newItem = new GioHangChiTiet();
                 newItem.setIdGioHang(gioHang);
-                newItem.setIdSanPhamChiTiet(spct); // Lưu đúng thực thể chi tiết đã tìm được
+                newItem.setIdSanPhamChiTiet(spct);
                 newItem.setSoLuong(1);
                 ghctRepo.save(newItem);
             }
         }
     }
-    /**
-     * Hàm tăng hoặc giảm số lượng sản phẩm trong giỏ (Dùng cho nút + và -)
-     */
+
+    // Trong GioHangService
+    public void updateSoLuong(Integer idGHCT, Integer soLuongMoi) {
+        GioHangChiTiet ghct = ghctRepo.findById(idGHCT).get();
+        int tonKho = ghct.getIdSanPhamChiTiet().getSoLuong();
+
+        if (soLuongMoi > tonKho) {
+            // Cập nhật lại giỏ hàng bằng đúng số lượng tồn kho còn lại
+            ghct.setSoLuong(tonKho);
+            ghctRepo.save(ghct);
+            throw new RuntimeException("Số lượng yêu cầu vượt quá tồn kho hiện có (" + tonKho + ")");
+        }
+
+        ghct.setSoLuong(soLuongMoi);
+        ghctRepo.save(ghct);
+    }
     @Transactional
     public void thayDoiSoLuong(Integer idGhct, Integer delta) {
+        // 1. Tìm dòng sản phẩm trong giỏ hàng
         GioHangChiTiet item = ghctRepo.findById(idGhct)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm trong giỏ hàng!"));
 
+        // 2. Tính toán số lượng mới
         int soLuongMoi = item.getSoLuong() + delta;
 
+        // 3. LOGIC MỚI: Kiểm tra tồn kho khi người dùng nhấn nút Tăng (+)
+        if (delta > 0) {
+            // Lấy số lượng thực tế đang có trong kho của biến thể này
+            int tonKhoThucTe = item.getIdSanPhamChiTiet().getSoLuong();
+
+            if (soLuongMoi > tonKhoThucTe) {
+                throw new RuntimeException("Số lượng yêu cầu vượt quá tồn kho hiện có (" + tonKhoThucTe + ")");
+            }
+        }
+        // 4. Giữ nguyên logic cũ: Cập nhật hoặc Xóa
         if (soLuongMoi > 0) {
             item.setSoLuong(soLuongMoi);
             ghctRepo.save(item);
@@ -87,21 +125,23 @@ public class GioHangService {
         }
     }
 
-    /**
-     * Hàm cập nhật số lượng cụ thể (Dùng khi khách nhập số từ bàn phím)
-     * @param idGhct ID của bản ghi GioHangChiTiet
-     * @param soLuongMoi Số lượng khách hàng nhập vào
-     */
     @Transactional
     public void capNhatSoLuongTuyChinh(Integer idGhct, Integer soLuongMoi) {
         GioHangChiTiet item = ghctRepo.findById(idGhct)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm trong giỏ hàng!"));
 
+        // BƯỚC THÊM MỚI: Lấy số lượng thực tế trong kho
+        int tonKhoThucTe = item.getIdSanPhamChiTiet().getSoLuong();
+
         if (soLuongMoi > 0) {
+            // KIỂM TRA: Nếu số lượng mới lớn hơn tồn kho thì chặn lại ngay
+            if (soLuongMoi > tonKhoThucTe) {
+                throw new RuntimeException("Rất tiếc, trong kho chỉ còn " + tonKhoThucTe + " sản phẩm!");
+            }
+
             item.setSoLuong(soLuongMoi);
             ghctRepo.save(item);
         } else {
-            // Nếu người dùng nhập 0 hoặc số âm, ta xóa sản phẩm khỏi giỏ
             ghctRepo.delete(item);
         }
     }
