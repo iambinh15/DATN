@@ -20,53 +20,54 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
     @Query("SELECT h FROM HoaDon h WHERE h.idKhachHang.id = :idKH AND h.idTrangThaiHoaDon.tenTrangThai <> 'test' ORDER BY h.ngayTao DESC")
     List<HoaDon> findByKhachHangExcludeTest(@Param("idKH") Integer idKH);
 
-//    @Query("SELECT h FROM HoaDon h " +
-//            "WHERE (:tenKH IS NULL OR h.idKhachHang.tenKhachHang LIKE %:tenKH%) " +
-//            "AND (:trangThai IS NULL OR h.idTrangThaiHoaDon.tenTrangThai = :trangThai) " +
-//            "AND (:tuNgay IS NULL OR h.ngayTao >= :tuNgay) " +
-//            "AND (:denNgay IS NULL OR h.ngayTao <= :denNgay) " +
-//            "ORDER BY h.ngayTao DESC")
-@Query("SELECT h FROM HoaDon h " +
-        "LEFT JOIN FETCH h.nhanVien " +
-        "LEFT JOIN FETCH h.idKhachHang " +
-        "LEFT JOIN FETCH h.idLoaiThanhToan " +
-        "LEFT JOIN FETCH h.idTrangThaiHoaDon " +
-        "WHERE (:tenKH IS NULL OR h.idKhachHang.tenKhachHang LIKE %:tenKH%) " +
-        "AND (:trangThai IS NULL OR h.idTrangThaiHoaDon.tenTrangThai = :trangThai) " +
-        "AND (:tuNgay IS NULL OR h.ngayTao >= :tuNgay) " +
-        "AND (:denNgay IS NULL OR h.ngayTao <= :denNgay) " +
-        "ORDER BY h.ngayTao DESC")
+    // @Query("SELECT h FROM HoaDon h " +
+    // "WHERE (:tenKH IS NULL OR h.idKhachHang.tenKhachHang LIKE %:tenKH%) " +
+    // "AND (:trangThai IS NULL OR h.idTrangThaiHoaDon.tenTrangThai = :trangThai) "
+    // +
+    // "AND (:tuNgay IS NULL OR h.ngayTao >= :tuNgay) " +
+    // "AND (:denNgay IS NULL OR h.ngayTao <= :denNgay) " +
+    // "ORDER BY h.ngayTao DESC")
+    @Query("SELECT h FROM HoaDon h " +
+            "LEFT JOIN FETCH h.nhanVien " +
+            "LEFT JOIN FETCH h.idKhachHang " +
+            "LEFT JOIN FETCH h.idLoaiThanhToan " +
+            "LEFT JOIN FETCH h.idTrangThaiHoaDon " +
+            "WHERE (:tenKH IS NULL OR h.idKhachHang.tenKhachHang LIKE %:tenKH%) " +
+            "AND (:trangThai IS NULL OR h.idTrangThaiHoaDon.tenTrangThai = :trangThai) " +
+            "AND (:loaiTT IS NULL OR h.idLoaiThanhToan.tenLoai = :loaiTT) " +
+            "AND (:tuNgay IS NULL OR h.ngayTao >= :tuNgay) " +
+            "AND (:denNgay IS NULL OR h.ngayTao <= :denNgay) " +
+            "ORDER BY h.ngayTao DESC")
 
-List<HoaDon> filterHoaDon(
+    List<HoaDon> filterHoaDon(
             @Param("tenKH") String tenKH,
             @Param("trangThai") String trangThai,
+            @Param("loaiTT") String loaiTT,
             @Param("tuNgay") Instant tuNgay,
             @Param("denNgay") Instant denNgay);
 
     @Query("""
-       SELECT COALESCE(SUM(h.tongThanhToan), 0)
-       FROM HoaDon h
-       WHERE h.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
-       """)
+            SELECT COALESCE(SUM(h.tongThanhToan), 0)
+            FROM HoaDon h
+            WHERE h.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
+            """)
     Double sumDoanhThuHoanThanh();
 
     @Query("""
-       SELECT COUNT(h)
-       FROM HoaDon h
-       WHERE h.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
-       """)
+            SELECT COUNT(h)
+            FROM HoaDon h
+            WHERE h.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
+            """)
     Long countHoaDonHoanThanh();
 
     @Query("""
-        SELECT COALESCE(SUM(h.tongThanhToan),0)
-        FROM HoaDon h
-        WHERE (:tu IS NULL OR h.ngayTao >= :tu)
-        AND (:den IS NULL OR h.ngayTao <= :den)
-        AND h.idTrangThaiHoaDon.id = 4
-    """)
+                SELECT COALESCE(SUM(h.tongThanhToan),0)
+                FROM HoaDon h
+                WHERE (:tu IS NULL OR h.ngayTao >= :tu)
+                AND (:den IS NULL OR h.ngayTao <= :den)
+                AND h.idTrangThaiHoaDon.id = 4
+            """)
     BigDecimal tongDoanhThu(
             @Param("tu") Instant tu,
-            @Param("den") Instant den
-    );
+            @Param("den") Instant den);
 }
-

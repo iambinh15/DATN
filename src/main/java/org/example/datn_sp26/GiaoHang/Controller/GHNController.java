@@ -1,6 +1,8 @@
 package org.example.datn_sp26.GiaoHang.Controller;
 
 import jakarta.servlet.http.HttpSession;
+import org.example.datn_sp26.BanHang.Entity.HoaDon;
+import org.example.datn_sp26.BanHang.Service.HoaDonService;
 import org.example.datn_sp26.GiaoHang.Service.GHNService;
 import org.example.datn_sp26.BanHang.Service.GioHangService;
 import org.example.datn_sp26.KhuyenMai.Service.MaGiamGiaService;
@@ -31,16 +33,16 @@ public class GHNController {
     @Autowired
     private DiaChiService diaChiService;
 
+    @Autowired
+    private HoaDonService hoaDonService;
+
     // =======================
     // 1️⃣ TRANG THANH TOÁN
     // =======================
     @GetMapping("/thanh-toan")
     public String hienThiThanhToan(Model model, HttpSession session) {
-        // 1. Kiểm tra chính xác tên biến Session
-        // Ghi chú: Hãy chắc chắn ở hàm Login bạn đã set: session.setAttribute("userLog", khách_hàng_đó)
         KhachHang kh = (KhachHang) session.getAttribute("khachHang");
 
-        // DEBUG: Dòng này sẽ in ra console để bạn xem có lấy được khách hàng không
         if (kh == null) {
             System.out.println(">>> LỖI: Session 'userLog' bị NULL. Đang quay về trang Login.");
             return "redirect:/login";
@@ -53,14 +55,12 @@ public class GHNController {
 
             var items = gioHangService.layGioHangCuaKhach(idKhachHang);
 
-            // Tính tổng tiền hàng
             long tongTienHang = items.stream()
-                    .mapToLong(i ->
-                            i.getIdSanPhamChiTiet()
-                                    .getDonGia()
-                                    .multiply(BigDecimal.valueOf(i.getSoLuong()))
-                                    .longValue()
-                    ).sum();
+                    .mapToLong(i -> i.getIdSanPhamChiTiet()
+                            .getDonGia()
+                            .multiply(BigDecimal.valueOf(i.getSoLuong()))
+                            .longValue())
+                    .sum();
 
             var dsDiaChi = diaChiService.layDiaChiCuaKhach(idKhachHang);
             var dsMaGiamGia = maGiamGiaService.layMaDangHoatDong();
@@ -72,7 +72,7 @@ public class GHNController {
             return "KhachHang/xac-nhan-thanh-toan";
 
         } catch (Exception e) {
-            e.printStackTrace(); // In lỗi chi tiết ra console nếu có lỗi logic bên trong
+            e.printStackTrace();
             return "redirect:/khach-hang/trang-chu";
         }
     }
@@ -91,8 +91,7 @@ public class GHNController {
                 districtId,
                 wardCode,
                 1000,
-                0L
-        );
+                0L);
 
         long phiShip = ghnService.parsePhiShip(res);
 
@@ -107,7 +106,7 @@ public class GHNController {
     @PostMapping("/luu-dia-chi-tam")
     @ResponseBody
     public void luuDiaChiTam(@RequestBody Map<String, Object> req,
-                             HttpSession session) {
+            HttpSession session) {
 
         String diaChi = (String) req.get("diaChi");
         Long phiShip = Long.valueOf(req.get("phiShip").toString());
@@ -121,18 +120,48 @@ public class GHNController {
     // =======================
     @PostMapping("/tao-don-cod")
     @ResponseBody
-    public void taoDonCOD(HttpSession session) {
+    public Map<String, Object> taoDonCOD(HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
 
-        Integer idKhachHang = 1; // TODO lấy từ session đăng nhập
-        String diaChi = (String) session.getAttribute("DIA_CHI_TAM");
-
-        if (diaChi == null) {
-            throw new RuntimeException("Chưa có địa chỉ giao hàng");
+        KhachHang khachHang = (KhachHang) session.getAttribute("khachHang");
+        if (khachHang == null) {
+            throw new RuntimeException("Chưa đăng nhập");
         }
 
-        // hoaDonService.taoHoaDon(idKhachHang, diaChi, "COD");
+        String diaChi = (String) session.getAttribute("DIA_CHI_TAM");
+        Object phiShipObj = session.getAttribute("PHI_SHIP");
 
+        if (diaChi == null || phiShipObj == null) {
+            throw new RuntimeException("Chưa có địa chỉ giao hàng hoặc phí ship");
+        }
+
+        BigDecimal phiShip = new BigDecimal(phiShipObj.toString());
+
+        // Tính tổng tiền hàng
+        var items = gioHangService.layGioHangCuaKhach(khachHang.getId());
+        long tongTienHang = items.stream()
+                .mapToLong(i -> i.getIdSanPhamChiTiet().getDonGia()
+                        .multiply(BigDecimal.valueOf(i.getSoLuong())).longValue())
+                .sum();
+
+        BigDecimal tongThanhToan = BigDecimal.valueOf(tongTienHang).add(phiShip);
+
+        // ✅ 1+2. TẠO HÓA ĐƠN COD + CHI TIẾT + TRỪ KHO + XÓA GIỎ (ATOMIC)
+        HoaDon hoaDon = hoaDonService.taoHoaDonCODDayDu(khachHang, tongThanhToan, diaChi);
+
+        // ✅ 3. Xóa session tạm
         session.removeAttribute("DIA_CHI_TAM");
         session.removeAttribute("PHI_SHIP");
+
+        response.put("success", true);
+        return response;
+    }
+
+    // =======================
+    // 5️⃣ TRANG THÀNH CÔNG COD
+    // =======================
+    @GetMapping("/payment-success-cod")
+    public String paymentSuccessCod() {
+        return "payment-success-cod";
     }
 }

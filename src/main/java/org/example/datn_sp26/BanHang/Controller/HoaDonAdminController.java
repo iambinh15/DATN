@@ -2,16 +2,17 @@ package org.example.datn_sp26.BanHang.Controller;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.datn_sp26.BanHang.Entity.HoaDon;
+import org.example.datn_sp26.BanHang.Entity.HoaDonChiTiet;
 import org.example.datn_sp26.BanHang.Entity.TrangThaiHoaDon;
+import org.example.datn_sp26.BanHang.Repository.HoaDonChiTietRepository;
 import org.example.datn_sp26.BanHang.Service.HoaDonExcelExporter;
 import org.example.datn_sp26.BanHang.Service.HoaDonService;
+import org.example.datn_sp26.SanPham.Entity.SanPhamChiTiet;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -31,15 +32,19 @@ public class HoaDonAdminController {
     @Autowired
     private HoaDonExcelExporter excelExporter;
 
+    @Autowired
+    private HoaDonChiTietRepository hoaDonChiTietRepository;
+
     @GetMapping
     public String list(
             @RequestParam(required = false) String tenKH,
             @RequestParam(required = false) String trangThai,
+            @RequestParam(required = false) String loaiTT,
             @RequestParam(required = false) String tuNgay,
             @RequestParam(required = false) String denNgay,
             Model model) {
 
-        List<HoaDon> danhSach = getDanhSachFiltered(tenKH, trangThai, tuNgay, denNgay);
+        List<HoaDon> danhSach = getDanhSachFiltered(tenKH, trangThai, loaiTT, tuNgay, denNgay);
 
         // Load dropdown options
         List<TrangThaiHoaDon> dsTrangThai = hoaDonService.getAllTrangThai();
@@ -50,6 +55,7 @@ public class HoaDonAdminController {
         // Preserve filter values in form
         model.addAttribute("tenKH", tenKH);
         model.addAttribute("trangThai", trangThai);
+        model.addAttribute("loaiTT", loaiTT);
         model.addAttribute("tuNgay", tuNgay);
         model.addAttribute("denNgay", denNgay);
 
@@ -60,12 +66,34 @@ public class HoaDonAdminController {
     public void xuatExcel(
             @RequestParam(required = false) String tenKH,
             @RequestParam(required = false) String trangThai,
+            @RequestParam(required = false) String loaiTT,
             @RequestParam(required = false) String tuNgay,
             @RequestParam(required = false) String denNgay,
             HttpServletResponse response) throws IOException {
 
-        List<HoaDon> danhSach = getDanhSachFiltered(tenKH, trangThai, tuNgay, denNgay);
+        List<HoaDon> danhSach = getDanhSachFiltered(tenKH, trangThai, loaiTT, tuNgay, denNgay);
         excelExporter.export(danhSach, response);
+    }
+
+    // ===== API: Lấy chi tiết hóa đơn (JSON) =====
+    @GetMapping("/chi-tiet/{id}")
+    @ResponseBody
+    public ResponseEntity<?> getChiTietHoaDon(@PathVariable Integer id) {
+        List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByHoaDonIdWithDetails(id);
+
+        List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        for (HoaDonChiTiet ct : chiTietList) {
+            java.util.Map<String, Object> item = new java.util.LinkedHashMap<>();
+            SanPhamChiTiet spct = ct.getIdSanPhamChiTiet();
+            item.put("mauSac", spct != null && spct.getIdMauSac() != null ? spct.getIdMauSac().getTenMau() : "—");
+            item.put("size", spct != null && spct.getIdSize() != null ? spct.getIdSize().getTenSize() : "—");
+            item.put("chatLieu",
+                    spct != null && spct.getIdChatLieu() != null ? spct.getIdChatLieu().getTenChatLieu() : "—");
+            item.put("donGia", ct.getDonGia());
+            item.put("soLuong", ct.getSoLuong());
+            result.add(item);
+        }
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/cap-nhat-trang-thai")
@@ -84,7 +112,7 @@ public class HoaDonAdminController {
 
     // ===== Helper: tái sử dụng logic lọc =====
     private List<HoaDon> getDanhSachFiltered(String tenKH, String trangThai,
-            String tuNgay, String denNgay) {
+            String loaiTT, String tuNgay, String denNgay) {
         Instant tuNgayInstant = null;
         Instant denNgayInstant = null;
 
@@ -103,13 +131,15 @@ public class HoaDonAdminController {
 
         boolean hasFilter = (tenKH != null && !tenKH.isBlank())
                 || (trangThai != null && !trangThai.isBlank())
+                || (loaiTT != null && !loaiTT.isBlank())
                 || tuNgayInstant != null
                 || denNgayInstant != null;
 
         if (hasFilter) {
             String tenKHParam = (tenKH != null && !tenKH.isBlank()) ? tenKH : null;
             String trangThaiParam = (trangThai != null && !trangThai.isBlank()) ? trangThai : null;
-            return hoaDonService.filterHoaDon(tenKHParam, trangThaiParam,
+            String loaiTTParam = (loaiTT != null && !loaiTT.isBlank()) ? loaiTT : null;
+            return hoaDonService.filterHoaDon(tenKHParam, trangThaiParam, loaiTTParam,
                     tuNgayInstant, denNgayInstant);
         } else {
             return hoaDonService.findAll();
