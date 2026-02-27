@@ -1,10 +1,7 @@
 package org.example.datn_sp26.BanHang.Service;
 
 import jakarta.transaction.Transactional;
-import org.example.datn_sp26.BanHang.Entity.HoaDon;
-import org.example.datn_sp26.BanHang.Entity.HoaDonChiTiet;
-import org.example.datn_sp26.BanHang.Entity.LoaiThanhToan;
-import org.example.datn_sp26.BanHang.Entity.TrangThaiHoaDon;
+import org.example.datn_sp26.BanHang.Entity.*;
 import org.example.datn_sp26.BanHang.Repository.HoaDonChiTietRepository;
 import java.util.Arrays;
 import org.example.datn_sp26.BanHang.Repository.HoaDonRepository;
@@ -300,7 +297,42 @@ public class HoaDonService {
         hoaDon.setIdTrangThaiHoaDon(trangThaiMoi);
         hoaDonRepository.save(hoaDon);
     }
+    @Transactional
+    public void thanhToan(HoaDon hoaDon, List<GioHangChiTiet> listGioHang) {
+        // Lưu hóa đơn trước
+        HoaDon hdonSaved = hoaDonRepository.save(hoaDon);
 
+        for (GioHangChiTiet item : listGioHang) {
+            // 1. Lấy thông tin SPCT mới nhất từ DB để kiểm tra tồn kho thực tế
+            SanPhamChiTiet spct = sanPhamChiTietRepository.findById(item.getIdSanPhamChiTiet().getId())
+                    .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại!"));
+
+            // 2. KIỂM TRA TỒN KHO: Nếu số lượng mua > tồn kho thực tế
+            if (item.getSoLuong() > spct.getSoLuong()) {
+                throw new RuntimeException("Sản phẩm [" + spct.getIdSanPham().getTenSanPham() +
+                        "] chỉ còn " + spct.getSoLuong() + " sản phẩm. Vui lòng cập nhật giỏ hàng!");
+            }
+
+            // 3. Trừ kho
+            int soLuongConLai = spct.getSoLuong() - item.getSoLuong();
+            spct.setSoLuong(soLuongConLai);
+
+            // Tự động ngưng hoạt động nếu hết hàng
+            if (soLuongConLai == 0) {
+                spct.setTrangThai(0);
+            }
+            sanPhamChiTietRepository.save(spct);
+
+            // 4. Lưu vào Hóa đơn chi tiết
+            HoaDonChiTiet hdct = new HoaDonChiTiet();
+            hdct.setIdHoaDon(hdonSaved);
+            hdct.setIdSanPhamChiTiet(spct);
+            hdct.setSoLuong(item.getSoLuong());
+            hdct.setDonGia(spct.getDonGia());
+
+            hoaDonChiTietRepository.save(hdct);
+        }
+    }
     private String taoMaHoaDon() {
         return "HD" + System.currentTimeMillis();
     }
