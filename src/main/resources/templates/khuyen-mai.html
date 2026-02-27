@@ -1,176 +1,789 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Khuyến Mãi | Admin</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Quản lý Voucher - CotiT Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f8f9fa; }
-        body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .main-card { background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; }
-        .page-title { color: var(--primary); font-weight: 700; border-left: 5px solid var(--accent); padding-left: 15px; margin-bottom: 30px; }
-        .promo-form { background: #fff; border: 1px solid #dee2e6; border-radius: 12px; padding: 25px; margin-bottom: 40px; }
-        .form-label { font-weight: 600; font-size: 0.85rem; color: #495057; }
-        .table-container { border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .table thead { background: var(--primary); color: white; }
-        .table th { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; padding: 15px; vertical-align: middle; }
-        .btn-save { background: var(--accent); color: white; font-weight: 600; padding: 10px 25px; border: none; border-radius: 8px; }
-        .alert { border-radius: 10px; margin-bottom: 25px; border: none; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            color: #111;
+            line-height: 1.6;
+        }
+
+        /* ===== LAYOUT ===== */
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            background: #000;
+            color: #fff;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid #222;
+        }
+
+        .sidebar-logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-logo span {
+            font-size: 12px;
+            font-weight: 400;
+            background: #333;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #666;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #999;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: #111;
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: #111;
+            color: #fff;
+            border-left-color: #fff;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            border-top: 1px solid #222;
+            background: #000;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar i {
+            font-size: 18px;
+            color: #999;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid #333;
+            color: #999;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #e74c3c;
+            border-color: #e74c3c;
+            color: #fff;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 30px;
+        }
+
+        /* ===== HEADER ===== */
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        /* ===== FORM CARD ===== */
+        .form-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .form-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.span-2 {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #fff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #000;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-reset {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: transparent;
+            color: #666;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .btn-reset:hover {
+            background: #f5f5f5;
+            color: #333;
+            border-color: #ccc;
+        }
+
+        .btn-save {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: background 0.2s;
+        }
+
+        .btn-save:hover {
+            background: #333;
+        }
+
+        /* ===== TABLE ===== */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .record-count {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 15px 16px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            white-space: nowrap;
+        }
+
+        .data-table th {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+            background: #fafafa;
+        }
+
+        .data-table td {
+            font-size: 14px;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-edit,
+        .btn-delete {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .btn-edit:hover {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .btn-delete {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-delete:hover {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .money {
+            font-weight: 600;
+            color: #dc2626;
+            white-space: nowrap;
+        }
+
+        .text-muted {
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .code-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #e2e3e5;
+            color: #383d41;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .date-info {
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .date-info .start {
+            color: #155724;
+        }
+
+        .date-info .end {
+            color: #721c24;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 50px;
+            margin-bottom: 16px;
+            color: #ddd;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+
+            .sidebar-header,
+            .nav-section-title,
+            .nav-item span,
+            .user-details,
+            .btn-logout span {
+                display: none;
+            }
+
+            .nav-item {
+                justify-content: center;
+                padding: 15px;
+            }
+
+            .nav-item i {
+                font-size: 20px;
+            }
+
+            .main-content {
+                margin-left: 80px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.span-2 {
+                grid-column: span 1;
+            }
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container-fluid">
-    <div class="main-card">
-        <h2 class="page-title">Hệ thống quản lý khuyến mãi</h2>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/admin" class="sidebar-logo">
+                    COTIT <span>ADMIN</span>
+                </a>
+            </div>
 
-        <div th:if="${message}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            <span th:text="${message}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <strong th:text="${error}"></strong>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-
-        <form th:action="@{/admin/khuyen-mai/save}" th:object="${km}" method="post" class="promo-form shadow-sm">
-            <input type="hidden" th:field="*{id}">
-
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Mã Voucher</label>
-                    <input type="text" th:field="*{ma}" class="form-control" placeholder="SALE10" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Tên Chương Trình</label>
-                    <input type="text" th:field="*{tenGiamGia}" class="form-control" placeholder="Tết rực rỡ">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Loại Giảm</label>
-                    <select th:field="*{loaiGiam}" class="form-select">
-                        <option value="0">Giảm theo tiền (VNĐ)</option>
-                        <option value="1">Giảm theo phần trăm (%)</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Giá Trị Giảm</label>
-                    <input type="number" th:field="*{giaTri}" class="form-control" required>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <p class="nav-section-title">Menu chính</p>
+                    <a th:href="@{/admin}" class="nav-item">
+                        <i class="fas fa-home"></i>
+                        <span>Tổng quan</span>
+                    </a>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Quản lý bán hàng</span>
+                    </a>
+                    <a th:href="@{/hoa-don}" class="nav-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Quản lý hóa đơn</span>
+                    </a>
+                    <a th:href="@{/admin/khuyen-mai}" class="nav-item active">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Quản lý voucher</span>
+                    </a>
+                    <a th:href="@{/thong-ke}" class="nav-item">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Thống kê</span>
+                    </a>
                 </div>
 
-                <div class="col-md-3">
-                    <label class="form-label">Ngày Bắt Đầu</label>
-                    <input type="datetime-local" th:field="*{ngayBatDau}" class="form-control">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Ngày Kết Thúc</label>
-                    <input type="datetime-local" th:field="*{ngayKetThuc}" class="form-control">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Số Lượng</label>
-                    <input type="number" th:field="*{soLuong}" class="form-control">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Đơn Tối Thiểu</label>
-                    <input type="number" th:field="*{giamToiThieu}" class="form-control">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Trạng Thái</label>
-                    <select th:field="*{trangThai}" class="form-select">
-                        <option value="1">Đang hoạt động</option>
-                        <option value="0">Ngừng áp dụng</option>
-                    </select>
+                <div class="nav-section">
+                    <p class="nav-section-title">Quản lý</p>
+                    <a th:href="@{/khach-hang}" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        <span>Quản lý khách hàng</span>
+                    </a>
+                    <a th:href="@{/nhan-vien}" class="nav-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Quản lý nhân viên</span>
+                    </a>
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Điều Kiện Giảm</label>
-                    <input type="text" th:field="*{dieuKienGiam}" class="form-control" placeholder="Áp dụng cho đơn hàng...">
+                <div class="nav-section">
+                    <p class="nav-section-title">Sản phẩm</p>
+                    <a th:href="@{/san-pham}" class="nav-item">
+                        <i class="fas fa-box"></i>
+                        <span>Danh sách sản phẩm</span>
+                    </a>
+                    <a th:href="@{/chat-lieu}" class="nav-item">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Chất liệu</span>
+                    </a>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Giảm Tối Đa</label>
-                    <input type="number" th:field="*{giamToiDa}" class="form-control" placeholder="Dành cho giảm %">
-                </div>
+            </nav>
 
-                <div class="col-md-3 d-flex align-items-end justify-content-end">
-                    <button type="reset" class="btn btn-light border me-2">Làm mới</button>
-                    <button type="submit" class="btn btn-save shadow">
-                        <i class="fas fa-paper-plane me-2"></i> CẬP NHẬT VOUCHER
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-details">
+                        <p class="user-name" th:text="${session.tenNhanVien != null ? session.tenNhanVien : 'Admin'}">
+                            Admin</p>
+                        <p class="user-role">Quản trị viên</p>
+                    </div>
+                </div>
+                <form th:action="@{/logout}" method="post" style="margin: 0;">
+                    <button type="submit" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Đăng xuất</span>
                     </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-header">
+                <h1 class="page-title">Quản lý Voucher</h1>
+            </div>
+
+            <!-- Alert Messages -->
+            <div th:if="${message}"
+                style="background: #d4edda; color: #155724; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${message}"></span>
+            </div>
+            <div th:if="${error}"
+                style="background: #f8d7da; color: #721c24; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span th:text="${error}"></span>
+            </div>
+
+            <!-- Form Thêm / Sửa Voucher -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <h3 class="form-card-title">
+                        <i class="fas fa-plus-circle" style="margin-right: 8px; color: #999;"></i>
+                        Thêm / Cập nhật voucher
+                    </h3>
+                </div>
+
+                <form th:action="@{/admin/khuyen-mai/save}" th:object="${km}" method="post">
+                    <input type="hidden" th:field="*{id}">
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Mã Voucher</label>
+                            <input type="text" th:field="*{ma}" placeholder="VD: SALE10" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tên chương trình</label>
+                            <input type="text" th:field="*{tenGiamGia}" placeholder="VD: Tết rực rỡ">
+                        </div>
+                        <div class="form-group">
+                            <label>Loại giảm</label>
+                            <select th:field="*{loaiGiam}">
+                                <option value="0">Giảm theo tiền (VNĐ)</option>
+                                <option value="1">Giảm theo phần trăm (%)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Giá trị giảm</label>
+                            <input type="number" th:field="*{giaTri}" placeholder="0" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ngày bắt đầu</label>
+                            <input type="datetime-local" th:field="*{ngayBatDau}">
+                        </div>
+                        <div class="form-group">
+                            <label>Ngày kết thúc</label>
+                            <input type="datetime-local" th:field="*{ngayKetThuc}">
+                        </div>
+                        <div class="form-group">
+                            <label>Số lượng</label>
+                            <input type="number" th:field="*{soLuong}" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Đơn tối thiểu</label>
+                            <input type="number" th:field="*{giamToiThieu}" placeholder="0">
+                        </div>
+
+                        <div class="form-group span-2">
+                            <label>Điều kiện giảm</label>
+                            <input type="text" th:field="*{dieuKienGiam}" placeholder="Áp dụng cho đơn hàng...">
+                        </div>
+                        <div class="form-group">
+                            <label>Giảm tối đa</label>
+                            <input type="number" th:field="*{giamToiDa}" placeholder="Dành cho giảm %">
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng thái</label>
+                            <select th:field="*{trangThai}">
+                                <option value="1">Đang hoạt động</option>
+                                <option value="0">Ngừng áp dụng</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="reset" class="btn-reset">
+                            <i class="fas fa-undo"></i> Làm mới
+                        </button>
+                        <button type="submit" class="btn-save">
+                            <i class="fas fa-paper-plane"></i> Lưu voucher
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Data Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Danh sách voucher</h3>
+                    <span class="record-count" th:text="${list != null ? list.size() : 0} + ' bản ghi'"></span>
+                </div>
+
+                <div class="table-wrapper" th:if="${list != null and !list.isEmpty()}">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Voucher</th>
+                                <th>Tên chương trình</th>
+                                <th>Giá trị giảm</th>
+                                <th>Giảm tối đa</th>
+                                <th>Đơn tối thiểu</th>
+                                <th>Điều kiện</th>
+                                <th>Thời gian</th>
+                                <th>Số lượng</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${list}">
+                                <td>
+                                    <span class="code-badge" th:text="${item.ma}"></span>
+                                </td>
+                                <td th:text="${item.tenGiamGia ?: '—'}"></td>
+                                <td class="money">
+                                    <span
+                                        th:text="${item.giaTri != null ? #numbers.formatDecimal(item.giaTri, 0, 'COMMA', 0, 'POINT') : '0'}"></span>
+                                    <span th:text="${item.loaiGiam == 0 ? ' ₫' : ' %'}"></span>
+                                </td>
+                                <td>
+                                    <span th:if="${item.giamToiDa != null}"
+                                        th:text="${#numbers.formatDecimal(item.giamToiDa, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
+                                    <span th:if="${item.giamToiDa == null}" class="text-muted">—</span>
+                                </td>
+                                <td>
+                                    <span th:if="${item.giamToiThieu != null}"
+                                        th:text="${#numbers.formatDecimal(item.giamToiThieu, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></span>
+                                    <span th:if="${item.giamToiThieu == null}" class="text-muted">0 ₫</span>
+                                </td>
+                                <td th:text="${item.dieuKienGiam ?: '—'}"></td>
+                                <td>
+                                    <div class="date-info">
+                                        <div th:if="${item.ngayBatDau != null}" class="start">
+                                            <i class="far fa-calendar-check" style="margin-right: 4px;"></i>
+                                            <span th:text="${#temporals.format(item.ngayBatDau, 'dd/MM/yyyy')}"></span>
+                                        </div>
+                                        <div th:if="${item.ngayKetThuc != null}" class="end">
+                                            <i class="far fa-calendar-times" style="margin-right: 4px;"></i>
+                                            <span th:text="${#temporals.format(item.ngayKetThuc, 'dd/MM/yyyy')}"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td th:text="${item.soLuong ?: 0}"></td>
+                                <td>
+                                    <span class="status-badge"
+                                        th:classappend="${item.trangThai == 1 ? 'active' : 'inactive'}"
+                                        th:text="${item.trangThai == 1 ? 'Hoạt động' : 'Ngừng'}"></span>
+                                </td>
+                                <td>
+                                    <div class="action-btns">
+                                        <a th:href="@{'/admin/khuyen-mai/edit/' + ${item.id}}" class="btn-edit">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </a>
+                                        <a th:href="@{'/admin/khuyen-mai/delete/' + ${item.id}}" class="btn-delete"
+                                            onclick="return confirm('Bạn có chắc muốn xóa voucher này?')">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" th:if="${list == null or list.isEmpty()}">
+                    <i class="fas fa-ticket-alt"></i>
+                    <p>Chưa có voucher nào.</p>
                 </div>
             </div>
-        </form>
-
-        <div class="table-container">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="text-center">
-                <tr>
-                    <th>Mã Voucher</th>
-                    <th>Tên Chương Trình</th>
-                    <th>Giá Trị Giảm</th>
-                    <th>Giảm Tối Đa</th>
-                    <th>Đơn Tối Thiểu</th>
-                    <th>Điều Kiện Giảm</th>
-                    <th>Ngày Bắt Đầu/Kết Thúc</th>
-                    <th>Số Lượng</th>
-                    <th>Trạng Thái</th>
-                    <th>Thao Tác</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="item : ${list}">
-                    <td class="text-center"><span class="badge bg-secondary" th:text="${item.ma}"></span></td>
-                    <td th:text="${item.tenGiamGia ?: 'N/A'}"></td>
-
-                    <td class="text-center fw-bold text-primary">
-                        <span th:text="${item.giaTri != null ? #numbers.formatDecimal(item.giaTri, 0, 'COMMA', 0, 'POINT') : '0'}"></span>
-                        <span th:text="${item.loaiGiam == 0 ? ' VNĐ' : ' %'}"></span>
-                    </td>
-
-                    <td class="text-center">
-                        <span th:text="${item.giamToiDa != null ? #numbers.formatDecimal(item.giamToiDa, 0, 'COMMA', 0, 'POINT') + 'đ' : '-'}"></span>
-                    </td>
-
-                    <td class="text-center">
-                        <span th:text="${item.giamToiThieu != null ? #numbers.formatDecimal(item.giamToiThieu, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}"></span>
-                    </td>
-
-                    <td class="small" th:text="${item.dieuKienGiam ?: '-'}"></td>
-
-                    <td class="text-center small">
-                        <div class="text-success" th:if="${item.ngayBatDau != null}">
-                            <i class="far fa-clock"></i> <span th:text="${#temporals.format(item.ngayBatDau, 'dd/MM/yyyy')}"></span>
-                        </div>
-                        <div class="text-danger" th:if="${item.ngayKetThuc != null}">
-                            <i class="far fa-clock"></i> <span th:text="${#temporals.format(item.ngayKetThuc, 'dd/MM/yyyy')}"></span>
-                        </div>
-                    </td>
-
-                    <td class="text-center" th:text="${item.soLuong ?: 0}"></td>
-
-                    <td class="text-center">
-                        <span th:if="${item.trangThai == 1}" class="badge bg-success">Đang hoạt động</span>
-                        <span th:if="${item.trangThai == 0}" class="badge bg-danger">Ngừng áp dụng</span>
-                    </td>
-
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center">
-                            <a th:href="@{'/admin/khuyen-mai/edit/' + ${item.id}}" class="btn btn-sm btn-warning text-white me-1"><i class="fas fa-edit"></i></a>
-                            <a th:href="@{'/admin/khuyen-mai/delete/' + ${item.id}}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa voucher này?')"><i class="fas fa-trash"></i></a>
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
+        </main>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
