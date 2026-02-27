@@ -6,6 +6,7 @@ import org.example.datn_sp26.BanHang.Entity.HoaDonChiTiet;
 import org.example.datn_sp26.BanHang.Entity.LoaiThanhToan;
 import org.example.datn_sp26.BanHang.Entity.TrangThaiHoaDon;
 import org.example.datn_sp26.BanHang.Repository.HoaDonChiTietRepository;
+import java.util.Arrays;
 import org.example.datn_sp26.BanHang.Repository.HoaDonRepository;
 import org.example.datn_sp26.BanHang.Repository.LoaiThanhToanRepository;
 import org.example.datn_sp26.BanHang.Repository.TrangThaiHoaDonRepository;
@@ -117,7 +118,7 @@ public class HoaDonService {
         hoaDon.setNgayTao(Instant.now());
         hoaDon.setTongThanhToan(tongThanhToan);
 
-        TrangThaiHoaDon trangThai = trangThaiHoaDonRepository.findByTenTrangThai("Chờ Thanh Toán")
+        TrangThaiHoaDon trangThai = trangThaiHoaDonRepository.findByTenTrangThai("Chờ xác nhận")
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy trạng thái"));
         hoaDon.setIdTrangThaiHoaDon(trangThai);
 
@@ -128,7 +129,8 @@ public class HoaDonService {
         return hoaDonRepository.save(hoaDon);
     }
 
-    public HoaDon taoHoaDonSauThanhToan(KhachHang khachHang, BigDecimal tongTienHang, String diaChiGiaoHang, BigDecimal phiShip) {
+    public HoaDon taoHoaDonSauThanhToan(KhachHang khachHang, BigDecimal tongTienHang, String diaChiGiaoHang,
+            BigDecimal phiShip) {
         if (diaChiGiaoHang == null || diaChiGiaoHang.isBlank()) {
             throw new RuntimeException("❌ Địa chỉ giao hàng không hợp lệ");
         }
@@ -140,7 +142,7 @@ public class HoaDonService {
         hoaDon.setDiaChi(diaChiGiaoHang);
         hoaDon.setTongThanhToan(tongTienHang);
 
-        TrangThaiHoaDon trangThai = trangThaiHoaDonRepository.findByTenTrangThai("Chờ Thanh Toán")
+        TrangThaiHoaDon trangThai = trangThaiHoaDonRepository.findByTenTrangThai("Chờ xác nhận")
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy trạng thái"));
         hoaDon.setIdTrangThaiHoaDon(trangThai);
 
@@ -151,34 +153,158 @@ public class HoaDonService {
         return hoaDonRepository.saveAndFlush(hoaDon);
     }
 
+    // ============================================================
+    // 🔥 TẠO HÓA ĐƠN COD (Tiền mặt)
+    // ============================================================
+    public HoaDon taoHoaDonCOD(KhachHang khachHang, BigDecimal tongThanhToan, String diaChiGiaoHang) {
+        if (diaChiGiaoHang == null || diaChiGiaoHang.isBlank()) {
+            throw new RuntimeException("❌ Địa chỉ giao hàng không hợp lệ");
+        }
+
+        HoaDon hoaDon = new HoaDon();
+        hoaDon.setMaHoaDon(taoMaHoaDon());
+        hoaDon.setIdKhachHang(khachHang);
+        hoaDon.setNgayTao(Instant.now());
+        hoaDon.setDiaChi(diaChiGiaoHang);
+        hoaDon.setTongThanhToan(tongThanhToan);
+
+        // Trạng thái: Chờ Thanh Toán (ID 11) — dành cho Tiền mặt
+        TrangThaiHoaDon trangThai = trangThaiHoaDonRepository.findByTenTrangThai("Chờ Thanh Toán")
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy trạng thái Chờ Thanh Toán"));
+        hoaDon.setIdTrangThaiHoaDon(trangThai);
+
+        // Loại thanh toán: Tiền mặt
+        LoaiThanhToan loaiThanhToan = loaiThanhToanRepository.findByTenLoai("Tiền mặt")
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy loại thanh toán Tiền mặt"));
+        hoaDon.setIdLoaiThanhToan(loaiThanhToan);
+
+        return hoaDonRepository.saveAndFlush(hoaDon);
+    }
+
+    // ============================================================
+    // 🔥 METHOD MỚI: TẠO HÓA ĐƠN VNPAY (ATOMIC - 1 TRANSACTION)
+    // Gộp: tạo header + chi tiết + trừ kho + xóa giỏ hàng
+    // ============================================================
+    @Transactional
+    public HoaDon taoHoaDonVNPay(KhachHang khachHang, BigDecimal tongThanhToan,
+            String diaChiGiaoHang, BigDecimal phiShip) {
+        // 1. Tạo HoaDon header
+        HoaDon hoaDon = taoHoaDonSauThanhToan(khachHang, tongThanhToan, diaChiGiaoHang, phiShip);
+
+        // 2. Tạo chi tiết + trừ kho
+        xuLyHoanTatHoaDon(khachHang.getId(), hoaDon);
+
+        // 3. Xóa giỏ hàng
+        gioHangService.xoaTatCaGioHang(khachHang.getId());
+
+        return hoaDon;
+    }
+
+    // ============================================================
+    // 🔥 METHOD MỚI: TẠO HÓA ĐƠN COD (ATOMIC - 1 TRANSACTION)
+    // Gộp: tạo header + chi tiết + trừ kho + xóa giỏ hàng
+    // ============================================================
+    @Transactional
+    public HoaDon taoHoaDonCODDayDu(KhachHang khachHang, BigDecimal tongThanhToan,
+            String diaChiGiaoHang) {
+        // 1. Tạo HoaDon header
+        HoaDon hoaDon = taoHoaDonCOD(khachHang, tongThanhToan, diaChiGiaoHang);
+
+        // 2. Tạo chi tiết + trừ kho
+        xuLyHoanTatHoaDon(khachHang.getId(), hoaDon);
+
+        // 3. Xóa giỏ hàng
+        gioHangService.xoaTatCaGioHang(khachHang.getId());
+
+        return hoaDon;
+    }
+
     public List<HoaDon> layDonHangCuaKhach(Integer idKhachHang) {
         return hoaDonRepository.findByKhachHangExcludeTest(idKhachHang);
     }
 
     public List<HoaDon> findAll() {
-        return hoaDonRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "ngayTao"));
+        return hoaDonRepository.findAll(org.springframework.data.domain.Sort
+                .by(org.springframework.data.domain.Sort.Direction.DESC, "ngayTao"));
     }
 
-    public List<HoaDon> filterHoaDon(String tenKH, String trangThai, Instant tuNgay, Instant denNgay) {
-        return hoaDonRepository.filterHoaDon(tenKH, trangThai, tuNgay, denNgay);
+    public List<HoaDon> filterHoaDon(String tenKH, String trangThai, String loaiTT, Instant tuNgay, Instant denNgay) {
+        return hoaDonRepository.filterHoaDon(tenKH, trangThai, loaiTT, tuNgay, denNgay);
     }
 
     public List<TrangThaiHoaDon> getAllTrangThai() {
         return trangThaiHoaDonRepository.findAll();
     }
 
+    // ===== Luồng trạng thái =====
+    // CK / Ví: 1(Chờ xác nhận) → 13(Đã xác nhận) → 2(Đang xử lý) → 3(Đang giao) →
+    // 4(Hoàn tất)
+    // Tiền mặt: 11(Chờ Thanh Toán) → 14(Đã Thanh Toán) → 2(Đang xử lý) → 3(Đang
+    // giao) → 4(Hoàn tất)
+    // Đã hủy (5): chỉ được chọn khi đang ở 3 trạng thái đầu của mỗi luồng
+
+    private static final List<Integer> CK_VI_FLOW = Arrays.asList(1, 13, 2, 3, 4);
+    private static final List<Integer> TIEN_MAT_FLOW = Arrays.asList(11, 14, 2, 3, 4);
+    private static final int ID_HUY = 5;
+    private static final int ID_HOAN_TAT = 4;
+
     public void capNhatTrangThai(Integer hoaDonId, Integer trangThaiId) {
         HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn #" + hoaDonId));
-        TrangThaiHoaDon trangThai = trangThaiHoaDonRepository.findById(trangThaiId)
+        TrangThaiHoaDon trangThaiMoi = trangThaiHoaDonRepository.findById(trangThaiId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy trạng thái #" + trangThaiId));
-        hoaDon.setIdTrangThaiHoaDon(trangThai);
+
+        int currentId = hoaDon.getIdTrangThaiHoaDon().getId();
+        int newId = trangThaiMoi.getId();
+
+        // Đã hủy hoặc Hoàn tất → không cho đổi
+        if (currentId == ID_HUY) {
+            throw new RuntimeException("Hóa đơn đã hủy, không thể đổi trạng thái!");
+        }
+        if (currentId == ID_HOAN_TAT) {
+            throw new RuntimeException("Hóa đơn đã hoàn tất, không thể đổi trạng thái!");
+        }
+
+        // Xác định luồng theo loại thanh toán
+        String loaiTT = hoaDon.getIdLoaiThanhToan() != null
+                ? hoaDon.getIdLoaiThanhToan().getTenLoai()
+                : "";
+        boolean isTienMat = "Tiền mặt".equalsIgnoreCase(loaiTT);
+        List<Integer> flow = isTienMat ? TIEN_MAT_FLOW : CK_VI_FLOW;
+
+        int currentIndex = flow.indexOf(currentId);
+
+        // Nếu chọn Hủy
+        if (newId == ID_HUY) {
+            // Chỉ cho hủy khi đang ở 3 trạng thái đầu
+            if (currentIndex >= 0 && currentIndex <= 2) {
+                hoaDon.setIdTrangThaiHoaDon(trangThaiMoi);
+                hoaDonRepository.save(hoaDon);
+                return;
+            } else {
+                throw new RuntimeException("Không thể hủy hóa đơn ở trạng thái hiện tại!");
+            }
+        }
+
+        // Kiểm tra trạng thái mới có trong luồng không
+        int newIndex = flow.indexOf(newId);
+        if (newIndex == -1) {
+            throw new RuntimeException("Trạng thái không hợp lệ cho loại thanh toán này!");
+        }
+
+        // Chỉ cho tiến 1 bước
+        if (currentIndex == -1 || newIndex != currentIndex + 1) {
+            throw new RuntimeException("Chỉ được chuyển sang trạng thái tiếp theo (1 bước)!");
+        }
+
+        hoaDon.setIdTrangThaiHoaDon(trangThaiMoi);
         hoaDonRepository.save(hoaDon);
     }
 
     private String taoMaHoaDon() {
         return "HD" + System.currentTimeMillis();
     }
+
     public Map<String, Object> thongKeHoanThanh() {
 
         Double tongDoanhThu = hoaDonRepository.sumDoanhThuHoanThanh();

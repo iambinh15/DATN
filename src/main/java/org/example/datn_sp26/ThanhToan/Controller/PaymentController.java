@@ -32,7 +32,7 @@ public class PaymentController {
 
     @GetMapping("/api/vnpay/pay")
     public String vnpayPayment(HttpServletRequest request,
-                               @RequestParam("amount") Long amount) throws Exception {
+            @RequestParam("amount") Long amount) throws Exception {
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
@@ -81,7 +81,7 @@ public class PaymentController {
 
     @GetMapping("/api/vnpay/callback")
     public String vnpayCallback(HttpServletRequest request,
-                                HttpSession session) {
+            HttpSession session) {
 
         String responseCode = request.getParameter("vnp_ResponseCode");
         String amountStr = request.getParameter("vnp_Amount");
@@ -109,17 +109,12 @@ public class PaymentController {
         BigDecimal tongThanhToan = BigDecimal.valueOf(Long.parseLong(amountStr) / 100);
 
         try {
-            // ✅ 2. TẠO HÓA ĐƠN (Header)
-            org.example.datn_sp26.BanHang.Entity.HoaDon hoaDon = hoaDonService.taoHoaDonSauThanhToan(
+            // ✅ 2+3. TẠO HÓA ĐƠN + CHI TIẾT + TRỪ KHO + XÓA GIỎ (ATOMIC)
+            org.example.datn_sp26.BanHang.Entity.HoaDon hoaDon = hoaDonService.taoHoaDonVNPay(
                     khachHang,
                     tongThanhToan,
                     diaChi,
-                    phiShip
-            );
-
-            // ✅ 3. XỬ LÝ CHI TIẾT + TRỪ KHO (QUAN TRỌNG NHẤT)
-            // Gọi hàm tổng hợp này để chuyển hàng từ giỏ sang hóa đơn chi tiết và cập nhật SPCT
-            hoaDonService.xuLyHoanTatHoaDon(khachHang.getId(), hoaDon);
+                    phiShip);
 
             // 4. XÓA SESSION SAU KHI HOÀN TẤT
             session.removeAttribute("DIA_CHI_TAM");
@@ -137,8 +132,7 @@ public class PaymentController {
     private String hmacSHA512(String key, String data) {
         try {
             Mac hmac512 = Mac.getInstance("HmacSHA512");
-            SecretKeySpec secretKey =
-                    new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
+            SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
             hmac512.init(secretKey);
             byte[] result = hmac512.doFinal(data.getBytes(StandardCharsets.UTF_8));
 

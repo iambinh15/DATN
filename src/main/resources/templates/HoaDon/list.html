@@ -578,7 +578,7 @@
                         <i class="fas fa-ticket-alt"></i>
                         <span>Quản lý voucher</span>
                     </a>
-                    <a href="#" class="nav-item">
+                    <a th:href="@{/thong-ke}" class="nav-item">
                         <i class="fas fa-chart-bar"></i>
                         <span>Thống kê</span>
                     </a>
@@ -665,6 +665,17 @@
                 </div>
 
                 <div class="filter-group">
+                    <label>Loại thanh toán</label>
+                    <select name="loaiTT">
+                        <option value="">— Tất cả —</option>
+                        <option value="CK" th:selected="${loaiTT != null and loaiTT == 'CK'}">CK</option>
+                        <option value="Tiền mặt" th:selected="${loaiTT != null and loaiTT == 'Tiền mặt'}">Tiền mặt
+                        </option>
+                        <option value="Ví" th:selected="${loaiTT != null and loaiTT == 'Ví'}">Ví</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
                     <label>Từ ngày</label>
                     <input type="date" name="tuNgay" th:value="${tuNgay}">
                 </div>
@@ -681,11 +692,14 @@
                     <a th:href="@{/hoa-don}" class="btn-clear">
                         <i class="fas fa-times"></i> Xóa lọc
                     </a>
-                    <a id="btnXuatExcel" href="/hoa-don/xuat-excel" class="btn-export">
-                        <i class="fas fa-file-excel"></i> Xuất Excel
-                    </a>
                 </div>
             </form>
+
+            <div style="margin-bottom: 20px;">
+                <a id="btnXuatExcel" href="/hoa-don/xuat-excel" class="btn-export">
+                    <i class="fas fa-file-excel"></i> Xuất Excel
+                </a>
+            </div>
 
             <!-- Data Table -->
             <div class="card">
@@ -708,6 +722,7 @@
                                 <th>Địa chỉ</th>
                                 <th>Ngày tạo</th>
                                 <th>Tổng thanh toán</th>
+                                <th>Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -728,7 +743,7 @@
                                             th:data-loai-thanh-toan="${hd.idLoaiThanhToan != null ? hd.idLoaiThanhToan.tenLoai : ''}"
                                             th:data-current-id="${hd.idTrangThaiHoaDon.id}"
                                             th:classappend="${hd.idTrangThaiHoaDon.tenTrangThai == 'Hoàn tất' ? 'select-paid' :
-                                                              (hd.idTrangThaiHoaDon.tenTrangThai == 'Chờ xác nhận' || hd.idTrangThaiHoaDon.tenTrangThai == 'Chờ thanh toán' ? 'select-pending' :
+                                                              (hd.idTrangThaiHoaDon.tenTrangThai == 'Chờ xác nhận' || hd.idTrangThaiHoaDon.tenTrangThai == 'Chờ Thanh Toán' ? 'select-pending' :
                                                               (hd.idTrangThaiHoaDon.tenTrangThai == 'Đang giao' ? 'select-shipping' :
                                                               (hd.idTrangThaiHoaDon.tenTrangThai == 'Đã hủy' ? 'select-cancelled' : 'select-default')))}">
                                             <option th:each="tt : ${dsTrangThai}" th:value="${tt.id}"
@@ -748,6 +763,12 @@
                                 <td class="money"
                                     th:text="${hd.tongThanhToan != null ? #numbers.formatDecimal(hd.tongThanhToan, 0, 'COMMA', 0, 'POINT') + ' ₫' : '—'}">
                                 </td>
+                                <td>
+                                    <button class="btn-detail" th:data-id="${hd.id}" th:data-ma="${hd.maHoaDon}"
+                                        onclick="xemChiTiet(this)">
+                                        <i class="fas fa-eye"></i> Chi tiết
+                                    </button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -762,17 +783,130 @@
         </main>
     </div>
 
+    <!-- Modal Chi tiết hóa đơn -->
+    <div id="modalChiTiet" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Chi tiết hóa đơn</h3>
+                <button class="modal-close" onclick="dongModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Màu sắc</th>
+                            <th>Size</th>
+                            <th>Chất liệu</th>
+                            <th>Đơn giá</th>
+                            <th>Số lượng</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTableBody"></tbody>
+                </table>
+                <div id="modalEmpty" style="display:none; text-align:center; padding:30px; color:#999;">
+                    <i class="fas fa-box-open" style="font-size:32px; margin-bottom:10px;"></i>
+                    <p>Không có chi tiết hóa đơn.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .btn-detail {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: #e8f4fd;
+            color: #0077b6;
+            border: 1px solid #b8dff0;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-detail:hover {
+            background: #0077b6;
+            color: #fff;
+            border-color: #0077b6;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 16px;
+            width: 700px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #000;
+        }
+
+        .modal-body {
+            padding: 20px 25px 25px;
+        }
+
+        .modal-body .data-table {
+            min-width: auto;
+        }
+    </style>
+
     <script>
         // Cập nhật link xuất Excel khi thay đổi bộ lọc
         function capNhatLinkExcel() {
             var tenKH = document.querySelector('input[name="tenKH"]').value || '';
             var trangThai = document.querySelector('select[name="trangThai"]').value || '';
+            var loaiTT = document.querySelector('select[name="loaiTT"]').value || '';
             var tuNgay = document.querySelector('input[name="tuNgay"]').value || '';
             var denNgay = document.querySelector('input[name="denNgay"]').value || '';
 
             var params = new URLSearchParams();
             if (tenKH) params.append('tenKH', tenKH);
             if (trangThai) params.append('trangThai', trangThai);
+            if (loaiTT) params.append('loaiTT', loaiTT);
             if (tuNgay) params.append('tuNgay', tuNgay);
             if (denNgay) params.append('denNgay', denNgay);
 
@@ -792,66 +926,77 @@
         capNhatLinkExcel();
 
         // ===== Luồng trạng thái theo loại thanh toán =====
-        // COD (Tiền mặt): 1 → 13 → 2 → 3 → 4, hủy(5) được từ 1,13,2
-        // VN Pay (CK):   12 → 14 → 2 → 3 → 4, hủy(5) được từ 12,14,2
-        var COD_FLOW = [1, 13, 2, 3, 4];
-        var VNPAY_FLOW = [12, 14, 2, 3, 4];
-        var COD_HUY_DUOC = [1, 13, 2];
-        var VNPAY_HUY_DUOC = [12, 14, 2];
+        // CK / Ví: 1(Chờ xác nhận) → 13(Đã xác nhận) → 2(Đang xử lý) → 3(Đang giao) → 4(Hoàn tất)
+        // Tiền mặt: 11(Chờ Thanh Toán) → 14(Đã Thanh Toán) → 2(Đang xử lý) → 3(Đang giao) → 4(Hoàn tất)
+        // Đã hủy (5): chỉ khi đang ở 3 trạng thái đầu
+        var CK_VI_FLOW = [1, 13, 2, 3, 4];
+        var TIEN_MAT_FLOW = [11, 14, 2, 3, 4];
         var ID_HUY = 5;
-        var ID_CU_BO_DI = 11; // "Chờ Thanh Toán" cũ, ẩn đi
+        var ID_HOAN_TAT = 4;
 
         document.querySelectorAll('.status-select').forEach(function (select) {
-            var loaiTT = select.getAttribute('data-loai-thanh-toan') || '';
+            var loaiTT = (select.getAttribute('data-loai-thanh-toan') || '').trim();
             var currentId = parseInt(select.getAttribute('data-current-id'));
-            var isCOD = (loaiTT === 'Tiền mặt');
-            var flow = isCOD ? COD_FLOW : VNPAY_FLOW;
-            var huyDuoc = isCOD ? COD_HUY_DUOC : VNPAY_HUY_DUOC;
+            var isTienMat = (loaiTT === 'Tiền mặt');
+            var flow = isTienMat ? TIEN_MAT_FLOW : CK_VI_FLOW;
             var currentIndex = flow.indexOf(currentId);
+
+            // 3 trạng thái đầu cho phép hủy
+            var canCancel = (currentIndex >= 0 && currentIndex <= 2);
+
+            // Trạng thái kết thúc (Hoàn tất hoặc Đã hủy) → khóa toàn bộ
+            var isTerminal = (currentId === ID_HOAN_TAT || currentId === ID_HUY);
 
             for (var i = 0; i < select.options.length; i++) {
                 var opt = select.options[i];
                 var optId = parseInt(opt.getAttribute('data-id'));
 
-                // Ẩn trạng thái cũ ID 11
-                if (optId === ID_CU_BO_DI) {
-                    opt.style.display = 'none';
-                    opt.disabled = true;
-                    continue;
-                }
-
                 // Trạng thái đang chọn → luôn hiện
                 if (opt.selected) continue;
 
-                // Đã hủy hoặc Hoàn tất → không cho chọn gì nữa
-                if (currentId === ID_HUY || currentId === 4) {
+                if (isTerminal) {
+                    // Đã kết thúc → ẩn hết
                     opt.style.display = 'none';
                     opt.disabled = true;
                     continue;
                 }
 
-                // Hủy (5) → chỉ hiện nếu đang ở trạng thái cho phép hủy
+                // Option "Đã hủy"
                 if (optId === ID_HUY) {
-                    if (!huyDuoc.includes(currentId)) {
+                    if (canCancel) {
+                        opt.style.display = '';
+                        opt.disabled = false;
+                    } else {
                         opt.style.display = 'none';
                         opt.disabled = true;
                     }
                     continue;
                 }
 
-                // Các trạng thái không thuộc luồng này → ẩn
+                // Option thuộc luồng hiện tại
                 var optIndex = flow.indexOf(optId);
                 if (optIndex === -1) {
+                    // Không thuộc luồng này → ẩn
                     opt.style.display = 'none';
                     opt.disabled = true;
                     continue;
                 }
 
-                // Ẩn trạng thái lùi hoặc bằng hiện tại
-                if (currentIndex !== -1 && optIndex <= currentIndex) {
+                // Chỉ hiện bước tiếp theo (currentIndex + 1)
+                if (currentIndex !== -1 && optIndex === currentIndex + 1) {
+                    opt.style.display = '';
+                    opt.disabled = false;
+                } else {
                     opt.style.display = 'none';
                     opt.disabled = true;
                 }
+            }
+
+            // Nếu trạng thái kết thúc → disable toàn bộ select
+            if (isTerminal) {
+                select.disabled = true;
+                select.style.opacity = '0.6';
+                select.style.cursor = 'not-allowed';
             }
         });
 
@@ -865,6 +1010,54 @@
                 }
             });
         }, 5000);
+
+        // ===== Xem chi tiết hóa đơn (AJAX) =====
+        function xemChiTiet(btn) {
+            var id = btn.getAttribute('data-id');
+            var ma = btn.getAttribute('data-ma') || id;
+            document.getElementById('modalTitle').textContent = 'Chi tiết hóa đơn: ' + ma;
+            document.getElementById('modalTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">Đang tải...</td></tr>';
+            document.getElementById('modalEmpty').style.display = 'none';
+            document.getElementById('modalChiTiet').style.display = 'flex';
+
+            fetch('/hoa-don/chi-tiet/' + id)
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    var tbody = document.getElementById('modalTableBody');
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = '';
+                        document.getElementById('modalEmpty').style.display = 'block';
+                        return;
+                    }
+                    document.getElementById('modalEmpty').style.display = 'none';
+                    var html = '';
+                    for (var i = 0; i < data.length; i++) {
+                        var d = data[i];
+                        var donGia = d.donGia != null ? Number(d.donGia).toLocaleString('vi-VN') + ' ₫' : '—';
+                        html += '<tr>';
+                        html += '<td>' + (i + 1) + '</td>';
+                        html += '<td>' + (d.mauSac || '—') + '</td>';
+                        html += '<td>' + (d.size || '—') + '</td>';
+                        html += '<td>' + (d.chatLieu || '—') + '</td>';
+                        html += '<td class="money">' + donGia + '</td>';
+                        html += '<td>' + (d.soLuong || 0) + '</td>';
+                        html += '</tr>';
+                    }
+                    tbody.innerHTML = html;
+                })
+                .catch(function () {
+                    document.getElementById('modalTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#e74c3c;">Lỗi tải dữ liệu.</td></tr>';
+                });
+        }
+
+        function dongModal() {
+            document.getElementById('modalChiTiet').style.display = 'none';
+        }
+
+        // Đóng modal khi click vào overlay
+        document.getElementById('modalChiTiet').addEventListener('click', function (e) {
+            if (e.target === this) dongModal();
+        });
     </script>
 
 </body>
