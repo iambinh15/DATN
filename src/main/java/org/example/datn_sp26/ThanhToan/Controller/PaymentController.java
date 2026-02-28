@@ -113,6 +113,10 @@ public class PaymentController {
         BigDecimal phiShip = new BigDecimal(phiShipObj.toString());
         BigDecimal tongThanhToan = BigDecimal.valueOf(Long.parseLong(amountStr) / 100);
 
+        // Lấy danh sách ID sản phẩm đã chọn từ session
+        @SuppressWarnings("unchecked")
+        java.util.List<Integer> selectedIds = (java.util.List<Integer>) session.getAttribute("SELECTED_IDS");
+
         try {
             // ✅ TRUYỀN THÊM THAM SỐ maVoucher VÀO SERVICE
             // Service sẽ xử lý gán voucher vào hóa đơn và trừ số lượng voucher trong DB
@@ -123,7 +127,7 @@ public class PaymentController {
                     phiShip,
                     maVoucher);
 
-            // 4. XÓA SESSION SAU KHI HOÀN TẤT
+            // XÓA SESSION SAU KHI HOÀN TẤT
             session.removeAttribute("DIA_CHI_TAM");
             session.removeAttribute("PHI_SHIP");
             session.removeAttribute("MA_GIAM_GIA_DA_CHON"); // Xóa voucher sau khi dùng xong

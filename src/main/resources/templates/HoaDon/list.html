@@ -574,7 +574,7 @@
                         <i class="fas fa-file-invoice"></i>
                         <span>Quản lý hóa đơn</span>
                     </a>
-                    <a href="#" class="nav-item">
+                    <a th:href="@{/admin/khuyen-mai}" class="nav-item">
                         <i class="fas fa-ticket-alt"></i>
                         <span>Quản lý voucher</span>
                     </a>
@@ -739,7 +739,8 @@
                                 <td>
                                     <form th:action="@{/hoa-don/cap-nhat-trang-thai}" method="post" style="margin:0;">
                                         <input type="hidden" name="hoaDonId" th:value="${hd.id}" />
-                                        <select name="trangThaiId" class="status-select" onchange="this.form.submit()"
+                                        <select name="trangThaiId" class="status-select"
+                                            onchange="if(confirm('Bạn có muốn đổi trạng thái không?')){this.form.submit()}else{this.value=this.getAttribute('data-current-id')}"
                                             th:data-loai-thanh-toan="${hd.idLoaiThanhToan != null ? hd.idLoaiThanhToan.tenLoai : ''}"
                                             th:data-current-id="${hd.idTrangThaiHoaDon.id}"
                                             th:classappend="${hd.idTrangThaiHoaDon.tenTrangThai == 'Hoàn tất' ? 'select-paid' :
@@ -927,10 +928,10 @@
 
         // ===== Luồng trạng thái theo loại thanh toán =====
         // CK / Ví: 1(Chờ xác nhận) → 13(Đã xác nhận) → 2(Đang xử lý) → 3(Đang giao) → 4(Hoàn tất)
-        // Tiền mặt: 11(Chờ Thanh Toán) → 14(Đã Thanh Toán) → 2(Đang xử lý) → 3(Đang giao) → 4(Hoàn tất)
+        // Tiền mặt: 11(Chờ Thanh Toán) → 13(Đã Xác Nhận) → 2(Đang xử lý) → 3(Đang giao) → 4(Hoàn tất)
         // Đã hủy (5): chỉ khi đang ở 3 trạng thái đầu
         var CK_VI_FLOW = [1, 13, 2, 3, 4];
-        var TIEN_MAT_FLOW = [11, 14, 2, 3, 4];
+        var TIEN_MAT_FLOW = [11, 13, 2, 3, 4];
         var ID_HUY = 5;
         var ID_HOAN_TAT = 4;
 

@@ -231,7 +231,7 @@
 
     .cart-header {
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr 80px;
+      grid-template-columns: 40px 2fr 1fr 1fr 1fr 80px;
       padding: 20px 25px;
       background: #000;
       color: #fff;
@@ -241,13 +241,31 @@
       text-transform: uppercase;
     }
 
-    .cart-header span:not(:first-child) {
+    .cart-header span:not(:first-child):not(:nth-child(2)) {
       text-align: center;
+    }
+
+    /* ===== CHECKBOX ===== */
+    .item-checkbox {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .item-checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #000;
+    }
+
+    .cart-header .item-checkbox input[type="checkbox"] {
+      accent-color: #fff;
     }
 
     .cart-item {
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr 80px;
+      grid-template-columns: 40px 2fr 1fr 1fr 1fr 80px;
       padding: 25px;
       border-bottom: 1px solid #eee;
       align-items: center;
@@ -614,7 +632,7 @@
       }
 
       .cart-item {
-        grid-template-columns: 1fr;
+        grid-template-columns: 40px 1fr;
         gap: 15px;
       }
 
@@ -712,6 +730,8 @@
     <!-- Cart Items -->
     <div class="cart-items">
       <div class="cart-header">
+        <span class="item-checkbox"><input type="checkbox" id="selectAll" checked
+            onchange="toggleSelectAll(this)"></span>
         <span>Sản phẩm</span>
         <span>Số lượng</span>
         <span>Đơn giá</span>
@@ -720,6 +740,10 @@
       </div>
 
       <div th:each="item : ${items}" class="cart-item">
+        <div class="item-checkbox">
+          <input type="checkbox" class="item-select" th:value="${item.id}"
+            th:data-price="${item.soLuong * item.idSanPhamChiTiet.donGia}" checked onchange="updateSelectedTotal()">
+        </div>
         <div class="item-info">
           <div class="item-image">
             <i class="fas fa-tshirt"></i>
@@ -777,8 +801,13 @@
       <h3 class="summary-title">ĐƠN HÀNG</h3>
 
       <div class="summary-row">
+        <span class="label">Sản phẩm đã chọn</span>
+        <span id="selectedCount" th:text="${items.size()}">0</span>
+      </div>
+
+      <div class="summary-row">
         <span class="label">Tạm tính</span>
-        <span
+        <span id="selectedSubtotal"
           th:text="${#numbers.formatDecimal(#aggregates.sum(items.![soLuong * idSanPhamChiTiet.donGia]), 0, 'COMMA', 0, 'POINT')} + 'đ'"></span>
       </div>
 
@@ -789,12 +818,13 @@
 
       <div class="summary-row total">
         <span class="label">Tổng cộng</span>
-        <span
+        <span id="selectedTotal"
           th:text="${#numbers.formatDecimal(#aggregates.sum(items.![soLuong * idSanPhamChiTiet.donGia]), 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"></span>
       </div>
 
-      <form th:action="@{/khach-hang/thanh-toan}" method="get">
-        <button type="submit" class="btn-checkout">
+      <form id="checkoutForm" th:action="@{/khach-hang/thanh-toan}" method="get">
+        <div id="selectedIdsContainer"></div>
+        <button type="submit" class="btn-checkout" onclick="return submitCheckout()">
           Tiến hành thanh toán
         </button>
       </form>
@@ -864,6 +894,64 @@
       const menu = document.getElementById('userMenu');
       if (dropdown && menu && !dropdown.contains(e.target)) {
         menu.classList.remove('active');
+      }
+    });
+
+    // ===== CHECKBOX SELECTION LOGIC =====
+    function toggleSelectAll(master) {
+      document.querySelectorAll('.item-select').forEach(cb => {
+        cb.checked = master.checked;
+      });
+      updateSelectedTotal();
+    }
+
+    function updateSelectedTotal() {
+      const checkboxes = document.querySelectorAll('.item-select');
+      let total = 0;
+      let count = 0;
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          total += parseInt(cb.dataset.price);
+          count++;
+        }
+      });
+
+      // Update select all checkbox state
+      const selectAll = document.getElementById('selectAll');
+      if (selectAll) {
+        selectAll.checked = count === checkboxes.length;
+      }
+
+      // Update summary
+      document.getElementById('selectedCount').textContent = count;
+      document.getElementById('selectedSubtotal').textContent = total.toLocaleString('vi-VN') + 'đ';
+      document.getElementById('selectedTotal').textContent = total.toLocaleString('vi-VN') + ' VNĐ';
+    }
+
+    function submitCheckout() {
+      const selected = document.querySelectorAll('.item-select:checked');
+      if (selected.length === 0) {
+        alert('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán!');
+        return false;
+      }
+
+      // Add hidden inputs for selected IDs
+      const container = document.getElementById('selectedIdsContainer');
+      container.innerHTML = '';
+      selected.forEach(cb => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'selectedIds';
+        input.value = cb.value;
+        container.appendChild(input);
+      });
+      return true;
+    }
+
+    // Initialize totals on page load
+    document.addEventListener('DOMContentLoaded', function () {
+      if (document.querySelector('.item-select')) {
+        updateSelectedTotal();
       }
     });
   </script>

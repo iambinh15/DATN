@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,7 +49,8 @@ public class GHNController {
     // 1️⃣ TRANG THANH TOÁN
     // =======================
     @GetMapping("/thanh-toan")
-    public String hienThiThanhToan(Model model, HttpSession session) {
+    public String hienThiThanhToan(@RequestParam(value = "selectedIds", required = false) List<Integer> selectedIds,
+            Model model, HttpSession session) {
         KhachHang kh = (KhachHang) session.getAttribute("khachHang");
 
         if (kh == null) {
@@ -61,9 +63,27 @@ public class GHNController {
         try {
             Integer idKhachHang = kh.getId();
 
-            var items = gioHangService.layGioHangCuaKhach(idKhachHang);
+            var allItems = gioHangService.layGioHangCuaKhach(idKhachHang);
 
-            long tongTienHang = items.stream()
+            // Nếu không có selectedIds hoặc rỗng, lấy tất cả
+            List<Integer> finalSelectedIds;
+            if (selectedIds != null && !selectedIds.isEmpty()) {
+                finalSelectedIds = selectedIds;
+            } else {
+                finalSelectedIds = allItems.stream()
+                        .map(i -> i.getId())
+                        .collect(Collectors.toList());
+            }
+
+            // Lưu vào session để dùng khi tạo đơn hàng
+            session.setAttribute("SELECTED_IDS", finalSelectedIds);
+
+            // Chỉ tính tổng tiền cho các sản phẩm được chọn
+            var selectedItems = allItems.stream()
+                    .filter(i -> finalSelectedIds.contains(i.getId()))
+                    .collect(Collectors.toList());
+
+            long tongTienHang = selectedItems.stream()
                     .mapToLong(i -> i.getIdSanPhamChiTiet()
                             .getDonGia()
                             .multiply(BigDecimal.valueOf(i.getSoLuong()))
