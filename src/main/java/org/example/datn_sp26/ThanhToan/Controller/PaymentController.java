@@ -108,17 +108,23 @@ public class PaymentController {
         // VNPay amount trả về là (số tiền * 100)
         BigDecimal tongThanhToan = BigDecimal.valueOf(Long.parseLong(amountStr) / 100);
 
+        // Lấy danh sách ID sản phẩm đã chọn từ session
+        @SuppressWarnings("unchecked")
+        java.util.List<Integer> selectedIds = (java.util.List<Integer>) session.getAttribute("SELECTED_IDS");
+
         try {
-            // ✅ 2+3. TẠO HÓA ĐƠN + CHI TIẾT + TRỪ KHO + XÓA GIỎ (ATOMIC)
+            // ✅ TẠO HÓA ĐƠN + CHI TIẾT + TRỪ KHO + XÓA SẢN PHẨM ĐÃ CHỌN (ATOMIC)
             org.example.datn_sp26.BanHang.Entity.HoaDon hoaDon = hoaDonService.taoHoaDonVNPay(
                     khachHang,
                     tongThanhToan,
                     diaChi,
-                    phiShip);
+                    phiShip,
+                    selectedIds);
 
-            // 4. XÓA SESSION SAU KHI HOÀN TẤT
+            // XÓA SESSION SAU KHI HOÀN TẤT
             session.removeAttribute("DIA_CHI_TAM");
             session.removeAttribute("PHI_SHIP");
+            session.removeAttribute("SELECTED_IDS");
 
             // Trả về trực tiếp tên file HTML như trong ảnh cấu trúc của bạn
             return "payment-success";

@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -48,9 +49,9 @@ public class HoaDonService {
     private SanPhamChiTietService sanPhamChiTietService;
 
     // ============================================================
-    // 🔥 HÀM TỔNG HỢP: LƯU CHI TIẾT + TRỪ KHO + XÓA GIỎ HÀNG
+    // 🔥 HÀM TỔNG HỢP: LƯU CHI TIẾ́T + TRỪ KHO (CHỈ CHO SẢN PHẨM ĐƯỢC CHỌN)
     // ============================================================
-    public void xuLyHoanTatHoaDon(Integer idKhachHang, HoaDon hoaDon) {
+    public void xuLyHoanTatHoaDon(Integer idKhachHang, HoaDon hoaDon, List<Integer> selectedIds) {
         var listGioHang = gioHangService.layGioHangCuaKhach(idKhachHang);
 
         if (listGioHang == null || listGioHang.isEmpty()) {
@@ -58,7 +59,12 @@ public class HoaDonService {
             return;
         }
 
-        for (var item : listGioHang) {
+        // Lọc chỉ lấy các sản phẩm được chọn
+        var selectedItems = listGioHang.stream()
+                .filter(i -> selectedIds == null || selectedIds.contains(i.getId()))
+                .collect(Collectors.toList());
+
+        for (var item : selectedItems) {
             HoaDonChiTiet hdct = new HoaDonChiTiet();
             hdct.setIdHoaDon(hoaDon);
             hdct.setIdSanPhamChiTiet(item.getIdSanPhamChiTiet());
@@ -77,7 +83,7 @@ public class HoaDonService {
             spct.setSoLuong(soLuongHienTai - soLuongMua);
             sanPhamChiTietRepository.save(spct);
 
-            // 2. Gọi hàm kiểm tra: Nếu hết sạch các size/màu thì ẩn sản phẩm cha
+            // Gọi hàm kiểm tra: Nếu hết sạch các size/màu thì ẩn sản phẩm cha
             sanPhamChiTietService.checkAndDisableSanPham(spct.getIdSanPham().getId());
 
             System.out.println(">>> Đã trừ SP ID: " + spct.getId() + " | Còn lại: " + spct.getSoLuong());
@@ -179,39 +185,47 @@ public class HoaDonService {
     }
 
     // ============================================================
-    // 🔥 METHOD MỚI: TẠO HÓA ĐƠN VNPAY (ATOMIC - 1 TRANSACTION)
-    // Gộp: tạo header + chi tiết + trừ kho + xóa giỏ hàng
+    // 🔥 METHOD: TẠO HÓA ĐƠN VNPAY (ATOMIC - 1 TRANSACTION)
+    // Gộp: tạo header + chi tiết + trừ kho + xóa sản phẩm đã chọn
     // ============================================================
     @Transactional
     public HoaDon taoHoaDonVNPay(KhachHang khachHang, BigDecimal tongThanhToan,
-            String diaChiGiaoHang, BigDecimal phiShip) {
+            String diaChiGiaoHang, BigDecimal phiShip, List<Integer> selectedIds) {
         // 1. Tạo HoaDon header
         HoaDon hoaDon = taoHoaDonSauThanhToan(khachHang, tongThanhToan, diaChiGiaoHang, phiShip);
 
-        // 2. Tạo chi tiết + trừ kho
-        xuLyHoanTatHoaDon(khachHang.getId(), hoaDon);
+        // 2. Tạo chi tiết + trừ kho (chỉ cho sản phẩm được chọn)
+        xuLyHoanTatHoaDon(khachHang.getId(), hoaDon, selectedIds);
 
-        // 3. Xóa giỏ hàng
-        gioHangService.xoaTatCaGioHang(khachHang.getId());
+        // 3. Xóa CHỈ các sản phẩm đã mua khỏi giỏ hàng
+        if (selectedIds != null && !selectedIds.isEmpty()) {
+            gioHangService.xoaDanhSachSanPhamDaMua(selectedIds);
+        } else {
+            gioHangService.xoaTatCaGioHang(khachHang.getId());
+        }
 
         return hoaDon;
     }
 
     // ============================================================
-    // 🔥 METHOD MỚI: TẠO HÓA ĐƠN COD (ATOMIC - 1 TRANSACTION)
-    // Gộp: tạo header + chi tiết + trừ kho + xóa giỏ hàng
+    // 🔥 METHOD: TẠO HÓA ĐƠN COD (ATOMIC - 1 TRANSACTION)
+    // Gộp: tạo header + chi tiết + trừ kho + xóa sản phẩm đã chọn
     // ============================================================
     @Transactional
     public HoaDon taoHoaDonCODDayDu(KhachHang khachHang, BigDecimal tongThanhToan,
-            String diaChiGiaoHang) {
+            String diaChiGiaoHang, List<Integer> selectedIds) {
         // 1. Tạo HoaDon header
         HoaDon hoaDon = taoHoaDonCOD(khachHang, tongThanhToan, diaChiGiaoHang);
 
-        // 2. Tạo chi tiết + trừ kho
-        xuLyHoanTatHoaDon(khachHang.getId(), hoaDon);
+        // 2. Tạo chi tiết + trừ kho (chỉ cho sản phẩm được chọn)
+        xuLyHoanTatHoaDon(khachHang.getId(), hoaDon, selectedIds);
 
-        // 3. Xóa giỏ hàng
-        gioHangService.xoaTatCaGioHang(khachHang.getId());
+        // 3. Xóa CHỈ các sản phẩm đã mua khỏi giỏ hàng
+        if (selectedIds != null && !selectedIds.isEmpty()) {
+            gioHangService.xoaDanhSachSanPhamDaMua(selectedIds);
+        } else {
+            gioHangService.xoaTatCaGioHang(khachHang.getId());
+        }
 
         return hoaDon;
     }
@@ -297,6 +311,7 @@ public class HoaDonService {
         hoaDon.setIdTrangThaiHoaDon(trangThaiMoi);
         hoaDonRepository.save(hoaDon);
     }
+
     @Transactional
     public void thanhToan(HoaDon hoaDon, List<GioHangChiTiet> listGioHang) {
         // Lưu hóa đơn trước
@@ -333,6 +348,7 @@ public class HoaDonService {
             hoaDonChiTietRepository.save(hdct);
         }
     }
+
     private String taoMaHoaDon() {
         return "HD" + System.currentTimeMillis();
     }
