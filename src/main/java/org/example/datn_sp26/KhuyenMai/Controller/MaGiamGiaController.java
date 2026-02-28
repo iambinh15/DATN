@@ -2,7 +2,9 @@ package org.example.datn_sp26.KhuyenMai.Controller;
 
 import org.example.datn_sp26.KhuyenMai.Entity.MaGiamGia;
 import org.example.datn_sp26.KhuyenMai.Repository.MaGiamGiaRepository;
+import org.example.datn_sp26.KhuyenMai.Service.MaGiamGiaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,8 @@ public class MaGiamGiaController {
 
     @Autowired
     private MaGiamGiaRepository repo;
+    @Autowired
+    private MaGiamGiaService maGiamGiaService;
 
     @GetMapping
     public String hienThi(Model model) {
@@ -47,5 +51,10 @@ public class MaGiamGiaController {
             redirectAttributes.addFlashAttribute("error", "Đã có lỗi xảy ra: " + e.getMessage());
         }
         return "redirect:/admin/khuyen-mai";
+    }
+    @PostMapping("/ap-dung")
+    public ResponseEntity<?> applyVoucher(@RequestParam String code, @RequestParam double total) {
+        double giamGia = maGiamGiaService.tinhSoTienGiam(code, total);
+        return ResponseEntity.ok(giamGia);
     }
 }

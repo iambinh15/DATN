@@ -14,7 +14,8 @@ import java.util.Optional;
 @Repository
 public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
     Optional<HoaDon> findByMaHoaDon(String maHoaDon);
-
+    // Thêm dòng này để sửa lỗi đỏ tại image_229719.jpg
+    List<HoaDon> findByIdKhachHang_IdOrderByNgayTaoDesc(Integer idKhachHang);
     List<HoaDon> findByIdKhachHang_Id(Integer idKhachHang);
 
     @Query("SELECT h FROM HoaDon h WHERE h.idKhachHang.id = :idKH AND h.idTrangThaiHoaDon.tenTrangThai <> 'test' ORDER BY h.ngayTao DESC")

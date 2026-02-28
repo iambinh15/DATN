@@ -102,14 +102,26 @@ public class HoaDonAdminController {
             @RequestParam Integer trangThaiId,
             RedirectAttributes redirectAttributes) {
         try {
+            // 1. Luôn thực hiện cập nhật trạng thái hóa đơn trước (Logic cũ)
             hoaDonService.capNhatTrangThai(hoaDonId, trangThaiId);
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái thành công!");
+
+            // 2. Kiểm tra nếu trạng thái được chọn là "Đã hủy" (ID = 5 theo DB của bạn)
+            if (trangThaiId != null && trangThaiId == 5) {
+                // Gọi hàm hoàn kho đã sửa lỗi "cannot find symbol"
+                hoaDonService.huyDonHangVaHoanKho(hoaDonId);
+
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "Hóa đơn #" + hoaDonId + " đã được hủy và hoàn trả số lượng vào kho thành công!");
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái thành công!");
+            }
+
         } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            // Nếu có bất kỳ lỗi nào (ví dụ lỗi logic trong hàm hoàn kho), thông báo sẽ hiển thị tại đây
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
         return "redirect:/hoa-don";
     }
-
     // ===== Helper: tái sử dụng logic lọc =====
     private List<HoaDon> getDanhSachFiltered(String tenKH, String trangThai,
             String loaiTT, String tuNgay, String denNgay) {

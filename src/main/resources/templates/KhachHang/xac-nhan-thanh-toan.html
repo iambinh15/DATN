@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,451 +7,252 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background-color: #f9f9f9; color: #111; line-height: 1.6; }
+    .header { background: #000; color: #fff; position: sticky; top: 0; z-index: 1000; }
+    .nav-container { max-width: 1400px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; height: 70px; }
+    .logo { font-size: 28px; font-weight: 700; letter-spacing: 3px; text-decoration: none; color: #fff; }
+    .checkout-layout { max-width: 1000px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 380px; gap: 40px; }
+    .checkout-section { background: #fff; border-radius: 12px; padding: 30px; margin-bottom: 25px; }
+    .section-title { font-size: 16px; font-weight: 600; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; }
+    .section-title .number { width: 28px; height: 28px; background: #000; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+    .address-option { display: flex; align-items: center; gap: 12px; padding: 15px; border: 2px solid #eee; border-radius: 8px; cursor: pointer; margin-bottom: 12px; }
+    .address-option.active { border-color: #000; background: #fafafa; }
+    .address-option input { display: none; }
+    .radio-circle { width: 20px; height: 20px; border: 2px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .address-option.active .radio-circle { border-color: #000; }
+    .radio-circle::after { content: ''; width: 10px; height: 10px; background: #000; border-radius: 50%; opacity: 0; }
+    .address-option.active .radio-circle::after { opacity: 1; }
+    .form-select, .form-input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+    .new-address-form { display: none; margin-top: 20px; }
+    .new-address-form.active { display: block; }
+    .confirmed-address { display: none; margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #000; }
+    .confirmed-address.active { display: block; }
+    .payment-option { display: flex; align-items: center; gap: 10px; padding: 20px; border: 2px solid #eee; border-radius: 8px; cursor: pointer; margin-bottom: 10px; }
+    .payment-option.active { border-color: #000; background: #fafafa; }
+    .order-summary { background: #fff; border-radius: 12px; padding: 30px; position: sticky; top: 100px; }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
+    .summary-row.total { border-top: 2px solid #000; padding-top: 20px; font-size: 20px; font-weight: 700; }
+    .btn-checkout { width: 100%; padding: 18px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 25px; }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f9f9f9;
-      color: #111;
-      line-height: 1.6;
-    }
-
-    .header {
-      background: #000;
-      color: #fff;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    .nav-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      height: 70px;
-    }
-
-    .logo {
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: 3px;
-      text-decoration: none;
-      color: #fff;
-    }
-
-    .secure-text {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #999;
-      font-size: 13px;
-    }
-
-    .page-header {
-      background: #fff;
-      border-bottom: 1px solid #eee;
-      padding: 30px 20px;
-    }
-
-    .page-header-content {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    .page-title {
-      font-size: 28px;
-      font-weight: 400;
-      letter-spacing: 2px;
-    }
-
-    .checkout-layout {
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 0 20px;
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 40px;
-    }
-
-    .checkout-section {
-      background: #fff;
-      border-radius: 12px;
-      padding: 30px;
-      margin-bottom: 25px;
-    }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 25px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .section-title .number {
-      width: 28px;
-      height: 28px;
-      background: #000;
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .address-options {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .address-option {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 15px;
-      border: 2px solid #eee;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .address-option.active {
-      border-color: #000;
-      background: #fafafa;
-    }
-
-    .address-option input[type="radio"] {
-      display: none;
-    }
-
-    .radio-circle {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #ccc;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .address-option.active .radio-circle {
-      border-color: #000;
-    }
-
-    .radio-circle::after {
-      content: '';
-      width: 10px;
-      height: 10px;
-      background: #000;
-      border-radius: 50%;
-      opacity: 0;
-    }
-
-    .address-option.active .radio-circle::after {
-      opacity: 1;
-    }
-
-    .form-select,
-    .form-input {
-      width: 100%;
-      padding: 15px;
-      border: 2px solid #eee;
-      border-radius: 8px;
-      font-size: 14px;
-      margin-bottom: 12px;
-    }
-
-    .new-address-form {
-      display: none;
-      margin-top: 20px;
-    }
-
-    .new-address-form.active {
-      display: block;
-    }
-
-    .confirmed-address {
-      display: none;
-      margin-top: 20px;
-      padding: 20px;
-      background: #f9f9f9;
-      border-radius: 8px;
-      border-left: 4px solid #000;
-    }
-
-    .confirmed-address.active {
-      display: block;
-    }
-
-    .payment-methods {
-      display: flex;
-      gap: 15px;
-    }
-
-    .payment-option {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 20px;
-      border: 2px solid #eee;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .payment-option.active {
-      border-color: #000;
-      background: #fafafa;
-    }
-
-    .order-summary {
-      background: #fff;
-      border-radius: 12px;
-      padding: 30px;
-      position: sticky;
-      top: 100px;
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 15px;
-    }
-
-    .summary-row.total {
-      border-top: 2px solid #000;
-      padding-top: 20px;
-      font-size: 20px;
-      font-weight: 700;
-    }
-
-    .btn-checkout {
-      width: 100%;
-      padding: 18px;
-      background: #000;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 25px;
-    }
+    /* VOUCHER SCROLL */
+    .voucher-scroll-container { max-height: 200px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 8px; padding: 5px; margin-top: 10px; }
+    .voucher-scroll-container::-webkit-scrollbar { width: 4px; }
+    .voucher-scroll-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+    .voucher-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; position: relative; background: #fff; }
+    .voucher-item.disabled { opacity: 0.5; background: #f9f9f9; cursor: not-allowed; border-style: dashed; }
+    .voucher-item.active { border-color: #000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .btn-apply-v { padding: 6px 12px; font-size: 11px; border: 1px solid #000; background: #fff; cursor: pointer; border-radius: 4px; font-weight: 600; }
+    .btn-apply-v.selected { background: #000; color: #fff; }
+    .voucher-item[data-condition]:hover::after { content: attr(data-condition); position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 11px; white-space: nowrap; z-index: 999; }
   </style>
 </head>
 
 <body>
-  <header class="header">
-    <nav class="nav-container">
-      <a th:href="@{/khach-hang/trang-chu}" class="logo">COTIT</a>
-      <div class="secure-text"><i class="fas fa-lock"></i> Thanh toán bảo mật</div>
-    </nav>
-  </header>
+<header class="header">
+  <nav class="nav-container"><a th:href="@{/khach-hang/trang-chu}" class="logo">COTIT</a></nav>
+</header>
 
-  <div class="checkout-layout">
-    <div class="checkout-main">
-      <div class="checkout-section">
-        <h2 class="section-title"><span class="number">1</span> Địa chỉ giao hàng</h2>
-        <div class="address-options">
-          <label class="address-option active" id="optionTK" onclick="chonDiaChiTK()">
-            <input type="radio" name="dc" checked>
-            <div class="radio-circle"></div>
-            <span class="option-text">Địa chỉ theo tài khoản</span>
-          </label>
-          <label class="address-option" id="optionMoi" onclick="chonDiaChiMoi()">
-            <input type="radio" name="dc">
-            <div class="radio-circle"></div>
-            <span class="option-text">Nhập địa chỉ mới</span>
-          </label>
-        </div>
-
-        <div id="diaChiTK" class="address-select-box">
-          <select id="diaChiMacDinh" class="form-select" onchange="capNhatDiaChiTuDanhSach()">
-            <option value="">-- Chọn địa chỉ đã lưu --</option>
-            <option th:each="dc : ${dsDiaChi}" th:value="${dc.diaChi}" th:text="${dc.diaChi}"></option>
-          </select>
-        </div>
-
-        <div id="diaChiMoi" class="new-address-form">
-          <input id="soNha" class="form-input" placeholder="Số nhà, tên đường...">
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-            <select id="tinh" class="form-select">
-              <option>-- Tỉnh/TP --</option>
-            </select>
-            <select id="huyen" class="form-select">
-              <option>-- Quận/Huyện --</option>
-            </select>
-            <select id="xa" class="form-select">
-              <option>-- Phường/Xã --</option>
-            </select>
-          </div>
-          <button type="button" class="btn-checkout" style="margin-top: 0;" onclick="xacNhanDiaChiMoi()">Xác nhận địa
-            chỉ này</button>
-        </div>
-
-        <div id="diaChiXacNhan" class="confirmed-address">
-          <p style="font-size: 12px; color: #666;">GIAO ĐẾN:</p>
-          <p id="labelDiaChi" style="font-weight: 600;"></p>
-        </div>
+<div class="checkout-layout">
+  <div class="checkout-main">
+    <div class="checkout-section">
+      <h2 class="section-title"><span class="number">1</span> Địa chỉ giao hàng</h2>
+      <div class="address-options">
+        <label class="address-option active" id="optionTK" onclick="chonDiaChiTK()">
+          <input type="radio" name="dc" checked><div class="radio-circle"></div><span>Địa chỉ có sẵn</span>
+        </label>
+        <label class="address-option" id="optionMoi" onclick="chonDiaChiMoi()">
+          <input type="radio" name="dc"><div class="radio-circle"></div><span>Địa chỉ mới</span>
+        </label>
       </div>
-
-      <div class="checkout-section">
-        <h2 class="section-title"><span class="number">2</span> Thanh toán</h2>
-        <div class="payment-methods">
-          <label class="payment-option active" onclick="selectPayment(this, 'COD')">
-            <input type="radio" name="pay" value="COD" checked><span>Tiền mặt (COD)</span>
-          </label>
-          <label class="payment-option" onclick="selectPayment(this, 'VNPAY')">
-            <input type="radio" name="pay" value="VNPAY"><span>VNPay</span>
-          </label>
+      <div id="diaChiTK">
+        <select id="diaChiMacDinh" class="form-select" onchange="capNhatDiaChiTuDanhSach()">
+          <option value="">-- Chọn địa chỉ --</option>
+          <option th:each="dc : ${dsDiaChi}" th:value="${dc.diaChi}" th:text="${dc.diaChi}"></option>
+        </select>
+      </div>
+      <div id="diaChiMoi" class="new-address-form">
+        <input id="soNha" class="form-input" placeholder="Số nhà, đường...">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+          <select id="tinh" class="form-select"><option>-- Tỉnh --</option></select>
+          <select id="huyen" class="form-select"><option>-- Huyện --</option></select>
+          <select id="xa" class="form-select"><option>-- Xã --</option></select>
         </div>
+        <button type="button" class="btn-checkout" style="margin:0" onclick="xacNhanDiaChiMoi()">Xác nhận</button>
+      </div>
+      <div id="diaChiXacNhan" class="confirmed-address">
+        <p id="labelDiaChi" style="font-weight: 600;"></p>
       </div>
     </div>
 
-    <div class="order-summary">
-      <h3 style="margin-bottom: 20px;">ĐƠN HÀNG</h3>
-      <div class="summary-row"><span>Tiền hàng</span><span
-          th:text="|${#numbers.formatDecimal(tongTienHang,0,'COMMA',0,'POINT')} đ|"></span></div>
-      <div class="summary-row"><span>Phí vận chuyển</span><span id="ship">0 đ</span></div>
-      <div class="summary-row total"><span>Tổng cộng</span><span id="tong">0 đ</span></div>
-      <button class="btn-checkout" onclick="thanhToan()">ĐẶT HÀNG NGAY</button>
+    <div class="checkout-section">
+      <h2 class="section-title"><span class="number">2</span> Thanh toán</h2>
+      <div class="payment-methods">
+        <label class="payment-option active" onclick="selectPayment(this, 'COD')">
+          <input type="radio" name="pay" value="COD" checked><span>Tiền mặt (COD)</span>
+        </label>
+        <label class="payment-option" onclick="selectPayment(this, 'VNPAY')">
+          <input type="radio" name="pay" value="VNPAY"><span>VNPay</span>
+        </label>
+      </div>
     </div>
   </div>
 
-  <script th:inline="javascript">
-    const TOKEN = "0159688c-fb78-11f0-92cb-eef4825ef61b";
-    const SHOP_DISTRICT = 1488; // Thay bằng DistrictID của shop bạn nếu cần
-    const tienHang = /*[[${tongTienHang}]]*/ 0;
-    let phiShip = 0;
-    let diaChiFinal = "";
+  <div class="order-summary">
+    <h3 style="margin-bottom: 20px;">ĐƠN HÀNG</h3>
+    <label style="font-size: 12px; font-weight: 700; color: #888;">MÃ GIẢM GIÁ</label>
+    <div class="voucher-scroll-container">
+      <div th:each="km : ${dsMaGiamGia}"
+           th:classappend="${tongTienHang < km.giamToiThieu} ? 'voucher-item disabled' : 'voucher-item'"
+           th:data-condition="${tongTienHang < km.giamToiThieu} ? 'Đơn tối thiểu ' + ${#numbers.formatDecimal(km.giamToiThieu,0,'COMMA',0,'POINT')} + 'đ' : 'Bấm để chọn'"
+           th:id="'v-' + ${km.ma}">
+        <div style="font-size: 13px;"><b th:text="${km.ma}"></b><br>
+          <small th:text="${km.loaiGiam == 1 ? 'Giảm ' + km.giaTri + '%' : 'Giảm ' + #numbers.formatDecimal(km.giaTri,0,'COMMA',0,'POINT') + 'đ'}"></small>
+        </div>
+        <button class="btn-apply-v" th:disabled="${tongTienHang < km.giamToiThieu}"
+                th:onclick="apDungVoucher([[${km.ma}]], [[${km.loaiGiam}]], [[${km.giaTri}]], [[${km.giamToiDa}]])">Chọn</button>
+      </div>
+    </div>
 
-    document.addEventListener('DOMContentLoaded', () => { capNhatTien(); loadProvinces(); });
+    <div style="margin-top: 25px;">
+      <div class="summary-row"><span>Tiền hàng</span><span th:text="|${#numbers.formatDecimal(tongTienHang,0,'COMMA',0,'POINT')} đ|"></span></div>
+      <div class="summary-row" id="rowGiamGia" style="display: none; color: #e74c3c;"><span>Giảm giá</span><span id="labelGiamGia">-0 đ</span></div>
+      <div class="summary-row"><span>Phí ship</span><span id="ship">0 đ</span></div>
+      <div class="summary-row total"><span>Tổng cộng</span><span id="tong">0 đ</span></div>
+    </div>
+    <button class="btn-checkout" onclick="thanhToan()">ĐẶT HÀNG NGAY</button>
+  </div>
+</div>
 
-    async function loadProvinces() {
-      const r = await fetch("https://online-gateway.ghn.vn/shiip/public-api/master-data/province", { headers: { Token: TOKEN } });
-      const d = await r.json();
-      d.data.forEach(p => tinh.innerHTML += `<option value="${p.ProvinceID}">${p.ProvinceName}</option>`);
+<script th:inline="javascript">
+  const TOKEN = "0159688c-fb78-11f0-92cb-eef4825ef61b";
+  const tienHang = /*[[${tongTienHang}]]*/ 0;
+  let phiShip = 0, tienGiam = 0, maVoucherChon = "", diaChiFinal = "";
+
+  document.addEventListener('DOMContentLoaded', () => { capNhatTien(); loadProvinces(); });
+
+  function apDungVoucher(ma, loai, giaTri, maxGiam) {
+    if (maVoucherChon === ma) { maVoucherChon = ""; tienGiam = 0; }
+    else {
+      maVoucherChon = ma;
+      tienGiam = (loai === 1) ? Math.min(tienHang * (giaTri / 100), maxGiam || Infinity) : Math.min(giaTri, tienHang);
     }
+    updateVoucherUI(); capNhatTien();
+  }
 
-    tinh.onchange = async () => {
-      const r = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/district?province_id=${tinh.value}`, { headers: { Token: TOKEN } });
-      const d = await r.json();
-      huyen.innerHTML = "<option>-- Quận/Huyện --</option>";
-      d.data.forEach(x => huyen.innerHTML += `<option value="${x.DistrictID}">${x.DistrictName}</option>`);
-    };
+  function updateVoucherUI() {
+    document.querySelectorAll('.voucher-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.btn-apply-v').forEach(btn => { btn.innerText = "Chọn"; btn.classList.remove('selected'); });
+    if (maVoucherChon) {
+      const item = document.getElementById('v-' + maVoucherChon);
+      item.classList.add('active'); item.querySelector('.btn-apply-v').innerText = "Đã chọn";
+      item.querySelector('.btn-apply-v').classList.add('selected');
+      document.getElementById('rowGiamGia').style.display = 'flex';
+      document.getElementById('labelGiamGia').innerText = "-" + tienGiam.toLocaleString() + " đ";
+    } else { document.getElementById('rowGiamGia').style.display = 'none'; }
+  }
 
-    huyen.onchange = async () => {
-      const r = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${huyen.value}`, { headers: { Token: TOKEN } });
-      const d = await r.json();
-      xa.innerHTML = "<option>-- Phường/Xã --</option>";
-      d.data.forEach(x => xa.innerHTML += `<option value="${x.WardCode}">${x.WardName}</option>`);
-    };
+  // GHN Logic
+  async function loadProvinces() {
+    const r = await fetch("https://online-gateway.ghn.vn/shiip/public-api/master-data/province", { headers: { Token: TOKEN } });
+    const d = await r.json(); d.data.forEach(p => tinh.innerHTML += `<option value="${p.ProvinceID}">${p.ProvinceName}</option>`);
+  }
+  tinh.onchange = async () => {
+    const r = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/district?province_id=${tinh.value}`, { headers: { Token: TOKEN } });
+    const d = await r.json(); huyen.innerHTML = "<option>-- Huyện --</option>";
+    d.data.forEach(x => huyen.innerHTML += `<option value="${x.DistrictID}">${x.DistrictName}</option>`);
+  };
+  huyen.onchange = async () => {
+    const r = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${huyen.value}`, { headers: { Token: TOKEN } });
+    const d = await r.json(); xa.innerHTML = "<option>-- Xã --</option>";
+    d.data.forEach(x => xa.innerHTML += `<option value="${x.WardCode}">${x.WardName}</option>`);
+  };
 
-    function chonDiaChiMoi() {
-      document.getElementById('diaChiMoi').classList.add('active');
-      document.getElementById('diaChiTK').style.display = 'none';
-      document.getElementById('optionTK').classList.remove('active');
-      document.getElementById('optionMoi').classList.add('active');
-      phiShip = 0; capNhatTien();
-    }
+  function chonDiaChiMoi() {
+    document.getElementById('diaChiMoi').classList.add('active');
+    document.getElementById('diaChiTK').style.display = 'none';
+    document.getElementById('optionTK').classList.remove('active');
+    document.getElementById('optionMoi').classList.add('active');
+  }
+  function chonDiaChiTK() {
+    document.getElementById('diaChiMoi').classList.remove('active');
+    document.getElementById('diaChiTK').style.display = 'block';
+    document.getElementById('optionTK').classList.add('active');
+    document.getElementById('optionMoi').classList.remove('active');
+    capNhatDiaChiTuDanhSach();
+  }
 
-    function chonDiaChiTK() {
-      document.getElementById('diaChiMoi').classList.remove('active');
-      document.getElementById('diaChiTK').style.display = 'block';
-      document.getElementById('optionTK').classList.add('active');
-      document.getElementById('optionMoi').classList.remove('active');
-      capNhatDiaChiTuDanhSach();
-    }
+  async function capNhatDiaChiTuDanhSach() {
+    const val = document.getElementById('diaChiMacDinh').value;
+    if (!val) return; diaChiFinal = val;
+    document.getElementById('labelDiaChi').innerText = val;
+    document.getElementById('diaChiXacNhan').classList.add('active');
+    const p = val.split(',').map(s => s.trim());
+    try {
+      const resP = await fetch("https://online-gateway.ghn.vn/shiip/public-api/master-data/province", { headers: { Token: TOKEN } });
+      const pObj = (await resP.json()).data.find(x => p[p.length-1].includes(x.ProvinceName));
+      const resD = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/district?province_id=${pObj.ProvinceID}`, { headers: { Token: TOKEN } });
+      const dObj = (await resD.json()).data.find(x => p[p.length-2].includes(x.DistrictName));
+      const resW = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${dObj.DistrictID}`, { headers: { Token: TOKEN } });
+      const wObj = (await resW.json()).data.find(x => p[p.length-3].includes(x.WardName));
+      goiApiTinhPhi(dObj.DistrictID, wObj.WardCode);
+    } catch (e) { console.error(e); }
+  }
 
-    async function capNhatDiaChiTuDanhSach() {
-      const val = document.getElementById('diaChiMacDinh').value;
-      if (!val) return;
-      diaChiFinal = val;
-      document.getElementById('labelDiaChi').innerText = diaChiFinal;
-      document.getElementById('diaChiXacNhan').classList.add('active');
-      document.getElementById('ship').innerText = "Đang tính phí...";
+  function xacNhanDiaChiMoi() {
+    diaChiFinal = `${soNha.value}, ${xa.options[xa.selectedIndex].text}, ${huyen.options[huyen.selectedIndex].text}, ${tinh.options[tinh.selectedIndex].text}`;
+    document.getElementById('labelDiaChi').innerText = diaChiFinal;
+    document.getElementById('diaChiXacNhan').classList.add('active');
+    goiApiTinhPhi(huyen.value, xa.value);
+  }
 
-      const parts = val.split(',').map(p => p.trim());
-      const tTinh = parts[parts.length - 1], tHuyen = parts[parts.length - 2], tXa = parts[parts.length - 3];
+  function goiApiTinhPhi(dID, wCode) {
+    fetch("/khach-hang/tinh-phi-ship-dia-chi-moi", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ districtId: dID, wardCode: wCode })
+    }).then(r => r.json()).then(d => { phiShip = d.phiShip; capNhatTien(); });
+  }
 
-      try {
-        const resP = await fetch("https://online-gateway.ghn.vn/shiip/public-api/master-data/province", { headers: { Token: TOKEN } });
-        const provinces = (await resP.json()).data;
-        const pObj = provinces.find(p => tTinh.includes(p.ProvinceName) || p.ProvinceName.includes(tTinh));
+  function capNhatTien() {
+    const total = (tienHang - tienGiam) + phiShip;
+    document.getElementById('ship').innerText = phiShip.toLocaleString() + " đ";
+    document.getElementById('tong').innerText = total.toLocaleString() + " đ";
+  }
 
-        const resD = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/district?province_id=${pObj.ProvinceID}`, { headers: { Token: TOKEN } });
-        const districts = (await resD.json()).data;
-        const dObj = districts.find(d => tHuyen.includes(d.DistrictName) || d.DistrictName.includes(tHuyen));
+  function selectPayment(el, v) {
+    document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+    el.classList.add('active'); el.querySelector('input').checked = true;
+  }
 
-        const resW = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${dObj.DistrictID}`, { headers: { Token: TOKEN } });
-        const wards = (await resW.json()).data;
-        const wObj = wards.find(w => tXa.includes(w.WardName) || w.WardName.includes(tXa));
+  // QUAN TRỌNG: Gửi dữ liệu về Server
+  function thanhToan() {
+    if (!diaChiFinal) { alert("Chọn địa chỉ!"); return; }
+    const totalFinal = (tienHang - tienGiam) + phiShip;
+    const paymentMethod = document.querySelector("input[name='pay']:checked").value;
 
-        goiApiTinhPhi(dObj.DistrictID, wObj.WardCode);
-      } catch (e) { document.getElementById('ship').innerText = "Không tính được phí ship"; }
-    }
-
-    function xacNhanDiaChiMoi() {
-      diaChiFinal = `${soNha.value}, ${xa.options[xa.selectedIndex].text}, ${huyen.options[huyen.selectedIndex].text}, ${tinh.options[tinh.selectedIndex].text}`;
-      document.getElementById('labelDiaChi').innerText = diaChiFinal;
-      document.getElementById('diaChiXacNhan').classList.add('active');
-      goiApiTinhPhi(huyen.value, xa.value);
-    }
-
-    function goiApiTinhPhi(dID, wCode) {
-      fetch("/khach-hang/tinh-phi-ship-dia-chi-moi", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ districtId: dID, wardCode: wCode })
-      }).then(r => r.json()).then(d => { phiShip = d.phiShip; capNhatTien(); });
-    }
-
-    function capNhatTien() {
-      document.getElementById('ship').innerText = phiShip.toLocaleString() + " đ";
-      document.getElementById('tong').innerText = (tienHang + phiShip).toLocaleString() + " đ";
-    }
-
-    function selectPayment(el, v) {
-      document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
-      el.classList.add('active');
-      el.querySelector('input').checked = true;
-    }
-
-    function thanhToan() {
-      if (!diaChiFinal) { alert("Vui lòng chọn địa chỉ!"); return; }
-      fetch("/khach-hang/luu-dia-chi-tam", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ diaChi: diaChiFinal, phiShip: phiShip })
-      }).then(() => {
-        const p = document.querySelector("input[name='pay']:checked").value;
-        if (p === "VNPAY") {
-          location.href = "/api/vnpay/pay?amount=" + (tienHang + phiShip);
-        } else {
-          // COD: gọi API tạo đơn hàng
-          fetch("/khach-hang/tao-don-cod", { method: "POST" })
-            .then(r => {
-              if (r.ok) {
-                location.href = "/khach-hang/payment-success-cod";
-              } else {
-                alert("Lỗi tạo đơn hàng. Vui lòng thử lại!");
-              }
-            })
-            .catch(() => alert("Lỗi kết nối. Vui lòng thử lại!"));
-        }
-      });
-    }
-  </script>
+    // Bước 1: Lưu thông tin tạm thời (Địa chỉ, Ship, Voucher) vào Session/DB tạm
+    fetch("/khach-hang/luu-dia-chi-tam", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        diaChi: diaChiFinal,
+        phiShip: phiShip,
+        maVoucher: maVoucherChon, // Tên mã gửi lên đây
+        tienGiam: tienGiam,       // Số tiền giảm gửi lên đây
+        tongTien: totalFinal      // Tổng tiền cuối cùng
+      })
+    }).then(r => {
+      if (paymentMethod === "VNPAY") {
+        location.href = "/api/vnpay/pay?amount=" + totalFinal;
+      } else {
+        // Gửi đơn COD kèm thông mã voucher
+        fetch("/khach-hang/tao-don-cod", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ maVoucher: maVoucherChon, tongTien: totalFinal, tienGiam: tienGiam })
+        }).then(res => res.ok ? location.href = "/khach-hang/payment-success-cod" : alert("Lỗi!"));
+      }
+    });
+  }
+</script>
 </body>
-
 </html>
