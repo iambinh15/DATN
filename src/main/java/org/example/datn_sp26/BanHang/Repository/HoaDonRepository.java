@@ -14,9 +14,19 @@ import java.util.Optional;
 @Repository
 public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
     Optional<HoaDon> findByMaHoaDon(String maHoaDon);
-
+    // Kiểm tra khách hàng đã có hóa đơn nào sử dụng voucher này chưa
+    // Trong file HoaDonRepository.java
+    @Query("SELECT COUNT(h) > 0 FROM HoaDon h " +
+            "WHERE h.idKhachHang.id = :idKH " +
+            "AND h.idMaGiamGia.id = :idVoucher " +
+            "AND h.idTrangThaiHoaDon.id <> 5")
+    boolean checkVoucherDaDungThatSu(@Param("idKH") Integer idKH, @Param("idVoucher") Integer idVoucher);
+    // Thêm dòng này để xử lý lỗi layDonHangCuaKhach
+    List<HoaDon> findByIdKhachHang_IdOrderByNgayTaoDesc(Integer idKhachHang);
     List<HoaDon> findByIdKhachHang_Id(Integer idKhachHang);
-
+    @Query("SELECT COUNT(h) > 0 FROM HoaDon h WHERE h.idKhachHang.id = :idKH " +
+            "AND h.idMaGiamGia.id = :idVoucher AND h.idTrangThaiHoaDon.id <> 0")
+    boolean checkDaDung(@Param("idKH") Integer idKH, @Param("idVoucher") Integer idVoucher);
     @Query("SELECT h FROM HoaDon h WHERE h.idKhachHang.id = :idKH AND h.idTrangThaiHoaDon.tenTrangThai <> 'test' ORDER BY h.ngayTao DESC")
     List<HoaDon> findByKhachHangExcludeTest(@Param("idKH") Integer idKH);
 

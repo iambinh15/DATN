@@ -2,9 +2,12 @@ package org.example.datn_sp26.GiaoHang.Controller;
 
 import jakarta.servlet.http.HttpSession;
 import org.example.datn_sp26.BanHang.Entity.HoaDon;
+import org.example.datn_sp26.BanHang.Repository.HoaDonRepository;
 import org.example.datn_sp26.BanHang.Service.HoaDonService;
 import org.example.datn_sp26.GiaoHang.Service.GHNService;
 import org.example.datn_sp26.BanHang.Service.GioHangService;
+import org.example.datn_sp26.KhuyenMai.Entity.MaGiamGia;
+import org.example.datn_sp26.KhuyenMai.Repository.MaGiamGiaRepository;
 import org.example.datn_sp26.KhuyenMai.Service.MaGiamGiaService;
 import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
 import org.example.datn_sp26.NguoiDung.Service.DiaChiService;
@@ -17,7 +20,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/khach-hang")
@@ -37,6 +40,10 @@ public class GHNController {
 
     @Autowired
     private HoaDonService hoaDonService;
+    @Autowired
+    private MaGiamGiaRepository maGiamGiaRepository;
+    @Autowired
+    private HoaDonRepository hoaDonRepository;
 
     // =======================
     // 1️⃣ TRANG THANH TOÁN
@@ -139,54 +146,148 @@ public class GHNController {
     // =======================
     // 4️⃣ TẠO ĐƠN COD
     // =======================
+    // =======================
+// 4️⃣ TẠO ĐƠN COD
+// =======================
     @PostMapping("/tao-don-cod")
     @ResponseBody
     public Map<String, Object> taoDonCOD(HttpSession session) {
         Map<String, Object> response = new HashMap<>();
 
+        // 1. Kiểm tra session khách hàng
         KhachHang khachHang = (KhachHang) session.getAttribute("khachHang");
         if (khachHang == null) {
-            throw new RuntimeException("Chưa đăng nhập");
+            System.out.println("===> [CẢNH BÁO]: Phiên đăng nhập (session) khách hàng bị null!");
+            response.put("success", false);
+            response.put("message", "Phiên đăng nhập hết hạn");
+            return response;
         }
 
-        String diaChi = (String) session.getAttribute("DIA_CHI_TAM");
+        // 2. LẤY MÃ VOUCHER TỪ SESSION (ĐÃ FIX TÊN ATTRIBUTE)
+        // Lưu ý: Tên này phải khớp 100% với tên bạn dùng ở hàm 'apDungVoucher' trong Controller
+        String maVoucher = (String) session.getAttribute("MA_GIAM_GIA_DA_CHON");
+
+        // THÔNG BÁO KIỂM TRA MÃ TRƯỚC KHI GỬI XUỐNG SERVICE
+        System.out.println("===> [CONTROLLER]: Đang lấy mã từ Session: [" + maVoucher + "]");
+
+        // 3. Lấy thông tin địa chỉ và phí ship
+        Object diaChiObj = session.getAttribute("DIA_CHI_TAM");
         Object phiShipObj = session.getAttribute("PHI_SHIP");
 
-        if (diaChi == null || phiShipObj == null) {
-            throw new RuntimeException("Chưa có địa chỉ giao hàng hoặc phí ship");
+        if (diaChiObj == null || phiShipObj == null) {
+            System.out.println("===> [LỖI]: Thiếu DIA_CHI_TAM hoặc PHI_SHIP trong session!");
+            response.put("success", false);
+            response.put("message", "Thiếu thông tin địa chỉ hoặc phí ship");
+            return response;
         }
 
-        // Lấy danh sách ID sản phẩm đã chọn từ session
-        @SuppressWarnings("unchecked")
-        List<Integer> selectedIds = (List<Integer>) session.getAttribute("SELECTED_IDS");
+        String diaChi = diaChiObj.toString();
+        // Chống lỗi NumberFormatException nếu phiShipObj không phải chuỗi số thuần túy
+        BigDecimal phiShip = new BigDecimal(phiShipObj.toString().replaceAll("[^\\d.]", ""));
 
-        BigDecimal phiShip = new BigDecimal(phiShipObj.toString());
+        // 4. Tính tổng tiền hàng từ giỏ hàng
+        var items = gioHangService.layGioHangCuaKhach(khachHang.getId());
+        if (items.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Giỏ hàng của bạn đang trống!");
+            return response;
+        }
 
-        // Tính tổng tiền hàng chỉ cho sản phẩm được chọn
-        var allItems = gioHangService.layGioHangCuaKhach(khachHang.getId());
-        var selectedItems = allItems.stream()
-                .filter(i -> selectedIds == null || selectedIds.contains(i.getId()))
-                .collect(Collectors.toList());
+        BigDecimal tongTienHang = items.stream()
+                .map(i -> i.getIdSanPhamChiTiet().getDonGia().multiply(BigDecimal.valueOf(i.getSoLuong())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        long tongTienHang = selectedItems.stream()
-                .mapToLong(i -> i.getIdSanPhamChiTiet().getDonGia()
-                        .multiply(BigDecimal.valueOf(i.getSoLuong())).longValue())
-                .sum();
+        // 5. Tổng thanh toán tạm tính (Tiền hàng + Ship)
+        // Lưu ý: Bạn truyền tổng chưa giảm xuống, Service sẽ lo phần trừ tiền dựa trên mã voucher
+        BigDecimal tongThanhToan = tongTienHang.add(phiShip);
 
-        BigDecimal tongThanhToan = BigDecimal.valueOf(tongTienHang).add(phiShip);
+        System.out.println("===> [CONTROLLER]: Tổng tạm tính (Hàng + Ship): " + tongThanhToan);
 
-        // ✅ TẠO HÓA ĐƠN COD + CHI TIẾ́T + TRỪ KHO + XÓA SẢN PHẨM ĐÃ CHỌN
-        HoaDon hoaDon = hoaDonService.taoHoaDonCODDayDu(khachHang, tongThanhToan, diaChi, selectedIds);
+        try {
+            // ✅ GỌI SERVICE: Truyền đủ 4 tham số.
+            // Logic 'xuLyVoucher' bên trong Service sẽ gán Voucher ID vào DB và trừ tiền.
+            HoaDon hoaDon = hoaDonService.taoHoaDonCODDayDu(khachHang, tongThanhToan, diaChi, maVoucher);
 
-        // Xóa session tạm
-        session.removeAttribute("DIA_CHI_TAM");
-        session.removeAttribute("PHI_SHIP");
-        session.removeAttribute("SELECTED_IDS");
+            // THÔNG BÁO THÀNH CÔNG TRONG CONSOLE
+            System.out.println("===> [THÀNH CÔNG]: Đã tạo hóa đơn: " + hoaDon.getMaHoaDon());
 
-        response.put("success", true);
+            // 6. Xóa các session tạm sau khi tạo đơn thành công để tránh trùng lặp cho đơn sau
+            session.removeAttribute("MA_GIAM_GIA_DA_CHON");
+            session.removeAttribute("DIA_CHI_TAM");
+            session.removeAttribute("PHI_SHIP");
+
+            response.put("success", true);
+            response.put("message", "Đặt hàng thành công!");
+        } catch (Exception e) {
+            // THÔNG BÁO LỖI CHI TIẾT
+            System.err.println("===> [LỖI TẠO ĐƠN]: " + e.getMessage());
+            e.printStackTrace();
+            response.put("success", false);
+            response.put("message", "Lỗi khi tạo hóa đơn: " + e.getMessage());
+        }
+
         return response;
     }
 
+
+    @PostMapping("/ap-dung-voucher-session")
+    @ResponseBody
+    public Map<String, Object> apDungVoucher(@RequestParam("maVoucher") String maVoucher, HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+
+        // 1. Lấy khách hàng từ session
+        KhachHang kh = (KhachHang) session.getAttribute("khachHang");
+        if (kh == null) {
+            response.put("success", false);
+            response.put("message", "Vui lòng đăng nhập để dùng mã!");
+            return response;
+        }
+
+        // 2. Tìm mã trong DB
+        Optional<MaGiamGia> vOpt = maGiamGiaRepository.findByMa(maVoucher.trim());
+
+        if (vOpt.isPresent()) {
+            MaGiamGia voucher = vOpt.get();
+
+
+            if (voucher.getTrangThai() == null || voucher.getTrangThai() != 1) {
+                response.put("success", false);
+                response.put("message", "Mã giảm giá này hiện không khả dụng!");
+                return response;
+            }
+
+            // 4. Kiểm tra số lượng tổng trong kho
+            if (voucher.getSoLuong() <= 0) {
+                response.put("success", false);
+                response.put("message", "Mã giảm giá này đã hết lượt sử dụng!");
+                return response;
+            }
+
+            // 5. LOGIC DÙNG 1 LẦN cho mã "NGUOIMOI"
+            if (maVoucher.toUpperCase().startsWith("NGUOIMOI")) {
+                // Sử dụng hàm checkVoucherDaDungThatSu đã khai báo ở Bước 1
+                // Hàm này sẽ bỏ qua các hóa đơn đã hủy, giúp khách dùng lại được mã
+                boolean daDung = hoaDonRepository.checkVoucherDaDungThatSu(kh.getId(), voucher.getId());
+
+                if (daDung) {
+                    response.put("success", false);
+                    response.put("message", "Bạn đã sử dụng mã chào mừng này rồi!");
+                    return response;
+                }
+            }
+
+            // 6. Áp dụng thành công
+            session.setAttribute("MA_GIAM_GIA_DA_CHON", maVoucher);
+            response.put("success", true);
+            response.put("message", "Áp dụng thành công!");
+
+        } else {
+            response.put("success", false);
+            response.put("message", "Mã giảm giá không tồn tại!");
+        }
+
+        return response;
+    }
     // =======================
     // 5️⃣ TRANG THÀNH CÔNG COD
     // =======================
@@ -195,3 +296,5 @@ public class GHNController {
         return "payment-success-cod";
     }
 }
+
+

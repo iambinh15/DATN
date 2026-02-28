@@ -19,4 +19,6 @@ public interface MaGiamGiaRepository extends JpaRepository<MaGiamGia, Integer> {
 
     // Bạn cũng có thể dùng phương thức tự sinh của Spring Data JPA:
     Optional<MaGiamGia> findByMaAndTrangThai(String ma, Integer trangThai);
+    Optional<MaGiamGia> findByMa(String ma);
+
 }
