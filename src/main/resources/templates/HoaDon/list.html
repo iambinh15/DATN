@@ -739,7 +739,8 @@
                                 <td>
                                     <form th:action="@{/hoa-don/cap-nhat-trang-thai}" method="post" style="margin:0;">
                                         <input type="hidden" name="hoaDonId" th:value="${hd.id}" />
-                                        <select name="trangThaiId" class="status-select" onchange="this.form.submit()"
+                                        <select name="trangThaiId" class="status-select"
+                                            onchange="if(confirm('Bạn có muốn đổi trạng thái không?')){this.form.submit()}else{this.value=this.getAttribute('data-current-id')}"
                                             th:data-loai-thanh-toan="${hd.idLoaiThanhToan != null ? hd.idLoaiThanhToan.tenLoai : ''}"
                                             th:data-current-id="${hd.idTrangThaiHoaDon.id}"
                                             th:classappend="${hd.idTrangThaiHoaDon.tenTrangThai == 'Hoàn tất' ? 'select-paid' :
