@@ -102,22 +102,22 @@ public class HoaDonAdminController {
             @RequestParam Integer trangThaiId,
             RedirectAttributes redirectAttributes) {
         try {
-            // 1. Luôn thực hiện cập nhật trạng thái hóa đơn trước (Logic cũ)
-            hoaDonService.capNhatTrangThai(hoaDonId, trangThaiId);
-
-            // 2. Kiểm tra nếu trạng thái được chọn là "Đã hủy" (ID = 5 theo DB của bạn)
-            if (trangThaiId != null && trangThaiId == 5) {
-                // Gọi hàm hoàn kho đã sửa lỗi "cannot find symbol"
+            if (trangThaiId == 13) {
+                // Chỉ khi chọn "Đã xác nhận" mới chạy logic trừ kho COD
+                hoaDonService.xacnhanDonHang(hoaDonId);
+                redirectAttributes.addFlashAttribute("successMessage", "Xác nhận đơn hàng thành công!");
+            }
+            else if (trangThaiId == 5) {
+                // Chỉ khi chọn "Đã hủy" mới chạy logic hoàn kho
                 hoaDonService.huyDonHangVaHoanKho(hoaDonId);
-
-                redirectAttributes.addFlashAttribute("successMessage",
-                        "Hóa đơn #" + hoaDonId + " đã được hủy và hoàn trả số lượng vào kho thành công!");
-            } else {
+                redirectAttributes.addFlashAttribute("successMessage", "Hủy đơn và hoàn kho thành công!");
+            }
+            else {
+                // Các trạng thái khác (Giao hàng, Hoàn thành...) CHỈ đổi trạng thái, KHÔNG đụng vào kho
+                hoaDonService.capNhatTrangThai(hoaDonId, trangThaiId);
                 redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái thành công!");
             }
-
-        } catch (RuntimeException e) {
-            // Nếu có bất kỳ lỗi nào (ví dụ lỗi logic trong hàm hoàn kho), thông báo sẽ hiển thị tại đây
+        } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
         return "redirect:/hoa-don";

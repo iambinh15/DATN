@@ -184,51 +184,7 @@ public class HoaDonService {
         hoaDonRepository.save(hoaDon);
     }
 
-    @Transactional
-    public void huyDonHangVaHoanKho(Integer idHoaDon) {
-        // 1. Tìm hóa đơn từ DB
-        HoaDon hd = hoaDonRepository.findById(idHoaDon)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn ID: " + idHoaDon));
 
-        int ID_DA_XAC_NHAN = 13;
-        int ID_TRANG_THAI_HUY = 5;
-
-        // LẤY TRẠNG THÁI THỰC TẾ
-        int trangThaiHienTai = hd.getIdTrangThaiHoaDon().getId();
-        String tenLoaiTT = hd.getIdLoaiThanhToan().getTenLoai();
-
-        // SỬA LOGIC Ở ĐÂY:
-        // Nếu trạng thái hiện tại ĐÃ LÀ 5 (nghĩa là đang trong quá trình hủy)
-        // hoặc >= 13 (đã xác nhận) thì PHẢI HOÀN HÀNG.
-        boolean laThanhToanOnline = tenLoaiTT.equals("CK");
-
-        // THAY ĐỔI ĐIỀU KIỆN: Thêm kiểm tra nếu đơn đó ĐÃ từng được xác nhận
-        // hoặc đơn Online thì mới hoàn kho.
-        if (laThanhToanOnline || trangThaiHienTai >= ID_DA_XAC_NHAN || trangThaiHienTai == ID_TRANG_THAI_HUY) {
-            System.out.println("===> OK: Đã xác nhận hoặc đang hủy đơn đã xác nhận. Hoàn hàng ngay!");
-
-            for (HoaDonChiTiet ct : hd.getHoaDonChiTiets()) {
-                SanPhamChiTiet spct = ct.getIdSanPhamChiTiet();
-                if (spct != null) {
-                    spct.setSoLuong(spct.getSoLuong() + ct.getSoLuong());
-                    sanPhamChiTietRepository.save(spct);
-
-                }
-            }
-        }
-
-        // Xử lý Voucher và Cập nhật trạng thái cuối cùng
-        if (hd.getIdMaGiamGia() != null) {
-            MaGiamGia v = hd.getIdMaGiamGia();
-            if (v.getTrangThai() != null && v.getTrangThai() == 1) {
-                v.setSoLuong(v.getSoLuong() + 1);
-                maGiamGiaRepository.save(v);
-            }
-        }
-
-        hd.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_TRANG_THAI_HUY).get());
-        hoaDonRepository.save(hd);
-    }
     public List<HoaDon> layDonHangCuaKhach(Integer idKhachHang) {
         return hoaDonRepository.findByIdKhachHang_IdOrderByNgayTaoDesc(idKhachHang);
     }
@@ -244,7 +200,58 @@ public class HoaDonService {
             sanPhamChiTietRepository.save(spct);
         }
     }
+    // 1. Hàm xác nhận đơn hàng (Dùng cho ID 13)
+    @Transactional
+    public void xacnhanDonHang(Integer idHoaDon) {
+        HoaDon hd = hoaDonRepository.findById(idHoaDon)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
 
+        // Chỉ trừ kho cho đơn Tiền mặt (COD)
+        if ("Tiền mặt".equalsIgnoreCase(hd.getIdLoaiThanhToan().getTenLoai())) {
+            for (HoaDonChiTiet ct : hd.getHoaDonChiTiets()) {
+                SanPhamChiTiet spct = ct.getIdSanPhamChiTiet();
+                if (spct != null) {
+                    spct.setSoLuong(spct.getSoLuong() - ct.getSoLuong());
+                    sanPhamChiTietRepository.save(spct);
+                }
+            }
+        }
+        hd.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(13).get());
+        hoaDonRepository.save(hd);
+    }
+
+    // 2. Hàm hủy đơn và hoàn kho + Voucher (Dùng cho ID 5)
+    @Transactional
+    public void huyDonHangVaHoanKho(Integer idHoaDon) {
+        HoaDon hd = hoaDonRepository.findById(idHoaDon)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
+
+        int idTTTruocKhiHuy = hd.getIdTrangThaiHoaDon().getId();
+        String loaiTT = hd.getIdLoaiThanhToan().getTenLoai();
+
+        boolean laDonOnline = "CK".equalsIgnoreCase(loaiTT);
+        boolean daTruKhoCOD = (idTTTruocKhiHuy == 13); // Đã xác nhận mới hoàn
+
+        if (laDonOnline || daTruKhoCOD) {
+            // Hoàn sản phẩm
+            for (HoaDonChiTiet ct : hd.getHoaDonChiTiets()) {
+                SanPhamChiTiet spct = ct.getIdSanPhamChiTiet();
+                if (spct != null) {
+                    spct.setSoLuong(spct.getSoLuong() + ct.getSoLuong());
+                    sanPhamChiTietRepository.save(spct);
+                }
+            }
+            // KHÔI PHỤC VOUCHER TẠI ĐÂY
+            if (hd.getIdMaGiamGia() != null) {
+                var voucher = hd.getIdMaGiamGia();
+                voucher.setSoLuong(voucher.getSoLuong() + 1);
+                // Lưu ý: Tên repository mã giảm giá của bạn phải đúng
+                // maGiamGiaRepository.save(voucher);
+            }
+        }
+        hd.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(5).get());
+        hoaDonRepository.save(hd);
+    }
     public List<HoaDon> findAll() {
         return hoaDonRepository.findAll(Sort.by(Sort.Direction.DESC, "ngayTao"));
     }
