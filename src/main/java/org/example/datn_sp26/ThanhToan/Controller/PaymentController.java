@@ -32,13 +32,17 @@ public class PaymentController {
 
     @GetMapping("/api/vnpay/pay")
     public String vnpayPayment(HttpServletRequest request,
-            @RequestParam("amount") Long amount) throws Exception {
+                               HttpSession session, // Thêm session để lấy mã giảm giá
+                               @RequestParam("amount") Long amount) throws Exception {
+
+        // BỔ SUNG: Lưu mã voucher vào session khi bắt đầu sang trang VNPay (nếu cần thiết)
+        // Hoặc đảm bảo mã voucher đã được lưu vào session "MA_GIAM_GIA_DA_CHON" trước đó
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
         vnp_Params.put("vnp_Command", "pay");
         vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-        vnp_Params.put("vnp_Amount", String.valueOf(amount * 100));
+        vnp_Params.put("vnp_Amount", String.valueOf(amount * 100)); // Số tiền này PHẢI là số tiền ĐÃ GIẢM
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_TxnRef", String.valueOf(System.currentTimeMillis()));
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang");
@@ -81,12 +85,11 @@ public class PaymentController {
 
     @GetMapping("/api/vnpay/callback")
     public String vnpayCallback(HttpServletRequest request,
-            HttpSession session) {
+                                HttpSession session) {
 
         String responseCode = request.getParameter("vnp_ResponseCode");
         String amountStr = request.getParameter("vnp_Amount");
 
-        // Nếu thanh toán thất bại, trả về trang lỗi ngay
         if (!"00".equals(responseCode) || amountStr == null) {
             return "payment-fail";
         }
@@ -95,6 +98,9 @@ public class PaymentController {
         String diaChi = (String) session.getAttribute("DIA_CHI_TAM");
         Object phiShipObj = session.getAttribute("PHI_SHIP");
         KhachHang khachHang = (KhachHang) session.getAttribute("khachHang");
+
+        // ✅ LẤY MÃ VOUCHER ĐÃ CHỌN TỪ SESSION
+        String maVoucher = (String) session.getAttribute("MA_GIAM_GIA_DA_CHON");
 
         if (khachHang == null) {
             return "redirect:/login";
@@ -105,22 +111,23 @@ public class PaymentController {
         }
 
         BigDecimal phiShip = new BigDecimal(phiShipObj.toString());
-        // VNPay amount trả về là (số tiền * 100)
         BigDecimal tongThanhToan = BigDecimal.valueOf(Long.parseLong(amountStr) / 100);
 
         try {
-            // ✅ 2+3. TẠO HÓA ĐƠN + CHI TIẾT + TRỪ KHO + XÓA GIỎ (ATOMIC)
+            // ✅ TRUYỀN THÊM THAM SỐ maVoucher VÀO SERVICE
+            // Service sẽ xử lý gán voucher vào hóa đơn và trừ số lượng voucher trong DB
             org.example.datn_sp26.BanHang.Entity.HoaDon hoaDon = hoaDonService.taoHoaDonVNPay(
                     khachHang,
                     tongThanhToan,
                     diaChi,
-                    phiShip);
+                    phiShip,
+                    maVoucher);
 
             // 4. XÓA SESSION SAU KHI HOÀN TẤT
             session.removeAttribute("DIA_CHI_TAM");
             session.removeAttribute("PHI_SHIP");
+            session.removeAttribute("MA_GIAM_GIA_DA_CHON"); // Xóa voucher sau khi dùng xong
 
-            // Trả về trực tiếp tên file HTML như trong ảnh cấu trúc của bạn
             return "payment-success";
 
         } catch (Exception e) {

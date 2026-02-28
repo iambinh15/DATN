@@ -35,16 +35,13 @@
     .summary-row.total { border-top: 2px solid #000; padding-top: 20px; font-size: 20px; font-weight: 700; }
     .btn-checkout { width: 100%; padding: 18px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 25px; }
 
-    /* VOUCHER SCROLL */
+    /* VOUCHER STYLES */
     .voucher-scroll-container { max-height: 200px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 8px; padding: 5px; margin-top: 10px; }
-    .voucher-scroll-container::-webkit-scrollbar { width: 4px; }
-    .voucher-scroll-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
-    .voucher-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; position: relative; background: #fff; }
-    .voucher-item.disabled { opacity: 0.5; background: #f9f9f9; cursor: not-allowed; border-style: dashed; }
-    .voucher-item.active { border-color: #000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .voucher-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; position: relative; background: #fff; transition: 0.3s; }
+    .voucher-item.disabled { opacity: 0.5; background: #f9f9f9; cursor: not-allowed; }
+    .voucher-item.active { border-color: #000; background: #fcfcfc; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     .btn-apply-v { padding: 6px 12px; font-size: 11px; border: 1px solid #000; background: #fff; cursor: pointer; border-radius: 4px; font-weight: 600; }
     .btn-apply-v.selected { background: #000; color: #fff; }
-    .voucher-item[data-condition]:hover::after { content: attr(data-condition); position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 11px; white-space: nowrap; z-index: 999; }
   </style>
 </head>
 
@@ -65,62 +62,88 @@
           <input type="radio" name="dc"><div class="radio-circle"></div><span>Địa chỉ mới</span>
         </label>
       </div>
+
       <div id="diaChiTK">
         <select id="diaChiMacDinh" class="form-select" onchange="capNhatDiaChiTuDanhSach()">
-          <option value="">-- Chọn địa chỉ --</option>
+          <option value="">-- Chọn địa chỉ đã lưu --</option>
           <option th:each="dc : ${dsDiaChi}" th:value="${dc.diaChi}" th:text="${dc.diaChi}"></option>
         </select>
       </div>
+
       <div id="diaChiMoi" class="new-address-form">
-        <input id="soNha" class="form-input" placeholder="Số nhà, đường...">
+        <input id="soNha" class="form-input" placeholder="Số nhà, tên đường...">
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-          <select id="tinh" class="form-select"><option>-- Tỉnh --</option></select>
-          <select id="huyen" class="form-select"><option>-- Huyện --</option></select>
-          <select id="xa" class="form-select"><option>-- Xã --</option></select>
+          <select id="tinh" class="form-select"><option value="">-- Tỉnh --</option></select>
+          <select id="huyen" class="form-select"><option value="">-- Huyện --</option></select>
+          <select id="xa" class="form-select"><option value="">-- Xã --</option></select>
         </div>
-        <button type="button" class="btn-checkout" style="margin:0" onclick="xacNhanDiaChiMoi()">Xác nhận</button>
+        <button type="button" class="btn-checkout" style="margin-top:10px; background:#444" onclick="xacNhanDiaChiMoi()">Xác nhận địa chỉ mới</button>
       </div>
+
       <div id="diaChiXacNhan" class="confirmed-address">
-        <p id="labelDiaChi" style="font-weight: 600;"></p>
+        <p style="font-size: 12px; color: #666; margin-bottom: 5px;">Giao đến:</p>
+        <p id="labelDiaChi" style="font-weight: 600; color: #000;"></p>
       </div>
     </div>
 
     <div class="checkout-section">
-      <h2 class="section-title"><span class="number">2</span> Thanh toán</h2>
+      <h2 class="section-title"><span class="number">2</span> Phương thức thanh toán</h2>
       <div class="payment-methods">
         <label class="payment-option active" onclick="selectPayment(this, 'COD')">
-          <input type="radio" name="pay" value="COD" checked><span>Tiền mặt (COD)</span>
+          <input type="radio" name="pay" value="COD" checked>
+          <i class="fas fa-truck" style="margin-right: 10px;"></i>
+          <span>Thanh toán khi nhận hàng (COD)</span>
         </label>
         <label class="payment-option" onclick="selectPayment(this, 'VNPAY')">
-          <input type="radio" name="pay" value="VNPAY"><span>VNPay</span>
+          <input type="radio" name="pay" value="VNPAY">
+          <i class="fas fa-credit-card" style="margin-right: 10px;"></i>
+          <span>Thanh toán qua VNPay</span>
         </label>
       </div>
     </div>
   </div>
 
   <div class="order-summary">
-    <h3 style="margin-bottom: 20px;">ĐƠN HÀNG</h3>
-    <label style="font-size: 12px; font-weight: 700; color: #888;">MÃ GIẢM GIÁ</label>
+    <h3 style="margin-bottom: 20px; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px;">ĐƠN HÀNG</h3>
+
+    <label style="font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase;">Mã giảm giá khả dụng</label>
     <div class="voucher-scroll-container">
       <div th:each="km : ${dsMaGiamGia}"
            th:classappend="${tongTienHang < km.giamToiThieu} ? 'voucher-item disabled' : 'voucher-item'"
-           th:data-condition="${tongTienHang < km.giamToiThieu} ? 'Đơn tối thiểu ' + ${#numbers.formatDecimal(km.giamToiThieu,0,'COMMA',0,'POINT')} + 'đ' : 'Bấm để chọn'"
            th:id="'v-' + ${km.ma}">
-        <div style="font-size: 13px;"><b th:text="${km.ma}"></b><br>
-          <small th:text="${km.loaiGiam == 1 ? 'Giảm ' + km.giaTri + '%' : 'Giảm ' + #numbers.formatDecimal(km.giaTri,0,'COMMA',0,'POINT') + 'đ'}"></small>
+        <div style="flex: 1;">
+          <b style="font-size: 14px;" th:text="${km.ma}"></b><br>
+          <small style="color: #666;" th:text="${km.loaiGiam == 1 ? 'Giảm ' + km.giaTri + '%' : 'Giảm ' + #numbers.formatDecimal(km.giaTri,0,'COMMA',0,'POINT') + 'đ'}"></small>
+          <div th:if="${tongTienHang < km.giamToiThieu}" style="font-size: 10px; color: #e74c3c;">
+            Thiếu [[${#numbers.formatDecimal(km.giamToiThieu - tongTienHang,0,'COMMA',0,'POINT')}]]đ để dùng
+          </div>
         </div>
-        <button class="btn-apply-v" th:disabled="${tongTienHang < km.giamToiThieu}"
+        <button class="btn-apply-v"
+                th:disabled="${tongTienHang < km.giamToiThieu}"
                 th:onclick="apDungVoucher([[${km.ma}]], [[${km.loaiGiam}]], [[${km.giaTri}]], [[${km.giamToiDa}]])">Chọn</button>
       </div>
     </div>
 
-    <div style="margin-top: 25px;">
-      <div class="summary-row"><span>Tiền hàng</span><span th:text="|${#numbers.formatDecimal(tongTienHang,0,'COMMA',0,'POINT')} đ|"></span></div>
-      <div class="summary-row" id="rowGiamGia" style="display: none; color: #e74c3c;"><span>Giảm giá</span><span id="labelGiamGia">-0 đ</span></div>
-      <div class="summary-row"><span>Phí ship</span><span id="ship">0 đ</span></div>
-      <div class="summary-row total"><span>Tổng cộng</span><span id="tong">0 đ</span></div>
+    <div style="margin-top: 25px; border-top: 1px dashed #eee; padding-top: 15px;">
+      <div class="summary-row">
+        <span style="color: #666;">Tiền hàng</span>
+        <span th:text="|${#numbers.formatDecimal(tongTienHang,0,'COMMA',0,'POINT')} đ|"></span>
+      </div>
+      <div class="summary-row" id="rowGiamGia" style="display: none; color: #e74c3c;">
+        <span>Mã giảm giá</span>
+        <span id="labelGiamGia">-0 đ</span>
+      </div>
+      <div class="summary-row">
+        <span style="color: #666;">Phí vận chuyển</span>
+        <span id="ship">0 đ</span>
+      </div>
+      <div class="summary-row total">
+        <span>Tổng cộng</span>
+        <span id="tong" style="color: #000;">0 đ</span>
+      </div>
     </div>
-    <button class="btn-checkout" onclick="thanhToan()">ĐẶT HÀNG NGAY</button>
+
+    <button class="btn-checkout" id="btnMainSubmit" onclick="thanhToan()">ĐẶT HÀNG NGAY</button>
   </div>
 </div>
 
@@ -129,42 +152,87 @@
   const tienHang = /*[[${tongTienHang}]]*/ 0;
   let phiShip = 0, tienGiam = 0, maVoucherChon = "", diaChiFinal = "";
 
-  document.addEventListener('DOMContentLoaded', () => { capNhatTien(); loadProvinces(); });
+  document.addEventListener('DOMContentLoaded', () => {
+    capNhatTien();
+    loadProvinces();
+  });
 
+  // ==========================================
+  // 1. XỬ LÝ VOUCHER (ĐÃ FIX LỖI NULL)
+  // ==========================================
   function apDungVoucher(ma, loai, giaTri, maxGiam) {
-    if (maVoucherChon === ma) { maVoucherChon = ""; tienGiam = 0; }
-    else {
+    // Logic toggle chọn/bỏ chọn
+    if (maVoucherChon === ma) {
+      maVoucherChon = "";
+      tienGiam = 0;
+    } else {
       maVoucherChon = ma;
+      // 0: Tiền mặt, 1: Phần trăm
       tienGiam = (loai === 1) ? Math.min(tienHang * (giaTri / 100), maxGiam || Infinity) : Math.min(giaTri, tienHang);
     }
-    updateVoucherUI(); capNhatTien();
+
+    // GỬI LÊN SERVER NGAY ĐỂ LƯU SESSION
+    fetch('/khach-hang/ap-dung-voucher-session?maVoucher=' + encodeURIComponent(maVoucherChon), {
+      method: 'POST'
+    })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                console.log("Hệ thống đã nhận voucher: " + maVoucherChon);
+                updateVoucherUI();
+                capNhatTien();
+              } else {
+                alert("Voucher không khả dụng: " + data.message);
+                maVoucherChon = ""; tienGiam = 0;
+                updateVoucherUI(); capNhatTien();
+              }
+            })
+            .catch(err => console.error("Lỗi đồng bộ voucher!", err));
   }
 
   function updateVoucherUI() {
     document.querySelectorAll('.voucher-item').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.btn-apply-v').forEach(btn => { btn.innerText = "Chọn"; btn.classList.remove('selected'); });
+    document.querySelectorAll('.btn-apply-v').forEach(btn => {
+      btn.innerText = "Chọn";
+      btn.classList.remove('selected');
+    });
+
     if (maVoucherChon) {
       const item = document.getElementById('v-' + maVoucherChon);
-      item.classList.add('active'); item.querySelector('.btn-apply-v').innerText = "Đã chọn";
-      item.querySelector('.btn-apply-v').classList.add('selected');
+      if (item) {
+        item.classList.add('active');
+        const btn = item.querySelector('.btn-apply-v');
+        btn.innerText = "Đã chọn";
+        btn.classList.add('selected');
+      }
       document.getElementById('rowGiamGia').style.display = 'flex';
-      document.getElementById('labelGiamGia').innerText = "-" + tienGiam.toLocaleString() + " đ";
-    } else { document.getElementById('rowGiamGia').style.display = 'none'; }
+      document.getElementById('labelGiamGia').innerText = "-" + Math.round(tienGiam).toLocaleString() + " đ";
+    } else {
+      document.getElementById('rowGiamGia').style.display = 'none';
+    }
   }
 
-  // GHN Logic
+  // ==========================================
+  // 2. XỬ LÝ ĐỊA CHỈ & GHN (GIỮ LOGIC CŨ)
+  // ==========================================
   async function loadProvinces() {
     const r = await fetch("https://online-gateway.ghn.vn/shiip/public-api/master-data/province", { headers: { Token: TOKEN } });
-    const d = await r.json(); d.data.forEach(p => tinh.innerHTML += `<option value="${p.ProvinceID}">${p.ProvinceName}</option>`);
+    const d = await r.json();
+    const tinhSelect = document.getElementById('tinh');
+    d.data.forEach(p => tinhSelect.innerHTML += `<option value="${p.ProvinceID}">${p.ProvinceName}</option>`);
   }
+
   tinh.onchange = async () => {
     const r = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/district?province_id=${tinh.value}`, { headers: { Token: TOKEN } });
-    const d = await r.json(); huyen.innerHTML = "<option>-- Huyện --</option>";
+    const d = await r.json();
+    huyen.innerHTML = "<option value=''>-- Huyện --</option>";
     d.data.forEach(x => huyen.innerHTML += `<option value="${x.DistrictID}">${x.DistrictName}</option>`);
   };
+
   huyen.onchange = async () => {
     const r = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${huyen.value}`, { headers: { Token: TOKEN } });
-    const d = await r.json(); xa.innerHTML = "<option>-- Xã --</option>";
+    const d = await r.json();
+    xa.innerHTML = "<option value=''>-- Xã --</option>";
     d.data.forEach(x => xa.innerHTML += `<option value="${x.WardCode}">${x.WardName}</option>`);
   };
 
@@ -173,7 +241,10 @@
     document.getElementById('diaChiTK').style.display = 'none';
     document.getElementById('optionTK').classList.remove('active');
     document.getElementById('optionMoi').classList.add('active');
+    diaChiFinal = "";
+    document.getElementById('diaChiXacNhan').classList.remove('active');
   }
+
   function chonDiaChiTK() {
     document.getElementById('diaChiMoi').classList.remove('active');
     document.getElementById('diaChiTK').style.display = 'block';
@@ -184,9 +255,12 @@
 
   async function capNhatDiaChiTuDanhSach() {
     const val = document.getElementById('diaChiMacDinh').value;
-    if (!val) return; diaChiFinal = val;
+    if (!val) { diaChiFinal = ""; return; }
+    diaChiFinal = val;
     document.getElementById('labelDiaChi').innerText = val;
     document.getElementById('diaChiXacNhan').classList.add('active');
+
+    // Tự động tìm District/Ward để tính ship từ chuỗi địa chỉ
     const p = val.split(',').map(s => s.trim());
     try {
       const resP = await fetch("https://online-gateway.ghn.vn/shiip/public-api/master-data/province", { headers: { Token: TOKEN } });
@@ -196,10 +270,11 @@
       const resW = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${dObj.DistrictID}`, { headers: { Token: TOKEN } });
       const wObj = (await resW.json()).data.find(x => p[p.length-3].includes(x.WardName));
       goiApiTinhPhi(dObj.DistrictID, wObj.WardCode);
-    } catch (e) { console.error(e); }
+    } catch (e) { console.warn("Không tự động tính được phí ship từ địa chỉ cũ."); }
   }
 
   function xacNhanDiaChiMoi() {
+    if(!soNha.value || !tinh.value || !huyen.value || !xa.value) { alert("Vui lòng nhập đầy đủ thông tin địa chỉ mới!"); return; }
     diaChiFinal = `${soNha.value}, ${xa.options[xa.selectedIndex].text}, ${huyen.options[huyen.selectedIndex].text}, ${tinh.options[tinh.selectedIndex].text}`;
     document.getElementById('labelDiaChi').innerText = diaChiFinal;
     document.getElementById('diaChiXacNhan').classList.add('active');
@@ -210,47 +285,68 @@
     fetch("/khach-hang/tinh-phi-ship-dia-chi-moi", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ districtId: dID, wardCode: wCode })
-    }).then(r => r.json()).then(d => { phiShip = d.phiShip; capNhatTien(); });
+    }).then(r => r.json()).then(d => {
+      phiShip = d.phiShip;
+      capNhatTien();
+    });
   }
 
   function capNhatTien() {
     const total = (tienHang - tienGiam) + phiShip;
-    document.getElementById('ship').innerText = phiShip.toLocaleString() + " đ";
-    document.getElementById('tong').innerText = total.toLocaleString() + " đ";
+    document.getElementById('ship').innerText = Math.round(phiShip).toLocaleString() + " đ";
+    document.getElementById('tong').innerText = Math.round(total).toLocaleString() + " đ";
   }
 
   function selectPayment(el, v) {
     document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
-    el.classList.add('active'); el.querySelector('input').checked = true;
+    el.classList.add('active');
+    el.querySelector('input').checked = true;
   }
 
-  // QUAN TRỌNG: Gửi dữ liệu về Server
+  // ==========================================
+  // 3. XỬ LÝ ĐẶT HÀNG (KẾT HỢP TẤT CẢ)
+  // ==========================================
   function thanhToan() {
-    if (!diaChiFinal) { alert("Chọn địa chỉ!"); return; }
-    const totalFinal = (tienHang - tienGiam) + phiShip;
-    const paymentMethod = document.querySelector("input[name='pay']:checked").value;
+    if (!diaChiFinal) { alert("Vui lòng chọn hoặc nhập địa chỉ giao hàng!"); return; }
 
-    // Bước 1: Lưu thông tin tạm thời (Địa chỉ, Ship, Voucher) vào Session/DB tạm
+    const btn = document.getElementById('btnMainSubmit');
+    btn.disabled = true; btn.innerText = "ĐANG XỬ LÝ...";
+
+    const paymentMethod = document.querySelector("input[name='pay']:checked").value;
+    const totalFinal = (tienHang - tienGiam) + phiShip;
+
+    // Bước 1: Lưu thông tin địa chỉ/ship vào Session
     fetch("/khach-hang/luu-dia-chi-tam", {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         diaChi: diaChiFinal,
         phiShip: phiShip,
-        maVoucher: maVoucherChon, // Tên mã gửi lên đây
-        tienGiam: tienGiam,       // Số tiền giảm gửi lên đây
-        tongTien: totalFinal      // Tổng tiền cuối cùng
+        maVoucher: maVoucherChon,
+        tongTien: totalFinal
       })
     }).then(r => {
+      if (!r.ok) throw new Error("Lỗi lưu Session");
+
+      // Bước 2: Gọi tạo đơn theo phương thức
       if (paymentMethod === "VNPAY") {
-        location.href = "/api/vnpay/pay?amount=" + totalFinal;
+        window.location.href = "/api/vnpay/pay?amount=" + Math.round(totalFinal);
       } else {
-        // Gửi đơn COD kèm thông mã voucher
-        fetch("/khach-hang/tao-don-cod", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({ maVoucher: maVoucherChon, tongTien: totalFinal, tienGiam: tienGiam })
-        }).then(res => res.ok ? location.href = "/khach-hang/payment-success-cod" : alert("Lỗi!"));
+        // Gọi tao-don-cod đã có ở Controller
+        fetch("/khach-hang/tao-don-cod", { method: "POST" })
+                .then(res => res.json())
+                .then(data => {
+                  if(data.success) {
+                    window.location.href = "/khach-hang/payment-success-cod";
+                  } else {
+                    alert("Đặt hàng thất bại: " + data.message);
+                    btn.disabled = false; btn.innerText = "ĐẶT HÀNG NGAY";
+                  }
+                });
       }
+    }).catch(err => {
+      alert("Hệ thống lỗi, vui lòng thử lại sau!");
+      btn.disabled = false; btn.innerText = "ĐẶT HÀNG NGAY";
     });
   }
 </script>
