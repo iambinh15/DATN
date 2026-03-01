@@ -146,7 +146,7 @@ public class HoaDonService {
 
         xuLyVoucher(hoaDon, maVoucher);
 
-        hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_CHO_THANH_TOAN).get());
+        hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_CHO_XAC_NHAN).get());
         hoaDon.setIdLoaiThanhToan(loaiThanhToanRepository.findByTenLoai("Tiền mặt").get());
         hoaDonRepository.saveAndFlush(hoaDon);
 
@@ -188,11 +188,26 @@ public class HoaDonService {
     }
 
     public void capNhatTrangThai(Integer hoaDonId, Integer trangThaiIdMoi) {
-        HoaDon hoaDon = hoaDonRepository.findById(hoaDonId).orElseThrow();
-        if (hoaDon.getIdTrangThaiHoaDon().getId() == ID_CHO_THANH_TOAN && trangThaiIdMoi == ID_DA_THANH_TOAN) {
-            truSoLuongTonKho(hoaDonId);
+
+        HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
+
+        Integer trangThaiHienTai = hoaDon.getIdTrangThaiHoaDon().getId();
+
+        // ✅ Nếu đơn COD đang "Chờ xác nhận" và chuyển sang "Đã xác nhận"
+        if (trangThaiHienTai.equals(ID_CHO_XAC_NHAN)
+                && trangThaiIdMoi.equals(13)) { // 13 = Đã xác nhận
+
+            // Chỉ trừ kho nếu là Tiền mặt (COD)
+            if ("Tiền mặt".equalsIgnoreCase(hoaDon.getIdLoaiThanhToan().getTenLoai())) {
+                truSoLuongTonKho(hoaDonId);
+            }
         }
-        hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(trangThaiIdMoi).get());
+
+        hoaDon.setIdTrangThaiHoaDon(
+                trangThaiHoaDonRepository.findById(trangThaiIdMoi).get()
+        );
+
         hoaDonRepository.save(hoaDon);
     }
 
@@ -242,7 +257,7 @@ public class HoaDonService {
         String loaiTT = hd.getIdLoaiThanhToan().getTenLoai();
 
         boolean laDonOnline = "CK".equalsIgnoreCase(loaiTT);
-        boolean daTruKhoCOD = (idTTTruocKhiHuy == 13); // Đã xác nhận mới hoàn
+        boolean daTruKhoCOD = (idTTTruocKhiHuy == 13);
 
         if (laDonOnline || daTruKhoCOD) {
             // Hoàn sản phẩm
