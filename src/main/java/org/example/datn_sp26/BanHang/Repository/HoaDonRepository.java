@@ -13,71 +13,84 @@ import java.util.Optional;
 
 @Repository
 public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
-    Optional<HoaDon> findByMaHoaDon(String maHoaDon);
-    // Kiểm tra khách hàng đã có hóa đơn nào sử dụng voucher này chưa
-    // Trong file HoaDonRepository.java
-    @Query("SELECT COUNT(h) > 0 FROM HoaDon h " +
-            "WHERE h.idKhachHang.id = :idKH " +
-            "AND h.idMaGiamGia.id = :idVoucher " +
-            "AND h.idTrangThaiHoaDon.id <> 5")
-    boolean checkVoucherDaDungThatSu(@Param("idKH") Integer idKH, @Param("idVoucher") Integer idVoucher);
-    // Thêm dòng này để xử lý lỗi layDonHangCuaKhach
-    List<HoaDon> findByIdKhachHang_IdOrderByNgayTaoDesc(Integer idKhachHang);
-    List<HoaDon> findByIdKhachHang_Id(Integer idKhachHang);
-    @Query("SELECT COUNT(h) > 0 FROM HoaDon h WHERE h.idKhachHang.id = :idKH " +
-            "AND h.idMaGiamGia.id = :idVoucher AND h.idTrangThaiHoaDon.id <> 0")
-    boolean checkDaDung(@Param("idKH") Integer idKH, @Param("idVoucher") Integer idVoucher);
-    @Query("SELECT h FROM HoaDon h WHERE h.idKhachHang.id = :idKH AND h.idTrangThaiHoaDon.tenTrangThai <> 'test' ORDER BY h.ngayTao DESC")
-    List<HoaDon> findByKhachHangExcludeTest(@Param("idKH") Integer idKH);
+        Optional<HoaDon> findByMaHoaDon(String maHoaDon);
 
-    // @Query("SELECT h FROM HoaDon h " +
-    // "WHERE (:tenKH IS NULL OR h.idKhachHang.tenKhachHang LIKE %:tenKH%) " +
-    // "AND (:trangThai IS NULL OR h.idTrangThaiHoaDon.tenTrangThai = :trangThai) "
-    // +
-    // "AND (:tuNgay IS NULL OR h.ngayTao >= :tuNgay) " +
-    // "AND (:denNgay IS NULL OR h.ngayTao <= :denNgay) " +
-    // "ORDER BY h.ngayTao DESC")
-    @Query("SELECT h FROM HoaDon h " +
-            "LEFT JOIN FETCH h.nhanVien " +
-            "LEFT JOIN FETCH h.idKhachHang " +
-            "LEFT JOIN FETCH h.idLoaiThanhToan " +
-            "LEFT JOIN FETCH h.idTrangThaiHoaDon " +
-            "WHERE (:tenKH IS NULL OR h.idKhachHang.tenKhachHang LIKE %:tenKH%) " +
-            "AND (:trangThai IS NULL OR h.idTrangThaiHoaDon.tenTrangThai = :trangThai) " +
-            "AND (:loaiTT IS NULL OR h.idLoaiThanhToan.tenLoai = :loaiTT) " +
-            "AND (:tuNgay IS NULL OR h.ngayTao >= :tuNgay) " +
-            "AND (:denNgay IS NULL OR h.ngayTao <= :denNgay) " +
-            "ORDER BY h.ngayTao DESC")
+        // Kiểm tra khách hàng đã có hóa đơn nào sử dụng voucher này chưa
+        // Trong file HoaDonRepository.java
+        @Query("SELECT COUNT(h) > 0 FROM HoaDon h " +
+                        "WHERE h.idKhachHang.id = :idKH " +
+                        "AND h.idMaGiamGia.id = :idVoucher " +
+                        "AND h.idTrangThaiHoaDon.id <> 5")
+        boolean checkVoucherDaDungThatSu(@Param("idKH") Integer idKH, @Param("idVoucher") Integer idVoucher);
 
-    List<HoaDon> filterHoaDon(
-            @Param("tenKH") String tenKH,
-            @Param("trangThai") String trangThai,
-            @Param("loaiTT") String loaiTT,
-            @Param("tuNgay") Instant tuNgay,
-            @Param("denNgay") Instant denNgay);
+        // Thêm dòng này để xử lý lỗi layDonHangCuaKhach
+        List<HoaDon> findByIdKhachHang_IdOrderByNgayTaoDesc(Integer idKhachHang);
 
-    @Query("""
-            SELECT COALESCE(SUM(h.tongThanhToan), 0)
-            FROM HoaDon h
-            WHERE h.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
-            """)
-    Double sumDoanhThuHoanThanh();
+        List<HoaDon> findByIdKhachHang_Id(Integer idKhachHang);
 
-    @Query("""
-            SELECT COUNT(h)
-            FROM HoaDon h
-            WHERE h.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
-            """)
-    Long countHoaDonHoanThanh();
+        @Query("SELECT COUNT(h) > 0 FROM HoaDon h WHERE h.idKhachHang.id = :idKH " +
+                        "AND h.idMaGiamGia.id = :idVoucher AND h.idTrangThaiHoaDon.id <> 0")
+        boolean checkDaDung(@Param("idKH") Integer idKH, @Param("idVoucher") Integer idVoucher);
 
-    @Query("""
-                SELECT COALESCE(SUM(h.tongThanhToan),0)
-                FROM HoaDon h
-                WHERE (:tu IS NULL OR h.ngayTao >= :tu)
-                AND (:den IS NULL OR h.ngayTao <= :den)
-                AND h.idTrangThaiHoaDon.id = 4
-            """)
-    BigDecimal tongDoanhThu(
-            @Param("tu") Instant tu,
-            @Param("den") Instant den);
+        @Query("SELECT h FROM HoaDon h WHERE h.idKhachHang.id = :idKH AND h.idTrangThaiHoaDon.tenTrangThai <> 'test' ORDER BY h.ngayTao DESC")
+        List<HoaDon> findByKhachHangExcludeTest(@Param("idKH") Integer idKH);
+
+        // @Query("SELECT h FROM HoaDon h " +
+        // "WHERE (:tenKH IS NULL OR h.idKhachHang.tenKhachHang LIKE %:tenKH%) " +
+        // "AND (:trangThai IS NULL OR h.idTrangThaiHoaDon.tenTrangThai = :trangThai) "
+        // +
+        // "AND (:tuNgay IS NULL OR h.ngayTao >= :tuNgay) " +
+        // "AND (:denNgay IS NULL OR h.ngayTao <= :denNgay) " +
+        // "ORDER BY h.ngayTao DESC")
+        @Query("SELECT h FROM HoaDon h " +
+                        "LEFT JOIN FETCH h.nhanVien " +
+                        "LEFT JOIN FETCH h.idKhachHang " +
+                        "LEFT JOIN FETCH h.idLoaiThanhToan " +
+                        "LEFT JOIN FETCH h.idTrangThaiHoaDon " +
+                        "WHERE (:tenKH IS NULL OR h.idKhachHang.tenKhachHang LIKE %:tenKH%) " +
+                        "AND (:trangThai IS NULL OR h.idTrangThaiHoaDon.tenTrangThai = :trangThai) " +
+                        "AND (:loaiTT IS NULL OR h.idLoaiThanhToan.tenLoai = :loaiTT) " +
+                        "AND (:tuNgay IS NULL OR h.ngayTao >= :tuNgay) " +
+                        "AND (:denNgay IS NULL OR h.ngayTao <= :denNgay) " +
+                        "ORDER BY h.ngayTao DESC")
+
+        List<HoaDon> filterHoaDon(
+                        @Param("tenKH") String tenKH,
+                        @Param("trangThai") String trangThai,
+                        @Param("loaiTT") String loaiTT,
+                        @Param("tuNgay") Instant tuNgay,
+                        @Param("denNgay") Instant denNgay);
+
+        @Query("""
+                        SELECT COALESCE(SUM(h.tongThanhToan), 0)
+                        FROM HoaDon h
+                        WHERE h.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
+                        """)
+        Double sumDoanhThuHoanThanh();
+
+        @Query("""
+                        SELECT COUNT(h)
+                        FROM HoaDon h
+                        WHERE h.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
+                        """)
+        Long countHoaDonHoanThanh();
+
+        @Query("""
+                            SELECT COALESCE(SUM(h.tongThanhToan),0)
+                            FROM HoaDon h
+                            WHERE (:tu IS NULL OR h.ngayTao >= :tu)
+                            AND (:den IS NULL OR h.ngayTao <= :den)
+                            AND h.idTrangThaiHoaDon.id = 4
+                        """)
+        BigDecimal tongDoanhThu(
+                        @Param("tu") Instant tu,
+                        @Param("den") Instant den);
+
+        // POS: Lấy hóa đơn theo trạng thái
+        List<HoaDon> findByIdTrangThaiHoaDon_IdOrderByNgayTaoDesc(Integer trangThaiId);
+    List<HoaDon> findByIdTrangThaiHoaDon_IdAndNgayTaoBefore(
+            Integer trangThaiId,
+            Instant thoiDiem
+    );
+    long countByIdTrangThaiHoaDon_Id(Integer trangThaiId);
 }
