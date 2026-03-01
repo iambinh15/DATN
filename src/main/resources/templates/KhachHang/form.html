@@ -212,7 +212,14 @@
             color: #666;
             text-decoration: none;
         }
+        .main-content {
+            position: relative;
+            z-index: 1;
+        }
 
+        .sidebar {
+            z-index: 9999;
+        }
         .breadcrumb a:hover {
             color: #000;
         }
@@ -389,7 +396,7 @@
                         <i class="fas fa-home"></i>
                         <span>Tổng quan</span>
                     </a>
-                    <a href="#" class="nav-item">
+                    <a th:href="@{/admin/ban-hang}" class="nav-item">
                         <i class="fas fa-shopping-cart"></i>
                         <span>Quản lý bán hàng</span>
                     </a>
