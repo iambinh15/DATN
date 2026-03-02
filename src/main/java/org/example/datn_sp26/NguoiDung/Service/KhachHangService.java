@@ -1,20 +1,27 @@
 package org.example.datn_sp26.NguoiDung.Service;
 
+import org.example.datn_sp26.NguoiDung.Entity.DiaChi;
 import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
 import org.example.datn_sp26.NguoiDung.Entity.TaiKhoan;
 import org.example.datn_sp26.NguoiDung.Repository.KhachHangRepository;
 import org.example.datn_sp26.NguoiDung.Repository.TaiKhoanRepository;
+import org.example.datn_sp26.NguoiDung.Repository.DiaChiRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
-
+import org.example.datn_sp26.NguoiDung.Repository.KhachHangRepository;
 @Service
 public class KhachHangService {
-
+    @Autowired
+    private DiaChiRepository diaChiRepository;
     private final KhachHangRepository repo;
     private final TaiKhoanRepository taiKhoanRepo;
-
+    @Autowired
+    private KhachHangRepository khachHangRepository;
     public KhachHangService(KhachHangRepository repo, TaiKhoanRepository taiKhoanRepo) {
         this.repo = repo;
         this.taiKhoanRepo = taiKhoanRepo;
@@ -53,5 +60,33 @@ public class KhachHangService {
             taiKhoan.setTrangThai(0);
             taiKhoanRepo.save(taiKhoan);
         }
+    }
+    @Transactional
+    public KhachHang themNhanh(String ten, String sdt, String diaChiText) {
+
+        if (ten == null || ten.isBlank()) {
+            throw new RuntimeException("Tên khách hàng không được để trống");
+        }
+
+        if (sdt == null || sdt.isBlank()) {
+            throw new RuntimeException("Số điện thoại không được để trống");
+        }
+
+        if (khachHangRepository.findBySdt(sdt).isPresent()) {
+            throw new RuntimeException("Số điện thoại đã tồn tại");
+        }
+        KhachHang kh = new KhachHang();
+        kh.setTenKhachHang(ten);
+        kh.setSdt(sdt);
+        kh.setNgayTao(Instant.now());
+        kh.setTrangThai(1);
+        kh = khachHangRepository.save(kh); // save trước để có ID
+        if (diaChiText != null && !diaChiText.isBlank()) {
+            DiaChi dc = new DiaChi();
+            dc.setDiaChi(diaChiText);      // phải tồn tại field này trong DiaChi
+            dc.setIdKhachHang(kh);         // liên kết với khách hàng
+            diaChiRepository.save(dc);
+        }
+        return kh;
     }
 }

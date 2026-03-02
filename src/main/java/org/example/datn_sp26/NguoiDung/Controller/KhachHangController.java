@@ -6,6 +6,7 @@ import org.example.datn_sp26.NguoiDung.Entity.DiaChi; // Nhớ import Entity Dia
 import org.example.datn_sp26.NguoiDung.Repository.KhachHangRepository;
 import org.example.datn_sp26.NguoiDung.Repository.DiaChiRepository; // Nhớ import Repo DiaChi
 import org.example.datn_sp26.NguoiDung.Service.KhachHangService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/khach-hang")
@@ -89,6 +92,33 @@ public class KhachHangController {
             diaChiRepository.delete(dc);
         }
         return "redirect:/khach-hang/thong-tin-ca-nhan";
+    }
+    @Autowired
+    private KhachHangService khachHangService;
+
+    @PostMapping("/admin/ban-hang/them-khach-hang-nhanh")
+    @ResponseBody
+    public Map<String, Object> themKhachHangNhanh(@RequestBody Map<String, String> req) {
+
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            KhachHang kh = khachHangService.themNhanh(
+                    req.get("tenKhachHang"),
+                    req.get("sdt"),
+                    req.get("diaChi")
+            );
+
+            result.put("success", true);
+            result.put("id", kh.getId());
+            result.put("ten", kh.getTenKhachHang());
+
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", e.getMessage());
+        }
+
+        return result;
     }
 
 

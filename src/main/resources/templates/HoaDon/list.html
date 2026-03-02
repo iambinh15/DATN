@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -566,8 +566,8 @@
                         <i class="fas fa-home"></i>
                         <span>Tổng quan</span>
                     </a>
-                    <a href="#" class="nav-item">
-                        <i class="fas fa-shopping-cart"></i>
+                    <a th:href="@{/admin/ban-hang}" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
                         <span>Quản lý bán hàng</span>
                     </a>
                     <a th:href="@{/hoa-don}" class="nav-item active">
@@ -590,22 +590,26 @@
                         <i class="fas fa-users"></i>
                         <span>Quản lý khách hàng</span>
                     </a>
-                    <a th:href="@{/nhan-vien}" class="nav-item">
-                        <i class="fas fa-user-tie"></i>
-                        <span>Quản lý nhân viên</span>
-                    </a>
+                    <li sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/nhan-vien}" class="nav-item">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Quản lý nhân viên</span>
+                        </a>
+                    </li>
                 </div>
 
                 <div class="nav-section">
-                    <p class="nav-section-title">Sản phẩm</p>
-                    <a th:href="@{/san-pham}" class="nav-item">
-                        <i class="fas fa-box"></i>
-                        <span>Danh sách sản phẩm</span>
-                    </a>
-                    <a th:href="@{/chat-lieu}" class="nav-item">
-                        <i class="fas fa-layer-group"></i>
-                        <span>Chất liệu</span>
-                    </a>
+                    <li sec:authorize="hasRole('ADMIN')">
+                        <p class="nav-section-title">Sản phẩm</p>
+                        <a th:href="@{/san-pham}" class="nav-item">
+                            <i class="fas fa-box"></i>
+                            <span>Danh sách sản phẩm</span>
+                        </a>
+                    </li>
+<!--                    <a th:href="@{/chat-lieu}" class="nav-item">-->
+<!--                        <i class="fas fa-layer-group"></i>-->
+<!--                        <span>Chất liệu</span>-->
+<!--                    </a>-->
                 </div>
             </nav>
 
@@ -739,7 +743,8 @@
                                 <td>
                                     <form th:action="@{/hoa-don/cap-nhat-trang-thai}" method="post" style="margin:0;">
                                         <input type="hidden" name="hoaDonId" th:value="${hd.id}" />
-                                        <select name="trangThaiId" class="status-select" onchange="this.form.submit()"
+                                        <select name="trangThaiId" class="status-select"
+                                            onchange="if(confirm('Bạn có muốn đổi trạng thái không?')){this.form.submit()}else{this.value=this.getAttribute('data-current-id')}"
                                             th:data-loai-thanh-toan="${hd.idLoaiThanhToan != null ? hd.idLoaiThanhToan.tenLoai : ''}"
                                             th:data-current-id="${hd.idTrangThaiHoaDon.id}"
                                             th:classappend="${hd.idTrangThaiHoaDon.tenTrangThai == 'Hoàn tất' ? 'select-paid' :
@@ -927,10 +932,10 @@
 
         // ===== Luồng trạng thái theo loại thanh toán =====
         // CK / Ví: 1(Chờ xác nhận) → 13(Đã xác nhận) → 2(Đang xử lý) → 3(Đang giao) → 4(Hoàn tất)
-        // Tiền mặt: 11(Chờ Thanh Toán) → 14(Đã Thanh Toán) → 2(Đang xử lý) → 3(Đang giao) → 4(Hoàn tất)
+        // Tiền mặt: 11(Chờ Thanh Toán) → 13(Đã Xác Nhận) → 2(Đang xử lý) → 3(Đang giao) → 4(Hoàn tất)
         // Đã hủy (5): chỉ khi đang ở 3 trạng thái đầu
         var CK_VI_FLOW = [1, 13, 2, 3, 4];
-        var TIEN_MAT_FLOW = [11, 14, 2, 3, 4];
+        var TIEN_MAT_FLOW = [1, 13, 2, 3, 4];
         var ID_HUY = 5;
         var ID_HOAN_TAT = 4;
 

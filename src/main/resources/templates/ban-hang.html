@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bán hàng tại quầy - CotiT Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== COPY TỪ LIST.HTML ĐỂ ĐỒNG BỘ ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #f5f5f5; color: #111; line-height: 1.6; }
+        
+        /* Layout & Sidebar */
+        .admin-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #000; color: #fff; position: fixed; height: 100vh; overflow-y: auto; z-index: 1000; }
+        .sidebar-header { padding: 25px 20px; border-bottom: 1px solid #222; }
+        .sidebar-logo { font-size: 24px; font-weight: 700; letter-spacing: 2px; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .sidebar-logo span { font-size: 12px; font-weight: 400; background: #333; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; }
+        .sidebar-nav { padding: 20px 0; }
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #666;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #999; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover { background: #111; color: #fff; }
+        .nav-item.active { background: #111; color: #fff; border-left-color: #fff; }
+        .nav-item i { width: 20px; text-align: center; }
+        .sidebar-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; border-top: 1px solid #222; background: #000; }
+        .user-info { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .user-avatar { width: 40px; height: 40px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .user-avatar i { font-size: 18px; color: #999; }
+        .user-details { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 600; color: #fff; }
+        .user-role { font-size: 12px; color: #666; }
+        .btn-logout { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: transparent; border: 1px solid #333; color: #999; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .btn-logout:hover { background: #e74c3c; border-color: #e74c3c; color: #fff; }
+        .main-content { flex: 1; margin-left: 260px; padding: 20px; height: 100vh; overflow: hidden; }
+
+        /* Common Components */
+        .card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; flex-direction: column; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #eee; background: #fff; }
+        .card-title { font-size: 15px; font-weight: 600; text-transform: uppercase; }
+        .table-wrapper { overflow-x: auto; flex: 1; overflow-y: auto; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 10px 15px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; font-size: 13px; }
+        .data-table th { font-weight: 600; text-transform: uppercase; color: #666; background: #fafafa; position: sticky; top: 0; z-index: 10; }
+        .data-table tbody tr:hover { background: #f9f9f9; cursor: pointer; }
+        .data-table tbody tr.active-row { background-color: #e8f4fd; border-left: 3px solid #0077b6; }
+        .money { font-weight: 600; color: #dc2626; }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+        .status-badge.pending { background: #fff3cd; color: #856404; }
+        
+        /* ===== POS SPECIFIC STYLES ===== */
+        .pos-container {
+            display: grid;
+            grid-template-columns: 70% 30%;
+            gap: 20px;
+            height: 100%;
+        }
+        .nav-section {
+            margin-bottom: 20px;
+        }
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .right-panel {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        /* Section Heights */
+        .invoice-section { height: 32%; }   /* Tăng lên */
+        .cart-section { height: 33%; }
+        .product-section { height: 35%; }
+
+        /* Buttons */
+        .btn-create { background: #000; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none; }
+        .btn-create:hover { background: #333; }
+        
+        .btn-add { background: #198754; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .btn-add:hover { background: #157347; }
+        
+        .btn-remove { background: #dc3545; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .btn-remove:hover { background: #bb2d3b; }
+
+        .btn-pay { width: 100%; padding: 15px; background: #000; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
+        .btn-pay:hover { background: #333; }
+
+        /* Payment Form */
+        .payment-form { padding: 20px; }
+        .form-group {
+            margin-bottom: 6px;
+        }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #555; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+        .form-control:focus { border-color: #000; }
+        .form-control[readonly] { background-color: #f9f9f9; cursor: not-allowed; }
+
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+        .summary-total { font-size: 18px; font-weight: 700; color: #dc2626; border-top: 1px solid #eee; padding-top: 15px; margin-top: 10px; }
+
+        /* Input Quantity in Cart */
+        .qty-input { width: 50px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #999; }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-layout">
+        <!-- Sidebar (Giữ nguyên từ list.html) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/admin" class="sidebar-logo">
+                    COTIT <span>ADMIN</span>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <p class="nav-section-title">Menu chính</p>
+                    <a th:href="@{/admin}" class="nav-item">
+                        <i class="fas fa-home"></i>
+                        <span>Tổng quan</span>
+                    </a>
+                    <!-- Active vào Quản lý bán hàng -->
+                    <a href="#" class="nav-item active">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Quản lý bán hàng</span>
+                    </a>
+                    <a th:href="@{/hoa-don}" class="nav-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Quản lý hóa đơn</span>
+                    </a>
+                    <a th:href="@{/admin/khuyen-mai}" class="nav-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Quản lý voucher</span>
+                    </a>
+                    <a th:href="@{/thong-ke}" class="nav-item">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Thống kê</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">Quản lý</p>
+                    <a th:href="@{/khach-hang}" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        <span>Quản lý khách hàng</span>
+                    </a>
+                    <li sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/nhan-vien}" class="nav-item">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Quản lý nhân viên</span>
+                        </a>
+                    </li>
+                </div>
+
+                <div class="nav-section">
+                    <li sec:authorize="hasRole('ADMIN')">
+                        <p class="nav-section-title">Sản phẩm</p>
+                        <a th:href="@{/san-pham}" class="nav-item">
+                            <i class="fas fa-box"></i>
+                            <span>Danh sách sản phẩm</span>
+                        </a>
+                    </li>
+                </div>
+                <!-- ... Các phần menu khác giữ nguyên ... -->
+                <div class="sidebar-footer">
+                    <div class="user-info">
+                        <div class="user-avatar"><i class="fas fa-user"></i></div>
+                        <div class="user-details">
+                            <p class="user-name" th:text="${session.tenNhanVien != null ? session.tenNhanVien : 'Admin'}">Admin</p>
+                            <p class="user-role">Quản trị viên</p>
+                        </div>
+                    </div>
+                    <form th:action="@{/logout}" method="post" style="margin: 0;">
+                        <button type="submit" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
+                        </button>
+                    </form>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Alert Messages -->
+            <div th:if="${successMessage}" style="position: absolute; top: 20px; right: 20px; z-index: 9999; background: #d4edda; color: #155724; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" style="position: absolute; top: 20px; right: 20px; z-index: 9999; background: #f8d7da; color: #721c24; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <i class="fas fa-exclamation-triangle"></i> <span th:text="${errorMessage}"></span>
+            </div>
+
+            <div class="pos-container">
+                
+                <!-- LEFT PANEL (70%) -->
+                <div class="left-panel">
+                    
+                    <!-- 1. DANH SÁCH HÓA ĐƠN -->
+                    <div class="card invoice-section">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-file-invoice"></i> Hóa đơn chờ</h3>
+                            <form th:action="@{/admin/ban-hang/tao-hoa-don}" method="post">
+                                <button type="submit" class="btn-create">
+                                    <i class="fas fa-plus"></i> Tạo hóa đơn
+                                </button>
+                            </form>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Mã HĐ</th>
+                                        <th>Nhân viên</th>
+                                        <th>Ngày tạo</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Loop danh sách hóa đơn chờ -->
+                                    <tr th:each="hd, stat : ${dsHoaDon}" 
+                                        th:classappend="${selectedHoaDon != null and selectedHoaDon.id == hd.id} ? 'active-row'"
+                                        th:onclick="'window.location.href=\'/admin/ban-hang?idHoaDon=' + ${hd.id} + '\''">
+                                        <td th:text="${stat.count}">1</td>
+                                        <td th:text="${hd.maHoaDon}">HD001</td>
+                                        <td th:text="${hd.nhanVien != null ? hd.nhanVien.tenNhanVien : '—'}">NV A</td>
+                                        <td th:text="${#temporals.format(hd.ngayTao, 'HH:mm dd/MM')}">10:00</td>
+                                        <td><span class="status-badge pending">Chờ thanh toán</span></td>
+                                    </tr>
+                                    <tr th:if="${dsHoaDon == null || dsHoaDon.isEmpty()}">
+                                        <td colspan="5" style="text-align: center; color: #999; padding: 20px;">
+                                            Chưa có hóa đơn nào. Hãy tạo mới!
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 2. GIỎ HÀNG -->
+                    <div class="card cart-section">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-shopping-cart"></i> Giỏ hàng 
+                                <span th:if="${selectedHoaDon != null}" th:text="'(' + ${selectedHoaDon.maHoaDon} + ')'"></span>
+                            </h3>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Mã SP</th>
+                                        <th>Tên sản phẩm</th>
+                                        <th>Đơn giá</th>
+                                        <th>Số lượng</th>
+                                        <th>Thành tiền</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="ct, stat : ${cartItems}">
+                                        <td th:text="${stat.count}">1</td>
+                                        <td th:text="${ct.idSanPhamChiTiet.id}">SP01</td>
+                                        <td>
+                                            <span th:text="${ct.idSanPhamChiTiet.idSanPham.tenSanPham}">Áo thun</span><br>
+                                            <small style="color:#666;" 
+                                                th:text="${ct.idSanPhamChiTiet.idMauSac.tenMau} + ' - ' + ${ct.idSanPhamChiTiet.idSize.tenSize}">
+                                            </small>
+                                        </td>
+                                        <td th:text="${#numbers.formatDecimal(ct.donGia, 0, 'COMMA', 0, 'POINT')}">100.000</td>
+                                        <td>
+                                            <!-- Form cập nhật số lượng -->
+                                            <form th:action="@{/admin/ban-hang/update-cart}" method="post" style="display:inline;">
+                                                <input type="hidden" name="hdctId" th:value="${ct.id}">
+                                                <input type="hidden" name="idHoaDon" th:value="${selectedHoaDon.id}">
+                                                <input type="number" name="soLuong" class="qty-input" 
+                                                       th:value="${ct.soLuong}" min="1" onchange="this.form.submit()">
+                                            </form>
+                                        </td>
+                                        <td class="money" th:text="${#numbers.formatDecimal(ct.donGia * ct.soLuong, 0, 'COMMA', 0, 'POINT')}">200.000</td>
+                                        <td>
+                                            <a th:href="@{/admin/ban-hang/remove-cart(hdctId=${ct.id}, idHoaDon=${selectedHoaDon.id})}" 
+                                               class="btn-remove" onclick="return confirm('Xóa sản phẩm này?')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${cartItems == null || cartItems.isEmpty()}">
+                                        <td colspan="7" style="text-align: center; color: #999; padding: 30px;">
+                                            Giỏ hàng trống. Vui lòng chọn sản phẩm bên dưới.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 3. DANH SÁCH SẢN PHẨM -->
+                    <div class="card product-section">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-box"></i> Danh sách sản phẩm</h3>
+                            <div class="search-box" style="display: flex; gap: 10px;">
+                                <input type="text" id="searchProduct" placeholder="Tìm kiếm sản phẩm..." 
+                                       style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; width: 250px;">
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Ảnh</th>
+                                        <th>Tên SP</th>
+                                        <th>Thuộc tính</th>
+                                        <th>Đơn giá</th>
+                                        <th>Tồn kho</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productTableBody">
+                                    <tr th:each="sp, stat : ${dsSanPham}">
+                                        <td th:text="${stat.count}">1</td>
+                                        <td>
+                                            <div style="width: 40px; height: 40px; background: #eee; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-image" style="color: #ccc;"></i>
+                                            </div>
+                                        </td>
+                                        <td th:text="${sp.idSanPham.tenSanPham}" style="font-weight: 500;">Áo Polo</td>
+                                        <td>
+                                            <span class="status-badge default" th:text="${sp.idMauSac.tenMau}"></span>
+                                            <span class="status-badge default" th:text="${sp.idSize.tenSize}"></span>
+                                            <span class="status-badge default" th:text="${sp.idChatLieu.tenChatLieu}"></span>
+                                        </td>
+                                        <td class="money" th:text="${#numbers.formatDecimal(sp.donGia, 0, 'COMMA', 0, 'POINT')}">150.000</td>
+                                        <td th:text="${sp.soLuong}">50</td>
+                                        <td>
+                                            <form th:action="@{/admin/ban-hang/add-product}" method="post" th:if="${selectedHoaDon != null}">
+                                                <input type="hidden" name="idHoaDon" th:value="${selectedHoaDon.id}">
+                                                <input type="hidden" name="spctId" th:value="${sp.id}">
+                                                <input type="hidden" name="soLuong" value="1">
+                                                <button type="submit" class="btn-add">
+                                                    <i class="fas fa-plus"></i> Thêm
+                                                </button>
+                                            </form>
+                                            <button th:if="${selectedHoaDon == null}" class="btn-add" style="opacity: 0.5; cursor: not-allowed;" title="Vui lòng chọn hóa đơn trước">
+                                                <i class="fas fa-plus"></i> Thêm
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT PANEL (30%) - THANH TOÁN -->
+                <div class="right-panel">
+                    <div class="card" style="height: 100%;">
+                        <div class="card-header" style="background: #000; color: #fff;">
+                            <h3 class="card-title" style="color: #fff;">Thông tin thanh toán</h3>
+                        </div>
+                        
+                        <div class="card-body payment-form" th:if="${selectedHoaDon != null}">
+                            <form th:action="@{/admin/ban-hang/thanh-toan}" method="post" id="paymentForm">
+                                <input type="hidden" name="hoaDonId" th:value="${selectedHoaDon.id}">
+                                
+                                <!-- Khách hàng -->
+                                <div class="form-group">
+                                    <label>Khách hàng</label>
+                                    <div style="display: flex; gap: 5px;">
+                                        <select name="khachHangId" class="form-control">
+                                            <option value="">Khách lẻ</option>
+                                            <option th:each="kh : ${dsKhachHang}" 
+                                                    th:value="${kh.id}" 
+                                                    th:text="${kh.tenKhachHang} + ' - ' + ${kh.sdt}"
+                                                    th:selected="${selectedHoaDon.idKhachHang != null and selectedHoaDon.idKhachHang.id == kh.id}">
+                                            </option>
+                                        </select>
+                                        <button type="button" class="btn-add" style="width: 40px;" onclick="openCustomerModal()">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Mã giảm giá -->
+                                <div class="form-group">
+                                    <label>Mã giảm giá (Voucher)</label>
+                                    <select name="voucherId" class="form-control" id="voucherSelect" onchange="tinhTien()">
+                                        <option value="" data-value="0" data-type="0">-- Chọn mã giảm giá --</option>
+                                        <option th:each="vc : ${dsVoucher}" 
+                                                th:value="${vc.id}" 
+                                                th:text="${vc.ma} + ' - Giảm ' + ${vc.loaiGiam == 0 ? #numbers.formatDecimal(vc.giaTri, 0, 'COMMA', 0, 'POINT') + 'đ' : vc.giaTri + '%'}"
+                                                th:data-value="${vc.giaTri}"
+                                                th:data-type="${vc.loaiGiam}"
+                                                th:selected="${selectedHoaDon.idMaGiamGia != null and selectedHoaDon.idMaGiamGia.id == vc.id}">
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <hr style="border: 0; border-top: 1px dashed #ddd; margin: 20px 0;">
+
+                                <!-- Thông tin tiền -->
+                                <div class="summary-row">
+                                    <span>Tổng tiền hàng:</span>
+                                    <span id="tongTienHangDisplay" th:text="${#numbers.formatDecimal(selectedHoaDon.tongThanhToan, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                    <input type="hidden" id="tongTienHangRaw" th:value="${selectedHoaDon.tongThanhToan}">
+                                </div>
+
+                                <div class="summary-row" style="color: #27ae60;">
+                                    <span>Giảm giá:</span>
+                                    <span id="giamGiaDisplay">0</span>
+                                </div>
+
+                                <div class="summary-row summary-total">
+                                    <span>Khách phải trả:</span>
+                                    <span id="khachCanTraDisplay" th:text="${#numbers.formatDecimal(selectedHoaDon.tongThanhToan, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                    <input type="hidden" id="khachCanTraRaw" th:value="${selectedHoaDon.tongThanhToan}">
+                                </div>
+
+                                <hr style="border: 0; border-top: 1px dashed #ddd; margin: 20px 0;">
+
+                                <!-- Phương thức thanh toán -->
+                                <div class="form-group">
+                                    <label>Phương thức thanh toán</label>
+                                    <select name="phuongThuc" class="form-control" id="phuongThucSelect" onchange="toggleTienKhachDua()">
+                                        <option value="Tiền mặt">Tiền mặt</option>
+                                        <option value="CK">Chuyển khoản (QR)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Tiền khách đưa -->
+                                <div class="form-group" id="blockTienKhachDua">
+                                    <label>Tiền khách đưa</label>
+                                    <input type="text" name="tienKhachDua" id="tienKhachDua" class="form-control" placeholder="0" oninput="tinhTienThua()">
+                                </div>
+
+                                <!-- Tiền thừa -->
+                                <div class="form-group">
+                                    <label>Tiền thừa trả khách</label>
+                                    <input type="text" id="tienThua" class="form-control" readonly value="0" style="color: blue; font-weight: bold;">
+                                </div>
+
+                                <button type="submit" class="btn-pay" onclick="return validateThanhToan()">
+                                    <i class="fas fa-check-circle"></i> THANH TOÁN
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Empty State cho Right Panel -->
+                        <div class="card-body" th:if="${selectedHoaDon == null}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #999; text-align: center;">
+                            <i class="fas fa-shopping-basket" style="font-size: 60px; margin-bottom: 20px; opacity: 0.3;"></i>
+                            <p>Vui lòng chọn hoặc tạo hóa đơn<br>để tiến hành thanh toán.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+    <!-- ===== MODAL THÊM KHÁCH HÀNG ===== -->
+    <div id="customerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9999;">
+        <div style="background:#fff; width:400px; margin:120px auto; padding:20px; border-radius:10px;">
+            <h3 style="margin-bottom:15px;">Thêm khách hàng nhanh</h3>
+
+            <div style="margin-bottom:10px;">
+                <input type="text" id="newTenKH" placeholder="Tên khách hàng" class="form-control">
+            </div>
+
+            <div style="margin-bottom:10px;">
+                <input type="text" id="newSdtKH" placeholder="Số điện thoại" class="form-control">
+            </div>
+            <div style="margin-bottom:10px;">
+                <input type="text" id="newDiaChiKH" placeholder="Địa chỉ" class="form-control">
+            </div>
+            <div style="text-align:right;">
+                <button onclick="closeCustomerModal()" style="margin-right:10px;">Hủy</button>
+                <button onclick="saveCustomer()" class="btn-add">Lưu</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Format tiền tệ VNĐ
+        const formatter = new Intl.NumberFormat('vi-VN');
+        function openCustomerModal() {
+            document.getElementById("customerModal").style.display = "block";
+        }
+
+        function closeCustomerModal() {
+            document.getElementById("customerModal").style.display = "none";
+        }
+        function formatMoney(amount) {
+            return formatter.format(amount);
+        }
+
+        function parseMoney(str) {
+            return Number(str.replace(/[^0-9.-]+/g,""));
+        }
+
+        // Tính toán tiền giảm giá và tổng thanh toán
+        function tinhTien() {
+            const tongTienHang = parseFloat(document.getElementById('tongTienHangRaw').value || 0);
+            const voucherSelect = document.getElementById('voucherSelect');
+            const selectedOption = voucherSelect.options[voucherSelect.selectedIndex];
+            
+            let giamGia = 0;
+            if (selectedOption.value) {
+                const giaTri = parseFloat(selectedOption.getAttribute('data-value'));
+                const loaiGiam = parseInt(selectedOption.getAttribute('data-type')); // 0: Tiền, 1: %
+
+                if (loaiGiam === 0) {
+                    giamGia = giaTri;
+                } else {
+                    giamGia = (tongTienHang * giaTri) / 100;
+                }
+            }
+
+            // Không giảm quá tổng tiền
+            if (giamGia > tongTienHang) giamGia = tongTienHang;
+
+            const khachCanTra = tongTienHang - giamGia;
+
+            // Update UI
+            document.getElementById('giamGiaDisplay').innerText = formatMoney(giamGia);
+            document.getElementById('khachCanTraDisplay').innerText = formatMoney(khachCanTra);
+            document.getElementById('khachCanTraRaw').value = khachCanTra;
+
+            tinhTienThua(); // Tính lại tiền thừa
+        }
+
+        // Tính tiền thừa
+        function tinhTienThua() {
+            const khachCanTra = parseFloat(document.getElementById('khachCanTraRaw').value || 0);
+            const tienKhachDuaInput = document.getElementById('tienKhachDua').value;
+            const tienKhachDua = parseFloat(tienKhachDuaInput.replace(/\./g, '') || 0); // Xử lý dấu chấm nếu có
+
+            const phuongThuc = document.getElementById('phuongThucSelect').value;
+
+            if (phuongThuc === 'CK') {
+                document.getElementById('tienThua').value = 0;
+                return;
+            }
+
+            const tienThua = tienKhachDua - khachCanTra;
+            document.getElementById('tienThua').value = formatMoney(tienThua > 0 ? tienThua : 0);
+        }
+
+        // Xử lý khi đổi phương thức thanh toán
+        function toggleTienKhachDua() {
+            const phuongThuc = document.getElementById('phuongThucSelect').value;
+            const inputTienKhach = document.getElementById('tienKhachDua');
+            const khachCanTra = document.getElementById('khachCanTraRaw').value;
+
+            if (phuongThuc === 'CK') {
+                inputTienKhach.value = formatMoney(khachCanTra); // Tự điền đủ tiền
+                inputTienKhach.readOnly = true;
+            } else {
+                inputTienKhach.value = '';
+                inputTienKhach.readOnly = false;
+            }
+            tinhTienThua();
+        }
+
+        // Validate trước khi submit
+        function validateThanhToan() {
+            const khachCanTra = parseFloat(document.getElementById('khachCanTraRaw').value || 0);
+            const tienKhachDua = parseFloat(document.getElementById('tienKhachDua').value.replace(/\./g, '') || 0);
+            const phuongThuc = document.getElementById('phuongThucSelect').value;
+
+            if (phuongThuc === 'Tiền mặt' && tienKhachDua < khachCanTra) {
+                alert("Tiền khách đưa không đủ!");
+                return false;
+            }
+            
+            if (confirm("Xác nhận thanh toán hóa đơn này?")) {
+                return true;
+            }
+            return false;
+        }
+
+        // Tìm kiếm sản phẩm đơn giản (Client side filter)
+        document.getElementById('searchProduct').addEventListener('keyup', function() {
+            const val = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#productTableBody tr');
+            
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(val) ? '' : 'none';
+            });
+        });
+
+        // Auto hide alert
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('[th\\:if]');
+            alerts.forEach(el => el.style.display = 'none');
+        }, 3000);
+
+        // Khởi chạy lần đầu
+        tinhTien();
+        function saveCustomer() {
+
+            const ten = document.getElementById("newTenKH").value;
+            const sdt = document.getElementById("newSdtKH").value;
+            let diaChi = document.getElementById("newDiaChiKH").value;
+            fetch("/admin/ban-hang/them-khach-hang-nhanh", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    tenKhachHang: ten,
+                    sdt: sdt,
+                    diaChi : diaChi
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Thêm thành công!");
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                });
+        }
+        // setInterval(function() {
+        //     window.location.reload();
+        // }, 61000);
+    </script>
+</body>
+</html>

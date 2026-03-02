@@ -102,14 +102,26 @@ public class HoaDonAdminController {
             @RequestParam Integer trangThaiId,
             RedirectAttributes redirectAttributes) {
         try {
-            hoaDonService.capNhatTrangThai(hoaDonId, trangThaiId);
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái thành công!");
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            if (trangThaiId == 13) {
+                // Chỉ khi chọn "Đã xác nhận" mới chạy logic trừ kho COD
+                hoaDonService.xacnhanDonHang(hoaDonId);
+                redirectAttributes.addFlashAttribute("successMessage", "Xác nhận đơn hàng thành công!");
+            }
+            else if (trangThaiId == 5) {
+                // Chỉ khi chọn "Đã hủy" mới chạy logic hoàn kho
+                hoaDonService.huyDonHangVaHoanKho(hoaDonId);
+                redirectAttributes.addFlashAttribute("successMessage", "Hủy đơn và hoàn kho thành công!");
+            }
+            else {
+                // Các trạng thái khác (Giao hàng, Hoàn thành...) CHỈ đổi trạng thái, KHÔNG đụng vào kho
+                hoaDonService.capNhatTrangThai(hoaDonId, trangThaiId);
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái thành công!");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
         return "redirect:/hoa-don";
     }
-
     // ===== Helper: tái sử dụng logic lọc =====
     private List<HoaDon> getDanhSachFiltered(String tenKH, String trangThai,
             String loaiTT, String tuNgay, String denNgay) {
