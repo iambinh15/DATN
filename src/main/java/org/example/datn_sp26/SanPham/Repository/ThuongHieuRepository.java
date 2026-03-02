@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface ThuongHieuRepository extends JpaRepository<ThuongHieu, Integer> {
     List<ThuongHieu> findByTrangThai(Integer trangThai);
+
 }

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách sản phẩm chi tiết</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-4">
+
+    <h2 class="mb-4 text-primary">Danh sách sản phẩm chi tiết</h2>
+
+    <!-- Nút thêm -->
+    <div class="mb-3">
+        <a th:href="@{/admin/san-pham-chi-tiet/create}"
+           class="btn btn-success">
+            + Thêm biến thể
+        </a>
+    </div>
+
+    <table class="table table-bordered table-hover align-middle text-center">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Màu</th>
+            <th>Size</th>
+            <th>Giá</th>
+            <th>Số lượng</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="item : ${list}">
+            <td th:text="${item.id}"></td>
+
+            <!-- Tránh lỗi null -->
+            <td th:text="${item.idMauSac != null ? item.idMauSac.tenMau : '---'}"></td>
+
+            <td th:text="${item.idSize != null ? item.idSize.tenSize : '---'}"></td>
+
+            <td th:text="${#numbers.formatDecimal(item.donGia, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+
+            <td th:text="${item.soLuong}"></td>
+
+            <td>
+                <span th:if="${item.trangThai == 1}"
+                      class="badge bg-success">Đang bán</span>
+
+                <span th:if="${item.trangThai == 0}"
+                      class="badge bg-danger">Ngừng bán</span>
+            </td>
+
+            <td>
+                <a th:href="@{/admin/san-pham-chi-tiet/edit/{id}(id=${item.id})}"
+                   class="btn btn-warning btn-sm">
+                    Sửa
+                </a>
+
+                <a th:href="@{/admin/san-pham-chi-tiet/delete/{id}(id=${item.id})}"
+                   class="btn btn-danger btn-sm"
+                   onclick="return confirm('Bạn có chắc muốn xóa?')">
+                    Xóa
+                </a>
+            </td>
+        </tr>
+
+        <!-- Nếu danh sách rỗng -->
+        <tr th:if="${#lists.isEmpty(list)}">
+            <td colspan="7" class="text-danger">
+                Không có dữ liệu
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+
+</body>
+</html>

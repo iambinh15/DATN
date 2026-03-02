@@ -4,6 +4,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.example.datn_sp26.SanPham.Entity.SanPhamChiTiet;
 import org.example.datn_sp26.ThongKe.Service.ThongKeService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
@@ -77,8 +78,20 @@ public class ThongKeController {
         List<BigDecimal> dataThang =
                 thongKeService.getDoanhThuTheoThang(now.getYear());
 
+        List<Object[]> topSanPham =
+                thongKeService.getTopSanPhamBanChay(tu, den);
+
+        List<SanPhamChiTiet> sapHetHang =
+                thongKeService.getSanPhamSapHetHang();
+
+        long soLuongSapHet =
+                thongKeService.countSanPhamSapHetHang();
+
+        model.addAttribute("soLuongSapHet", soLuongSapHet);
         model.addAttribute("doanhThu", doanhThu);
         model.addAttribute("dataThang", dataThang);
+        model.addAttribute("topSanPham", topSanPham);
+        model.addAttribute("sapHetHang", sapHetHang);
         model.addAttribute("tuNgay", tuNgay);
         model.addAttribute("denNgay", denNgay);
 

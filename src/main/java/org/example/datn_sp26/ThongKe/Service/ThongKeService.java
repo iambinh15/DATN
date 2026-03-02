@@ -1,6 +1,9 @@
 package org.example.datn_sp26.ThongKe.Service;
 
+import org.example.datn_sp26.BanHang.Repository.HoaDonChiTietRepository;
 import org.example.datn_sp26.BanHang.Repository.HoaDonRepository;
+import org.example.datn_sp26.SanPham.Entity.SanPhamChiTiet;
+import org.example.datn_sp26.SanPham.Repository.SanPhamChiTietRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -12,9 +15,15 @@ import java.util.List;
 public class ThongKeService {
 
     private final HoaDonRepository hoaDonRepository;
+    private final HoaDonChiTietRepository hoaDonChiTietRepository;
+    private final SanPhamChiTietRepository sanPhamChiTietRepository;
 
-    public ThongKeService(HoaDonRepository hoaDonRepository) {
+    public ThongKeService(HoaDonRepository hoaDonRepository,
+                          HoaDonChiTietRepository hoaDonChiTietRepository,
+                          SanPhamChiTietRepository sanPhamChiTietRepository) {
         this.hoaDonRepository = hoaDonRepository;
+        this.hoaDonChiTietRepository = hoaDonChiTietRepository;
+        this.sanPhamChiTietRepository = sanPhamChiTietRepository;
     }
 
     public BigDecimal getDoanhThu(Instant tu, Instant den) {
@@ -44,5 +53,22 @@ public class ThongKeService {
         }
 
         return result;
+    }
+    public List<Object[]> getTopSanPhamBanChay(Instant tu, Instant den) {
+        List<Object[]> list =
+                hoaDonChiTietRepository.topSanPhamBanChay(tu, den);
+
+        if (list == null) {
+            return new ArrayList<>();
+        }
+
+        return list.stream().limit(5).toList();
+    }
+
+    public List<SanPhamChiTiet> getSanPhamSapHetHang() {
+        return sanPhamChiTietRepository.findSanPhamSapHetHang(10);
+    }
+    public long countSanPhamSapHetHang() {
+        return sanPhamChiTietRepository.countBySoLuongLessThan(10);
     }
 }
