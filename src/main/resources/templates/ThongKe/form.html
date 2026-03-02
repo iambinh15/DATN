@@ -1,196 +1,592 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
-    <title>Thống kê</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-          rel="stylesheet">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống kê - CotiT Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ===== COPY TỪ LIST.HTML ĐỂ ĐỒNG BỘ ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            color: #111;
+            line-height: 1.6;
+        }
+
+        /* Layout & Sidebar */
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #000;
+            color: #fff;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid #222;
+        }
+
+        .sidebar-logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-logo span {
+            font-size: 12px;
+            font-weight: 400;
+            background: #333;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #666;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #999;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: #111;
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: #111;
+            color: #fff;
+            border-left-color: #fff;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            border-top: 1px solid #222;
+            background: #000;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar i {
+            font-size: 18px;
+            color: #999;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid #333;
+            color: #999;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #e74c3c;
+            border-color: #e74c3c;
+            color: #fff;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 30px;
+        }
+
+        /* Cards */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            background: #fff;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 10px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #666;
+            background: #fafafa;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .money {
+            font-weight: 600;
+            color: #dc2626;
+        }
+
+        /* Stats specific */
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 25px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .filter-bar label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .filter-bar input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .filter-bar input:focus {
+            border-color: #000;
+        }
+
+        .btn-filter {
+            padding: 8px 20px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-filter:hover {
+            background: #333;
+        }
+
+        .btn-export {
+            padding: 8px 20px;
+            background: #198754;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .btn-export:hover {
+            background: #157347;
+        }
+
+        .quick-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-links a {
+            padding: 5px 14px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #555;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .quick-links a:hover {
+            background: #000;
+            color: #fff;
+            border-color: #000;
+        }
+
+        .revenue-big {
+            font-size: 32px;
+            font-weight: 700;
+            color: #dc2626;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .danger-badge {
+            display: inline-block;
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
 </head>
 
-<body class="bg-light">
+<body>
 
-<div class="container mt-4">
-
-    <h2 class="mb-4 text-primary">📊 Thống kê doanh thu</h2>
-
-    <!-- ================= BỘ LỌC ================= -->
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-
-            <form method="get" th:action="@{/thong-ke}">
-                <div class="row g-3 align-items-end">
-
-                    <div class="col-md-3">
-                        <label>Từ ngày</label>
-                        <input type="datetime-local"
-                               name="tuNgay"
-                               class="form-control"
-                               th:value="${tuNgay}">
-                    </div>
-
-                    <div class="col-md-3">
-                        <label>Đến ngày</label>
-                        <input type="datetime-local"
-                               name="denNgay"
-                               class="form-control"
-                               th:value="${denNgay}">
-                    </div>
-
-                    <div class="col-md-3">
-                        <button class="btn btn-primary w-100">
-                            🔍 Lọc
-                        </button>
-                    </div>
-
-                    <div class="col-md-3 text-end">
-                        <a th:href="@{/thong-ke(export=true)}"
-                           class="btn btn-success w-100">
-                            ⬇ Xuất Excel
-                        </a>
-                    </div>
-
-                </div>
-            </form>
-
-            <hr>
-
-            <div class="d-flex gap-2 flex-wrap">
-                <a th:href="@{/thong-ke(type='today')}"
-                   class="btn btn-outline-primary btn-sm">Hôm nay</a>
-
-                <a th:href="@{/thong-ke(type='7days')}"
-                   class="btn btn-outline-primary btn-sm">7 ngày</a>
-
-                <a th:href="@{/thong-ke(type='month')}"
-                   class="btn btn-outline-primary btn-sm">Tháng này</a>
-
-                <a th:href="@{/thong-ke(type='year')}"
-                   class="btn btn-outline-primary btn-sm">Năm</a>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/admin" class="sidebar-logo">
+                    COTIT <span>ADMIN</span>
+                </a>
             </div>
 
-        </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <p class="nav-section-title">Menu chính</p>
+                    <a th:href="@{/admin}" class="nav-item">
+                        <i class="fas fa-home"></i>
+                        <span>Tổng quan</span>
+                    </a>
+                    <a th:href="@{/admin/ban-hang}" class="nav-item">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Quản lý bán hàng</span>
+                    </a>
+                    <a th:href="@{/hoa-don}" class="nav-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Quản lý hóa đơn</span>
+                    </a>
+                    <a th:href="@{/admin/khuyen-mai}" class="nav-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Quản lý voucher</span>
+                    </a>
+                    <a th:href="@{/thong-ke}" class="nav-item active">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Thống kê</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">Quản lý</p>
+                    <a th:href="@{/khach-hang}" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        <span>Quản lý khách hàng</span>
+                    </a>
+                    <li sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/nhan-vien}" class="nav-item">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Quản lý nhân viên</span>
+                        </a>
+                    </li>
+                </div>
+
+                <div class="nav-section">
+                    <li sec:authorize="hasRole('ADMIN')">
+                        <p class="nav-section-title">Sản phẩm</p>
+                        <a th:href="@{/san-pham}" class="nav-item">
+                            <i class="fas fa-box"></i>
+                            <span>Danh sách sản phẩm</span>
+                        </a>
+                    </li>
+                </div>
+
+                <div class="sidebar-footer">
+                    <div class="user-info">
+                        <div class="user-avatar"><i class="fas fa-user"></i></div>
+                        <div class="user-details">
+                            <p class="user-name"
+                                th:text="${session.tenNhanVien != null ? session.tenNhanVien : 'Admin'}">Admin</p>
+                            <p class="user-role">Quản trị viên</p>
+                        </div>
+                    </div>
+                    <form th:action="@{/logout}" method="post" style="margin: 0;">
+                        <button type="submit" class="btn-logout">
+                            <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
+                        </button>
+                    </form>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <h1 class="page-title"><i class="fas fa-chart-bar"></i> Thống kê doanh thu</h1>
+
+            <!-- BỘ LỌC -->
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" th:action="@{/thong-ke}">
+                        <div class="filter-bar">
+                            <div>
+                                <label>Từ ngày</label>
+                                <input type="datetime-local" name="tuNgay" th:value="${tuNgay}">
+                            </div>
+                            <div>
+                                <label>Đến ngày</label>
+                                <input type="datetime-local" name="denNgay" th:value="${denNgay}">
+                            </div>
+                            <button class="btn-filter" type="submit">
+                                <i class="fas fa-search"></i> Lọc
+                            </button>
+                            <a th:href="@{/thong-ke(export=true)}" class="btn-export">
+                                <i class="fas fa-download"></i> Xuất Excel
+                            </a>
+                        </div>
+                    </form>
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+                    <div class="quick-links">
+                        <a th:href="@{/thong-ke(type='today')}">Hôm nay</a>
+                        <a th:href="@{/thong-ke(type='7days')}">7 ngày</a>
+                        <a th:href="@{/thong-ke(type='month')}">Tháng này</a>
+                        <a th:href="@{/thong-ke(type='year')}">Năm</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TỔNG DOANH THU -->
+            <div class="card">
+                <div class="card-body" style="text-align: center; padding: 30px;">
+                    <p class="stat-label">Tổng doanh thu</p>
+                    <p class="revenue-big" th:text="${#numbers.formatDecimal(doanhThu,0,'COMMA',0,'POINT')} + ' đ'">
+                    </p>
+                </div>
+            </div>
+
+            <!-- BIỂU ĐỒ 12 THÁNG -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-chart-line"></i> Doanh thu 12 tháng</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="chart"></canvas>
+                </div>
+            </div>
+
+            <!-- TOP SẢN PHẨM -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-fire"></i> Top sản phẩm bán chạy</h3>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tên sản phẩm</th>
+                                <th>Số lượng bán</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="sp : ${topSanPham}">
+                                <td th:text="${sp[0]}"></td>
+                                <td style="font-weight: 600; color: #2563eb;" th:text="${sp[1]}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SẢN PHẨM SẮP HẾT -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title" style="color: #dc2626;">
+                        <i class="fas fa-exclamation-triangle"></i> Sản phẩm sắp hết hàng
+                        <span class="danger-badge" th:text="${soLuongSapHet} + ' sản phẩm'"></span>
+                    </h3>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tên sản phẩm</th>
+                                <th>Màu</th>
+                                <th>Size</th>
+                                <th>Chất liệu</th>
+                                <th>Số lượng</th>
+                                <th>Đơn giá</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="sp : ${sapHetHang}" th:style="${sp.soLuong < 10} ? 'background: #fef2f2;'">
+                                <td th:text="${sp.idSanPham != null ? sp.idSanPham.tenSanPham : ''}"></td>
+                                <td th:text="${sp.idMauSac != null ? sp.idMauSac.tenMau : ''}"></td>
+                                <td th:text="${sp.idSize != null ? sp.idSize.tenSize : ''}"></td>
+                                <td th:text="${sp.idChatLieu != null ? sp.idChatLieu.tenChatLieu : ''}"></td>
+                                <td class="money" th:text="${sp.soLuong}"></td>
+                                <td th:text="${#numbers.formatDecimal(sp.donGia,0,'COMMA',0,'POINT')} + ' đ'"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
     </div>
 
-    <!-- ================= TỔNG DOANH THU ================= -->
+    <!-- CHART JS -->
+    <script th:inline="javascript">
+        let data = [[${ dataThang }]];
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-body text-center">
-            <h4>Tổng doanh thu</h4>
-
-            <h2 class="text-danger fw-bold"
-                th:text="${#numbers.formatDecimal(doanhThu,0,'COMMA',0,'POINT')} + ' đ'">
-            </h2>
-        </div>
-    </div>
-
-    <!-- ================= BIỂU ĐỒ 12 THÁNG ================= -->
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h5 class="mb-3">Doanh thu 12 tháng</h5>
-            <canvas id="chart"></canvas>
-        </div>
-    </div>
-
-    <!-- ================= TOP SẢN PHẨM ================= -->
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-
-            <h5 class="mb-3">🔥 Top sản phẩm bán chạy</h5>
-
-            <table class="table table-bordered table-hover">
-                <thead class="table-warning">
-                <tr>
-                    <th>Tên sản phẩm</th>
-                    <th>Số lượng bán</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="sp : ${topSanPham}">
-                    <td th:text="${sp[0]}"></td>
-                    <td class="fw-bold text-primary"
-                        th:text="${sp[1]}"></td>
-                </tr>
-                </tbody>
-            </table>
-
-        </div>
-    </div>
-
-    <!-- ================= SẢN PHẨM SẮP HẾT ================= -->
-
-    <div class="card shadow-sm mb-4 border-danger">
-        <div class="card-body">
-
-            <h5 class="text-danger mb-3">
-                ⚠ Sản phẩm sắp hết hàng
-                (<span th:text="${soLuongSapHet}"></span> sản phẩm)
-            </h5>
-
-            <table class="table table-bordered table-hover">
-                <thead class="table-danger">
-                <tr>
-                    <th>Tên sản phẩm</th>
-                    <th>Màu</th>
-                    <th>Size</th>
-                    <th>Chất liệu</th>
-                    <th>Số lượng</th>
-                    <th>Đơn giá</th>
-                </tr>
-                </thead>
-
-                <tbody>
-                <tr th:each="sp : ${sapHetHang}"
-                    th:classappend="${sp.soLuong < 10} ? 'table-danger'">
-
-                    <!-- ĐÚNG FIELD ENTITY CỦA BẠN -->
-
-                    <td th:text="${sp.idSanPham != null ? sp.idSanPham.tenSanPham : ''}"></td>
-
-                    <td th:text="${sp.idMauSac != null ? sp.idMauSac.tenMau : ''}"></td>
-
-                    <td th:text="${sp.idSize != null ? sp.idSize.tenSize : ''}"></td>
-
-                    <td th:text="${sp.idChatLieu != null ? sp.idChatLieu.tenChatLieu : ''}"></td>
-
-                    <td class="fw-bold text-danger"
-                        th:text="${sp.soLuong}"></td>
-
-                    <td th:text="${#numbers.formatDecimal(sp.donGia,0,'COMMA',0,'POINT')} + ' đ'"></td>
-
-                </tr>
-                </tbody>
-            </table>
-
-        </div>
-    </div>
-
-</div>
-
-<!-- ================= CHART JS ================= -->
-
-<script th:inline="javascript">
-    let data = [[${dataThang}]];
-
-    new Chart(document.getElementById('chart'), {
-        type: 'bar',
-        data: {
-            labels: [
-                "T1","T2","T3","T4","T5","T6",
-                "T7","T8","T9","T10","T11","T12"
-            ],
-            datasets: [{
-                label: "Doanh thu",
-                data: data
-            }]
-        }
-    });
-</script>
+        new Chart(document.getElementById('chart'), {
+            type: 'bar',
+            data: {
+                labels: [
+                    "T1", "T2", "T3", "T4", "T5", "T6",
+                    "T7", "T8", "T9", "T10", "T11", "T12"
+                ],
+                datasets: [{
+                    label: "Doanh thu",
+                    data: data,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 
 </body>
+
 </html>

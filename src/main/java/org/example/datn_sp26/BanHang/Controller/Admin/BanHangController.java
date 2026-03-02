@@ -29,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Map;
 import java.util.Optional;
 import org.example.datn_sp26.NguoiDung.Entity.TaiKhoan;
+
 @Controller
 @RequestMapping("/admin/ban-hang")
 public class BanHangController {
@@ -53,15 +54,17 @@ public class BanHangController {
 
     @Autowired
     private NhanVienDangNhapRepository nhanVienDangNhapRepository;
+
     // 1. Hiển thị trang bán hàng (POS)
     @GetMapping
     public String hienThiBanHang(@RequestParam(value = "idHoaDon", required = false) Integer idHoaDon,
-                                 Model model) {
+            @RequestParam(value = "showQR", required = false) Boolean showQR,
+            Model model) {
         // Load danh sách hóa đơn chờ (Trạng thái "Chờ thanh toán")
         model.addAttribute("dsHoaDon", hoaDonService.layDsHoaDonTaiQuay());
 
         // Load danh sách sản phẩm
-        model.addAttribute("dsSanPham", sanPhamChiTietRepository.findAll());
+        model.addAttribute("dsSanPham", sanPhamChiTietRepository.hienThiSPCTConHang());
 
         // Load khách hàng & voucher
         model.addAttribute("dsKhachHang", khachHangRepository.findAll());
@@ -75,6 +78,9 @@ public class BanHangController {
                 model.addAttribute("cartItems", hoaDonService.layChiTietHoaDon(idHoaDon));
             }
         }
+
+        // Flag hiển thị QR modal (sau khi chọn thanh toán CK)
+        model.addAttribute("showQR", showQR != null && showQR);
 
         return "ban-hang";
     }
@@ -95,8 +101,7 @@ public class BanHangController {
             String username = authentication.getName();
 
             // Tìm tài khoản
-            Optional<TaiKhoan> taiKhoanOpt =
-                    taiKhoanDangNhapRepository.findByTenDangNhap(username);
+            Optional<TaiKhoan> taiKhoanOpt = taiKhoanDangNhapRepository.findByTenDangNhap(username);
 
             if (taiKhoanOpt.isEmpty()) {
                 ra.addFlashAttribute("errorMessage", "Không tìm thấy tài khoản!");
@@ -104,8 +109,7 @@ public class BanHangController {
             }
 
             // Tìm nhân viên theo tài khoản
-            Optional<NhanVien> nvOpt =
-                    nhanVienDangNhapRepository.findByTaiKhoan(taiKhoanOpt.get());
+            Optional<NhanVien> nvOpt = nhanVienDangNhapRepository.findByTaiKhoan(taiKhoanOpt.get());
 
             if (nvOpt.isEmpty()) {
                 ra.addFlashAttribute("errorMessage", "Không tìm thấy nhân viên!");
@@ -128,9 +132,9 @@ public class BanHangController {
     // 3. Thêm sản phẩm vào hóa đơn
     @PostMapping("/add-product")
     public String themSanPham(@RequestParam("idHoaDon") Integer idHoaDon,
-                              @RequestParam("spctId") Integer spctId,
-                              @RequestParam("soLuong") Integer soLuong,
-                              RedirectAttributes ra) {
+            @RequestParam("spctId") Integer spctId,
+            @RequestParam("soLuong") Integer soLuong,
+            RedirectAttributes ra) {
         try {
             hoaDonService.themSanPhamVaoHoaDon(idHoaDon, spctId, soLuong);
         } catch (Exception e) {
@@ -142,8 +146,8 @@ public class BanHangController {
     // 4. Xóa sản phẩm khỏi hóa đơn
     @GetMapping("/remove-cart")
     public String xoaSanPham(@RequestParam("hdctId") Integer hdctId,
-                             @RequestParam("idHoaDon") Integer idHoaDon,
-                             RedirectAttributes ra) {
+            @RequestParam("idHoaDon") Integer idHoaDon,
+            RedirectAttributes ra) {
         try {
             hoaDonService.xoaSanPhamKhoiHoaDon(hdctId);
         } catch (Exception e) {
@@ -155,9 +159,9 @@ public class BanHangController {
     // 5. Cập nhật số lượng sản phẩm trong giỏ
     @PostMapping("/update-cart")
     public String capNhatSoLuong(@RequestParam("hdctId") Integer hdctId,
-                                 @RequestParam("soLuong") Integer soLuong,
-                                 @RequestParam("idHoaDon") Integer idHoaDon,
-                                 RedirectAttributes ra) {
+            @RequestParam("soLuong") Integer soLuong,
+            @RequestParam("idHoaDon") Integer idHoaDon,
+            RedirectAttributes ra) {
         try {
             hoaDonService.capNhatSoLuongChiTiet(hdctId, soLuong);
         } catch (Exception e) {
@@ -169,16 +173,24 @@ public class BanHangController {
     // 6. Xử lý thanh toán
     @PostMapping("/thanh-toan")
     public String thanhToan(@RequestParam("hoaDonId") Integer hoaDonId,
-                            @RequestParam(value = "khachHangId", required = false) Integer khachHangId,
-                            @RequestParam(value = "voucherId", required = false) Integer voucherId,
-                            @RequestParam("phuongThuc") String phuongThuc,
-                            @RequestParam("tienKhachDua") String tienKhachDuaStr,
-                            RedirectAttributes ra) {
+            @RequestParam(value = "khachHangId", required = false) Integer khachHangId,
+            @RequestParam(value = "voucherId", required = false) Integer voucherId,
+            @RequestParam("phuongThuc") String phuongThuc,
+            @RequestParam("tienKhachDua") String tienKhachDuaStr,
+            RedirectAttributes ra) {
         try {
             // Loại bỏ dấu chấm/phẩy trong chuỗi tiền tệ (ví dụ: 100.000 -> 100000)
             BigDecimal tienKhachDua = new BigDecimal(tienKhachDuaStr.replaceAll("[^\\d]", ""));
-            
+
             hoaDonService.thanhToanTaiQuay(hoaDonId, khachHangId, voucherId, phuongThuc, tienKhachDua);
+
+            if ("CK".equalsIgnoreCase(phuongThuc)) {
+                // CK: quay lại trang với QR modal hiển thị, chờ nhân viên xác nhận
+                ra.addFlashAttribute("successMessage",
+                        "Đã tạo yêu cầu chuyển khoản. Vui lòng xác nhận sau khi nhận tiền.");
+                return "redirect:/admin/ban-hang?idHoaDon=" + hoaDonId + "&showQR=true";
+            }
+
             ra.addFlashAttribute("successMessage", "Thanh toán thành công hóa đơn!");
             return "redirect:/admin/ban-hang";
         } catch (Exception e) {
@@ -187,6 +199,42 @@ public class BanHangController {
             return "redirect:/admin/ban-hang?idHoaDon=" + hoaDonId;
         }
     }
+
+    // 7. API tạo QR Code chuyển khoản
+    @GetMapping("/tao-qr")
+    @ResponseBody
+    public Map<String, Object> taoQR(@RequestParam("hoaDonId") Integer hoaDonId,
+            @RequestParam(value = "voucherId", required = false) Integer voucherId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            String qrUrl = hoaDonService.taoQRUrl(hoaDonId, voucherId);
+            HoaDon hoaDon = hoaDonRepository.findById(hoaDonId).orElse(null);
+            response.put("success", true);
+            response.put("qrUrl", qrUrl);
+            response.put("tongTien", hoaDon != null ? hoaDon.getTongThanhToan() : 0);
+            response.put("maHoaDon", hoaDon != null ? hoaDon.getMaHoaDon() : "");
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
+
+    // 8. Xác nhận đã nhận tiền chuyển khoản
+    @PostMapping("/xac-nhan-ck")
+    public String xacNhanChuyenKhoan(@RequestParam("hoaDonId") Integer hoaDonId,
+            RedirectAttributes ra) {
+        try {
+            hoaDonService.xacNhanChuyenKhoan(hoaDonId);
+            ra.addFlashAttribute("successMessage", "Xác nhận chuyển khoản thành công! Hóa đơn đã hoàn tất.");
+            return "redirect:/admin/ban-hang";
+        } catch (Exception e) {
+            e.printStackTrace();
+            ra.addFlashAttribute("errorMessage", "Lỗi xác nhận: " + e.getMessage());
+            return "redirect:/admin/ban-hang?idHoaDon=" + hoaDonId;
+        }
+    }
+
     @PostMapping("/them-khach-hang-nhanh")
     @ResponseBody
     public Map<String, Object> themKhachHangNhanh(@RequestBody Map<String, String> data) {
@@ -197,7 +245,7 @@ public class BanHangController {
             String ten = data.get("tenKhachHang");
             String sdt = data.get("sdt");
             String diaChi = data.get("diaChi");
-            KhachHang kh = khachHangService.themNhanh(ten, sdt,diaChi);
+            KhachHang kh = khachHangService.themNhanh(ten, sdt, diaChi);
 
             response.put("success", true);
             response.put("id", kh.getId());

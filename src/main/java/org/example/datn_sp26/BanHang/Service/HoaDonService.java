@@ -15,6 +15,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -43,6 +45,11 @@ public class HoaDonService {
     private static final int ID_CHO_XAC_NHAN = 1;
     private static final int ID_CHO_THANH_TOAN = 11;
     private static final int ID_DA_THANH_TOAN = 14;
+
+    // Thông tin ngân hàng cho QR Code chuyển khoản tại quầy
+    private static final String BANK_ID = "MB";
+    private static final String BANK_ACCOUNT = "0946073693";
+    private static final String BANK_ACCOUNT_NAME = "Truong Van Thien";
 
     // ============================================================
     // LOGIC XỬ LÝ VOUCHER (Đã thêm logic trừ tiền)
@@ -205,8 +212,7 @@ public class HoaDonService {
         }
 
         hoaDon.setIdTrangThaiHoaDon(
-                trangThaiHoaDonRepository.findById(trangThaiIdMoi).get()
-        );
+                trangThaiHoaDonRepository.findById(trangThaiIdMoi).get());
 
         hoaDonRepository.save(hoaDon);
     }
@@ -310,8 +316,7 @@ public class HoaDonService {
         hoaDon.setNgayTao(Instant.now());
         hoaDon.setTongThanhToan(BigDecimal.ZERO);
         hoaDon.setIdTrangThaiHoaDon(
-                trangThaiHoaDonRepository.findById(ID_CHO_THANH_TOAN).get()
-        );
+                trangThaiHoaDonRepository.findById(ID_CHO_THANH_TOAN).get());
 
         return hoaDonRepository.save(hoaDon);
     }
@@ -331,8 +336,7 @@ public class HoaDonService {
         if (spct.getSoLuong() < soLuong) {
             throw new RuntimeException("Sản phẩm không đủ số lượng tồn kho!");
         }
-        Optional<HoaDonChiTiet> existing =
-                hoaDonChiTietRepository.findByIdHoaDonAndIdSanPhamChiTiet(hoaDon, spct);
+        Optional<HoaDonChiTiet> existing = hoaDonChiTietRepository.findByIdHoaDonAndIdSanPhamChiTiet(hoaDon, spct);
 
         if (existing.isPresent()) {
             HoaDonChiTiet hdct = existing.get();
@@ -365,6 +369,7 @@ public class HoaDonService {
         hoaDonChiTietRepository.delete(hdct);
         capNhatTongTien(hoaDonId);
     }
+
     @Transactional
     public void capNhatSoLuongChiTiet(Integer hdctId, Integer soLuong) {
         HoaDonChiTiet hdct = hoaDonChiTietRepository.findById(hdctId)
@@ -387,18 +392,14 @@ public class HoaDonService {
 
     /**
      * Thanh toán hóa đơn tại quầy
+     * - Tiền mặt: hoàn tất ngay (trừ kho + chuyển trạng thái)
+     * - CK: chỉ gán thông tin, KHÔNG trừ kho. Đợi xacNhanChuyenKhoan() để hoàn tất.
      */
     @Transactional
     public void thanhToanTaiQuay(Integer hoaDonId, Integer khachHangId, Integer voucherId,
             String phuongThuc, BigDecimal tienKhachDua) {
         HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
-
-        // Gán khách hàng nếu có
-        if (khachHangId != null) {
-            var khachHangRepo = org.springframework.beans.factory.BeanFactoryUtils.class;
-            // Sử dụng repository trực tiếp
-        }
 
         // Gán phương thức thanh toán
         hoaDon.setIdLoaiThanhToan(loaiThanhToanRepository.findByTenLoai(phuongThuc).get());
@@ -433,7 +434,44 @@ public class HoaDonService {
             }
         }
 
+        // Nếu thanh toán Tiền mặt → trừ kho + hoàn tất ngay
+        if ("Tiền mặt".equalsIgnoreCase(phuongThuc)) {
+            truKhoTaiQuay(hoaDonId);
+            hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_HOAN_TAT).get());
+        } else {
+            // CK: giữ nguyên trạng thái "Chờ thanh toán", đợi nhân viên xác nhận đã nhận
+            // tiền
+            // Không thay đổi trạng thái ở đây
+        }
+
+        hoaDonRepository.save(hoaDon);
+    }
+
+    /**
+     * Xác nhận đã nhận tiền chuyển khoản → trừ kho + hoàn tất hóa đơn
+     */
+    @Transactional
+    public void xacNhanChuyenKhoan(Integer hoaDonId) {
+        HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
+
+        // Kiểm tra trạng thái phải là "Chờ thanh toán" (đang chờ xác nhận CK)
+        if (hoaDon.getIdTrangThaiHoaDon().getId() != ID_CHO_THANH_TOAN) {
+            throw new RuntimeException("Hóa đơn không ở trạng thái chờ xác nhận chuyển khoản!");
+        }
+
         // Trừ kho
+        truKhoTaiQuay(hoaDonId);
+
+        // Chuyển sang Hoàn tất
+        hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_HOAN_TAT).get());
+        hoaDonRepository.save(hoaDon);
+    }
+
+    /**
+     * Trừ kho cho hóa đơn POS (dùng chung cho Tiền mặt và CK)
+     */
+    private void truKhoTaiQuay(Integer hoaDonId) {
         List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByHoaDonId(hoaDonId);
         for (HoaDonChiTiet ct : chiTietList) {
             SanPhamChiTiet spct = ct.getIdSanPhamChiTiet();
@@ -443,10 +481,44 @@ public class HoaDonService {
             spct.setSoLuong(spct.getSoLuong() - ct.getSoLuong());
             sanPhamChiTietRepository.save(spct);
         }
+    }
 
-        // Chuyển trạng thái sang "Hoàn tất"
-        hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_HOAN_TAT).get());
-        hoaDonRepository.save(hoaDon);
+    /**
+     * Sinh URL QR Code chuyển khoản qua VietQR
+     */
+    public String taoQRUrl(Integer hoaDonId, Integer voucherId) {
+        HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
+
+        // Tính tổng tiền
+        capNhatTongTien(hoaDonId);
+        hoaDon = hoaDonRepository.findById(hoaDonId).get();
+        BigDecimal tongTien = hoaDon.getTongThanhToan();
+
+        // Áp voucher vào tính toán (chỉ preview, chưa lưu)
+        if (voucherId != null) {
+            MaGiamGia voucher = maGiamGiaRepository.findById(voucherId).orElse(null);
+            if (voucher != null) {
+                BigDecimal giaTriGiam = BigDecimal.valueOf(voucher.getGiaTri());
+                BigDecimal soTienTru;
+                if (voucher.getLoaiGiam() == 0) {
+                    soTienTru = giaTriGiam;
+                } else {
+                    soTienTru = tongTien.multiply(giaTriGiam).divide(BigDecimal.valueOf(100));
+                }
+                tongTien = tongTien.subtract(soTienTru);
+                if (tongTien.compareTo(BigDecimal.ZERO) < 0)
+                    tongTien = BigDecimal.ZERO;
+            }
+        }
+
+        String amount = tongTien.toBigInteger().toString();
+        String addInfo = URLEncoder.encode("Thanh toan " + hoaDon.getMaHoaDon(), StandardCharsets.UTF_8);
+
+        return "https://img.vietqr.io/image/" + BANK_ID + "-" + BANK_ACCOUNT
+                + "-compact.png?amount=" + amount
+                + "&addInfo=" + addInfo
+                + "&accountName=" + URLEncoder.encode(BANK_ACCOUNT_NAME, StandardCharsets.UTF_8);
     }
 
     /**
@@ -476,17 +548,17 @@ public class HoaDonService {
     public List<HoaDonChiTiet> layChiTietHoaDon(Integer hoaDonId) {
         return hoaDonChiTietRepository.findByHoaDonIdWithDetails(hoaDonId);
     }
+
     @Scheduled(fixedRate = 60000) // chạy mỗi 60 giây
     @Transactional
     public void tuDongHuyHoaDonQuaHan() {
 
-        Instant gioiHan = Instant.now().minusSeconds(60); // 10 phút
+        Instant gioiHan = Instant.now().minusSeconds(600); // 10 phút
 
         List<HoaDon> danhSach = hoaDonRepository
                 .findByIdTrangThaiHoaDon_IdAndNgayTaoBefore(
                         ID_CHO_THANH_TOAN,
-                        gioiHan
-                );
+                        gioiHan);
 
         for (HoaDon hd : danhSach) {
 
