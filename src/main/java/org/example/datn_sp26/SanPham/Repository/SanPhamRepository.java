@@ -25,4 +25,6 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Integer> {
             "(SELECT ct FROM SanPhamChiTiet ct WHERE ct.idSanPham.id = s.id " +
             "AND ct.soLuong > 0 AND ct.trangThai = 1)")
     List<SanPham> hienThiSanPhamTrenTrangChu();
+
+    List<SanPham> findByTrangThai(Integer trangThai);
 }

@@ -1,5 +1,6 @@
 package org.example.datn_sp26.SanPham.Repository;
 
+import jakarta.transaction.Transactional;
 import org.example.datn_sp26.SanPham.Entity.SanPhamChiTiet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -34,4 +35,35 @@ public interface SanPhamChiTietRepository extends JpaRepository<SanPhamChiTiet, 
     List<SanPhamChiTiet> hienThiSPCTConHang();
     // Thêm dòng này vào để hết lỗi đỏ ở Service
     List<SanPhamChiTiet> findAllByIdSanPham_Id(Integer idSanPham);
+
+
+    List<SanPhamChiTiet> findByIdSanPham_Id(Integer sanPhamId);
+
+    // Kiểm tra trùng biến thể
+    Optional<SanPhamChiTiet>
+    findByIdSanPham_IdAndIdMauSac_IdAndIdSize_Id(
+            Integer sanPhamId,
+            Integer mauSacId,
+            Integer sizeId
+    );
+
+    @Query("""
+    SELECT COALESCE(SUM(s.soLuong),0)
+    FROM SanPhamChiTiet s
+    WHERE s.idSanPham.id = :sanPhamId
+""")
+    Integer tongSoLuongBySanPhamId(@Param("sanPhamId") Integer sanPhamId);
+
+    @Transactional
+    void deleteByIdSanPham_Id(Integer id);
+
+    @Query("""
+    SELECT spct
+    FROM SanPhamChiTiet spct
+    JOIN FETCH spct.idSanPham
+    WHERE spct.soLuong < :nguong
+    ORDER BY spct.soLuong ASC
+""")
+    List<SanPhamChiTiet> findSanPhamSapHetHang(@Param("nguong") Integer nguong);
+    long countBySoLuongLessThan(Integer soLuong);
 }

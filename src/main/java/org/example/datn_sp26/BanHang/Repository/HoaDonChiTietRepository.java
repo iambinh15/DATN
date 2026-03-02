@@ -3,8 +3,10 @@ package org.example.datn_sp26.BanHang.Repository;
 import org.example.datn_sp26.BanHang.Entity.HoaDonChiTiet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 
 @Repository
@@ -28,4 +30,19 @@ public interface HoaDonChiTietRepository extends JpaRepository<HoaDonChiTiet, In
             "LEFT JOIN FETCH spct.idChatLieu " +
             "WHERE h.idHoaDon.id = ?1")
     List<HoaDonChiTiet> findByHoaDonIdWithDetails(Integer idHoaDon);
+
+    @Query("""
+           SELECT hdc.idSanPhamChiTiet.idSanPham.tenSanPham,
+                  SUM(hdc.soLuong)
+           FROM HoaDonChiTiet hdc
+           WHERE hdc.idHoaDon.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
+           AND (:tuNgay IS NULL OR hdc.idHoaDon.ngayTao >= :tuNgay)
+           AND (:denNgay IS NULL OR hdc.idHoaDon.ngayTao <= :denNgay)
+           GROUP BY hdc.idSanPhamChiTiet.idSanPham.tenSanPham
+           ORDER BY SUM(hdc.soLuong) DESC
+           """)
+    List<Object[]> topSanPhamBanChay(
+            @Param("tuNgay") Instant tuNgay,
+            @Param("denNgay") Instant denNgay
+    );
 }
