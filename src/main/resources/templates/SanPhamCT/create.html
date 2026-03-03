@@ -1,182 +1,520 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
-    <title>Thêm biến thể sản phẩm</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm biến thể sản phẩm - CotiT Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
         }
 
         body {
-            margin: 0;
-            background-color: #f4f6f9;
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            color: #111;
+            line-height: 1.6;
         }
 
-        .container {
-            width: 700px;
-            margin: 40px auto;
-        }
-
-        .card {
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .error-box {
-            background: #ffe3e3;
-            color: #c92a2a;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 6px;
-        }
-
-        select, input {
-            width: 100%;
-            padding: 9px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-        }
-
-        .row {
+        /* ===== LAYOUT ===== */
+        .admin-layout {
             display: flex;
-            gap: 15px;
+            min-height: 100vh;
         }
 
-        .col {
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            background: #000;
+            color: #fff;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid #222;
+        }
+
+        .sidebar-logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-logo span {
+            font-size: 12px;
+            font-weight: 400;
+            background: #333;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #666;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #999;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: #111;
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: #111;
+            color: #fff;
+            border-left-color: #fff;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            border-top: 1px solid #222;
+            background: #000;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar i {
+            font-size: 18px;
+            color: #999;
+        }
+
+        .user-details {
             flex: 1;
         }
 
-        .btn-group {
-            text-align: center;
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid #333;
+            color: #999;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #e74c3c;
+            border-color: #e74c3c;
+            color: #fff;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 30px;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        /* ===== FORM CARD ===== */
+        .form-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            max-width: 700px;
+        }
+
+        .form-card-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .form-card-body {
+            padding: 25px;
+        }
+
+        .error-box {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #000;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
             margin-top: 25px;
         }
 
-        .btn {
-            padding: 9px 20px;
+        .btn-save {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: #000;
+            color: #fff;
             border: none;
-            border-radius: 6px;
-            font-weight: bold;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
+            transition: background 0.2s;
+            font-family: 'Inter', sans-serif;
         }
 
-        .btn-save {
-            background: #28a745;
-            color: white;
+        .btn-save:hover {
+            background: #333;
         }
 
         .btn-back {
-            background: #6c757d;
-            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: transparent;
+            color: #666;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
             text-decoration: none;
-            margin-left: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            background: #f5f5f5;
+            color: #333;
+            border-color: #ccc;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+
+            .sidebar-header,
+            .nav-section-title,
+            .nav-item span,
+            .user-details,
+            .btn-logout span {
+                display: none;
+            }
+
+            .nav-item {
+                justify-content: center;
+                padding: 15px;
+            }
+
+            .nav-item i {
+                font-size: 20px;
+            }
+
+            .main-content {
+                margin-left: 80px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<div class="container">
-    <div class="card">
-
-        <h2>Thêm biến thể sản phẩm</h2>
-
-        <div th:if="${error}" class="error-box" th:text="${error}"></div>
-
-        <form th:action="@{/admin/spct/save}"
-              th:object="${spct}"
-              method="post">
-
-            <!-- Giữ id sản phẩm -->
-            <input type="hidden" th:field="*{idSanPham.id}" />
-
-            <div class="row">
-
-                <div class="form-group col">
-                    <label>Màu sắc *</label>
-                    <select th:field="*{idMauSac.id}" required>
-                        <option value="">-- Chọn màu --</option>
-                        <option th:each="m : ${mauSacs}"
-                                th:value="${m.id}"
-                                th:text="${m.tenMau}">
-                        </option>
-                    </select>
-                </div>
-
-                <div class="form-group col">
-                    <label>Size *</label>
-                    <select th:field="*{idSize.id}" required>
-                        <option value="">-- Chọn size --</option>
-                        <option th:each="s : ${sizes}"
-                                th:value="${s.id}"
-                                th:text="${s.tenSize}">
-                        </option>
-                    </select>
-                </div>
-
-            </div>
-
-            <div class="form-group">
-                <label>Chất liệu</label>
-                <select th:field="*{idChatLieu.id}">
-                    <option value="">-- Chọn chất liệu --</option>
-                    <option th:each="c : ${chatLieus}"
-                            th:value="${c.id}"
-                            th:text="${c.tenChatLieu}">
-                    </option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Giá bán *</label>
-                <input type="number"
-                       th:field="*{donGia}"
-                       min="0"
-                       step="0.01"
-                       required>
-            </div>
-
-            <div class="form-group">
-                <label>Số lượng *</label>
-                <input type="number"
-                       th:field="*{soLuong}"
-                       min="1"
-                       required>
-            </div>
-
-            <div class="btn-group">
-                <button type="submit" class="btn btn-save">Lưu</button>
-
-                <a th:href="@{/admin/spct/list/{id}(id=${spct.idSanPham.id})}"
-                   class="btn btn-back">
-                    Quay lại
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/admin" class="sidebar-logo">
+                    COTIT <span>ADMIN</span>
                 </a>
             </div>
 
-        </form>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <p class="nav-section-title">Menu chính</p>
+                    <a th:href="@{/admin}" class="nav-item">
+                        <i class="fas fa-home"></i>
+                        <span>Tổng quan</span>
+                    </a>
+                    <a th:href="@{/admin/ban-hang}" class="nav-item">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Quản lý bán hàng</span>
+                    </a>
+                    <a th:href="@{/hoa-don}" class="nav-item">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Quản lý hóa đơn</span>
+                    </a>
+                    <li sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/khuyen-mai}" class="nav-item">
+                            <i class="fas fa-ticket-alt"></i>
+                            <span>Quản lý voucher</span>
+                        </a>
+                    </li>
+                    <a th:href="@{/thong-ke}" class="nav-item">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Thống kê</span>
+                    </a>
+                </div>
 
+                <div class="nav-section">
+                    <p class="nav-section-title">Quản lý</p>
+                    <a th:href="@{/khach-hang}" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        <span>Quản lý khách hàng</span>
+                    </a>
+                    <li sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/nhan-vien}" class="nav-item">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Quản lý nhân viên</span>
+                        </a>
+                    </li>
+                </div>
+
+                <div class="nav-section">
+                    <li sec:authorize="hasRole('ADMIN')">
+                        <p class="nav-section-title">Sản phẩm</p>
+                        <a th:href="@{/admin/san-pham}" class="nav-item active">
+                            <i class="fas fa-box"></i>
+                            <span>Danh sách sản phẩm</span>
+                        </a>
+                    </li>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-details">
+                        <p class="user-name" th:text="${session.tenNhanVien != null ? session.tenNhanVien : 'Admin'}">
+                            Admin</p>
+                        <p class="user-role">Quản trị viên</p>
+                    </div>
+                </div>
+                <form th:action="@{/logout}" method="post" style="margin: 0;">
+                    <button type="submit" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Đăng xuất</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-header">
+                <h1 class="page-title">Thêm biến thể sản phẩm</h1>
+            </div>
+
+            <!-- Form Card -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <h3 class="form-card-title"><i class="fas fa-plus-circle"></i> Thông tin biến thể</h3>
+                </div>
+                <div class="form-card-body">
+
+                    <div th:if="${error}" class="error-box">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span th:text="${error}"></span>
+                    </div>
+
+                    <form th:action="@{/admin/spct/save}" th:object="${spct}" method="post">
+
+                        <!-- Giữ id sản phẩm -->
+                        <input type="hidden" th:field="*{idSanPham.id}" />
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Màu sắc *</label>
+                                <select th:field="*{idMauSac.id}" required>
+                                    <option value="">-- Chọn màu --</option>
+                                    <option th:each="m : ${mauSacs}" th:value="${m.id}" th:text="${m.tenMau}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Size *</label>
+                                <select th:field="*{idSize.id}" required>
+                                    <option value="">-- Chọn size --</option>
+                                    <option th:each="s : ${sizes}" th:value="${s.id}" th:text="${s.tenSize}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Chất liệu</label>
+                            <select th:field="*{idChatLieu.id}">
+                                <option value="">-- Chọn chất liệu --</option>
+                                <option th:each="c : ${chatLieus}" th:value="${c.id}" th:text="${c.tenChatLieu}">
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Giá bán *</label>
+                            <input type="number" th:field="*{donGia}" min="0" step="0.01" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Số lượng *</label>
+                            <input type="number" th:field="*{soLuong}" min="1" required>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-save">
+                                <i class="fas fa-save"></i> Lưu biến thể
+                            </button>
+                            <a th:href="@{/admin/spct/list/{id}(id=${spct.idSanPham.id})}" class="btn-back">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
     </div>
-</div>
 
 </body>
+
 </html>
