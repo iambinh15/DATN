@@ -6,6 +6,7 @@ import org.example.datn_sp26.BanHang.Repository.*;
 import org.example.datn_sp26.KhuyenMai.Entity.MaGiamGia;
 import org.example.datn_sp26.KhuyenMai.Repository.MaGiamGiaRepository;
 import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
+import org.example.datn_sp26.NguoiDung.Repository.KhachHangRepository;
 import org.example.datn_sp26.SanPham.Entity.SanPhamChiTiet;
 import org.example.datn_sp26.SanPham.Repository.SanPhamChiTietRepository;
 import org.example.datn_sp26.SanPham.Service.SanPhamChiTietService;
@@ -24,7 +25,8 @@ import java.util.*;
 @Service
 @Transactional
 public class HoaDonService {
-
+    @Autowired
+    private KhachHangRepository khachHangRepository;
     @Autowired
     private HoaDonRepository hoaDonRepository;
     @Autowired
@@ -398,8 +400,21 @@ public class HoaDonService {
     @Transactional
     public void thanhToanTaiQuay(Integer hoaDonId, Integer khachHangId, Integer voucherId,
             String phuongThuc, BigDecimal tienKhachDua) {
+
         HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
+
+        // Gán khách hàng và địa chỉ vào hóa đơn
+        if (khachHangId != null) {
+            KhachHang kh = khachHangRepository.findById(khachHangId).orElse(null);
+            if (kh != null) {
+                hoaDon.setIdKhachHang(kh);
+                // Lấy địa chỉ đầu tiên của khách hàng (nếu có)
+                if (kh.getDanhSachDiaChi() != null && !kh.getDanhSachDiaChi().isEmpty()) {
+                    hoaDon.setDiaChi(kh.getDanhSachDiaChi().get(0).getDiaChi());
+                }
+            }
+        }
 
         // Gán phương thức thanh toán
         hoaDon.setIdLoaiThanhToan(loaiThanhToanRepository.findByTenLoai(phuongThuc).get());
