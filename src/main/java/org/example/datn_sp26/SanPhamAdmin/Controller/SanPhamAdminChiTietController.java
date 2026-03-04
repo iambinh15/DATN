@@ -1,5 +1,6 @@
 package org.example.datn_sp26.SanPhamAdmin.Controller;
 
+import org.example.datn_sp26.SanPham.Entity.HinhAnh;
 import org.example.datn_sp26.SanPham.Entity.SanPham;
 import org.example.datn_sp26.SanPham.Entity.SanPhamChiTiet;
 import org.example.datn_sp26.SanPham.Repository.*;
@@ -8,9 +9,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -34,6 +41,9 @@ public class SanPhamAdminChiTietController {
 
     @Autowired
     private ThuongHieuRepository thuongHieuRepository;
+
+    @Autowired
+    private HinhAnhRepository hinhAnhRepository;
 
     // ===============================
     // FORM CREATE
@@ -60,7 +70,8 @@ public class SanPhamAdminChiTietController {
     // ===============================
     @PostMapping("/save")
     public String save(@ModelAttribute("spct") SanPhamChiTiet spct,
-                       Model model) {
+                       @RequestParam(value = "moreImages", required = false) List<MultipartFile> moreImages,
+                       Model model) throws IOException {
 
         // ===== Validate an toàn =====
         if (spct.getSoLuong() == null || spct.getSoLuong() <= 0) {
@@ -107,6 +118,29 @@ public class SanPhamAdminChiTietController {
             spctRepository.save(spct);
         }
 
+        // ================== LƯU THÊM NHIỀU ẢNH (NẾU CÓ) ==================
+        if (moreImages != null) {
+            String uploadDir = "src/main/resources/static/images";
+            Files.createDirectories(Paths.get(uploadDir));
+
+            for (MultipartFile file : moreImages) {
+                if (file.isEmpty()) continue;
+
+                String originalFileName = file.getOriginalFilename();
+                String fileName = sanPhamId + "_" + System.currentTimeMillis() + "_" +
+                        (originalFileName != null ? originalFileName : "image");
+
+                var destination = Paths.get(uploadDir).resolve(fileName);
+                Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+
+                HinhAnh hinhAnh = new HinhAnh();
+                hinhAnh.setIdSanPham(spct.getIdSanPham());
+                hinhAnh.setHinhAnh("/images/" + fileName);
+                hinhAnh.setTrangThai(1);
+                hinhAnhRepository.save(hinhAnh);
+            }
+        }
+
         return "redirect:/admin/spct/list/" + sanPhamId;
     }
 
@@ -122,6 +156,37 @@ public class SanPhamAdminChiTietController {
         model.addAttribute("sanPhamId", sanPhamId);
 
         return "SanPhamCT/index";
+    }
+
+    // ===============================
+    // EDIT FORM
+    // ===============================
+    @GetMapping("/edit/{id}")
+    public String edit(@PathVariable Integer id, Model model) {
+
+        SanPhamChiTiet spct = spctRepository.findById(id).orElseThrow();
+
+        model.addAttribute("spct", spct);
+        model.addAttribute("mauSacs", mauSacRepository.findAll());
+        model.addAttribute("sizes", sizeRepository.findAll());
+        model.addAttribute("chatLieus", chatLieuRepository.findAll());
+        model.addAttribute("thuongHieus", thuongHieuRepository.findAll());
+
+        return "SanPhamCT/create";
+    }
+
+    // ===============================
+    // DELETE
+    // ===============================
+    @GetMapping("/delete/{id}")
+    public String delete(@PathVariable Integer id) {
+
+        SanPhamChiTiet spct = spctRepository.findById(id).orElseThrow();
+        Integer sanPhamId = spct.getIdSanPham().getId();
+
+        spctRepository.deleteById(id);
+
+        return "redirect:/admin/spct/list/" + sanPhamId;
     }
 
     // ===============================
