@@ -31,8 +31,66 @@
 
         .breadcrumb { max-width: 1400px; margin: 0 auto; padding: 20px; font-size: 13px; color: #666; }
         .product-detail { max-width: 1400px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
-        .main-image { width: 100%; height: 600px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 20px; }
+        .main-image { position: relative; width: 100%; height: 600px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
         .main-image i { font-size: 120px; color: #ddd; }
+
+        .main-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            display: none; /* chỉ hiện khi có hình */
+        }
+
+        .gallery-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.4);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            z-index: 5;
+        }
+
+        .gallery-arrow:hover { background: rgba(0,0,0,0.6); }
+        .gallery-arrow.left { left: 15px; }
+        .gallery-arrow.right { right: 15px; }
+
+        .thumb-list {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .thumb-item {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .thumb-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumb-item.active {
+            border-color: #000;
+        }
 
         .product-info { padding-top: 20px; }
         .product-badge { display: inline-block; background: #000; color: #fff; padding: 5px 15px; font-size: 11px; font-weight: 600; letter-spacing: 1px; margin-bottom: 20px; }
@@ -112,7 +170,40 @@
 
 <div th:if="${sp != null}" class="product-detail">
     <div class="product-gallery">
-        <div class="main-image"><i class="fas fa-tshirt"></i></div>
+        <div class="main-image" id="mainImageWrapper">
+            <!-- Ảnh lớn, sẽ được set src bằng JavaScript -->
+            <img id="mainImage" alt="Ảnh sản phẩm">
+
+            <!-- Placeholder khi không có ảnh -->
+            <i class="fas fa-tshirt"
+               th:if="${sp.hinhAnhs == null or sp.hinhAnhs.isEmpty()}"></i>
+
+            <!-- Nút chuyển ảnh chỉ hiển thị khi có >= 2 ảnh -->
+            <button type="button"
+                    class="gallery-arrow left"
+                    th:if="${sp.hinhAnhs != null and !sp.hinhAnhs.isEmpty() and sp.hinhAnhs.size() > 1}"
+                    onclick="changeImage(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button type="button"
+                    class="gallery-arrow right"
+                    th:if="${sp.hinhAnhs != null and !sp.hinhAnhs.isEmpty() and sp.hinhAnhs.size() > 1}"
+                    onclick="changeImage(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Thumbnails -->
+        <div class="thumb-list"
+             th:if="${sp.hinhAnhs != null and !sp.hinhAnhs.isEmpty()}">
+            <div class="thumb-item"
+                 th:each="ha, iter : ${sp.hinhAnhs}"
+                 th:classappend="${iter.index == 0} ? 'active'"
+                 th:data-index="${iter.index}"
+                 th:onclick="'selectImage(' + ${iter.index} + ')'">
+                <img th:src="${ha.hinhAnh}" alt="Ảnh phụ">
+            </div>
+        </div>
     </div>
 
     <div class="product-info">
@@ -148,7 +239,7 @@
     </div>
 </div>
 
-<script>
+<script th:inline="javascript">
     function toggleUserMenu(e) {
         e.preventDefault();
         document.getElementById('userMenu').classList.toggle('active');
@@ -178,6 +269,49 @@
             document.getElementById('userMenu').classList.remove('active');
         }
     });
+
+    // ====== GALLERY ẢNH SẢN PHẨM ======
+    // Lấy danh sách URL ảnh trực tiếp từ các thumbnail (không phụ thuộc kiểu collection trong JPA)
+    const thumbImgs = document.querySelectorAll('.thumb-item img');
+    const imageUrls = Array.from(thumbImgs).map(function (img) {
+        return img.getAttribute('src');
+    });
+    let currentIndex = 0;
+
+    // Khởi tạo ảnh đầu tiên nếu có
+    (function initGallery() {
+        if (!imageUrls || imageUrls.length === 0) return;
+        const mainImg = document.getElementById('mainImage');
+        if (mainImg) {
+            mainImg.src = imageUrls[0];
+            mainImg.style.display = 'block';
+        }
+    })();
+
+    function renderActiveThumb() {
+        const thumbs = document.querySelectorAll('.thumb-item');
+        thumbs.forEach(t => t.classList.remove('active'));
+        if (thumbs[currentIndex]) {
+            thumbs[currentIndex].classList.add('active');
+        }
+    }
+
+    function selectImage(index) {
+        if (!imageUrls || imageUrls.length === 0) return;
+        currentIndex = index;
+        const mainImg = document.getElementById('mainImage');
+        if (mainImg) {
+            mainImg.src = imageUrls[currentIndex];
+            mainImg.style.display = 'block';
+        }
+        renderActiveThumb();
+    }
+
+    function changeImage(step) {
+        if (!imageUrls || imageUrls.length === 0) return;
+        currentIndex = (currentIndex + step + imageUrls.length) % imageUrls.length;
+        selectImage(currentIndex);
+    }
 </script>
 </body>
 </html>

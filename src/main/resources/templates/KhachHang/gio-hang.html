@@ -746,7 +746,16 @@
         </div>
         <div class="item-info">
           <div class="item-image">
-            <i class="fas fa-tshirt"></i>
+            <!-- Ảnh đại diện sản phẩm trong giỏ -->
+            <img th:each="ha, iter : ${item.idSanPhamChiTiet.idSanPham.hinhAnhs}"
+                 th:if="${iter.index == 0}"
+                 th:src="${ha.hinhAnh}"
+                 alt="Ảnh sản phẩm"
+                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+
+            <!-- Placeholder nếu không có ảnh -->
+            <i class="fas fa-tshirt"
+               th:if="${item.idSanPhamChiTiet.idSanPham.hinhAnhs == null or item.idSanPhamChiTiet.idSanPham.hinhAnhs.isEmpty()}"></i>
           </div>
           <div class="item-details">
             <h4>Sản phẩm #<span th:text="${item.idSanPhamChiTiet.id}"></span></h4>

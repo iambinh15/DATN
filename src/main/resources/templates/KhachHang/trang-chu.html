@@ -554,9 +554,17 @@
       <div th:each="sp : ${listSanPham}" class="product-card">
         <div class="product-image">
           <span class="product-badge">MỚI</span>
-          <div class="product-placeholder">
+
+          <!-- Nếu có ảnh thì hiển thị ảnh đầu tiên, nếu không thì dùng placeholder áo thun -->
+          <img th:each="ha, iter : ${sp.hinhAnhs}"
+               th:if="${iter.index == 0}"
+               th:src="${ha.hinhAnh}"
+               alt="Ảnh sản phẩm">
+
+          <div class="product-placeholder" th:if="${sp.hinhAnhs == null or sp.hinhAnhs.isEmpty()}">
             <i class="fas fa-tshirt"></i>
           </div>
+
           <div class="product-actions">
             <a th:href="@{/khach-hang/san-pham/{id}(id=${sp.id})}" class="quick-view-btn">Xem nhanh</a>
           </div>
