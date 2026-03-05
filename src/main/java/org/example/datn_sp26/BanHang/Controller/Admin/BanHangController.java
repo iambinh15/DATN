@@ -68,7 +68,7 @@ public class BanHangController {
 
         // Load khách hàng & voucher
         model.addAttribute("dsKhachHang", khachHangRepository.findAll());
-        model.addAttribute("dsVoucher", maGiamGiaRepository.findAll());
+        model.addAttribute("dsVoucher", maGiamGiaRepository.findByTrangThai(1));
 
         // Nếu có hóa đơn được chọn, load chi tiết hóa đơn đó
         if (idHoaDon != null) {
