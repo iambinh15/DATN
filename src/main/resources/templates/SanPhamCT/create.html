@@ -457,7 +457,10 @@
                         <span th:text="${error}"></span>
                     </div>
 
-                    <form th:action="@{/admin/spct/save}" th:object="${spct}" method="post">
+                    <form th:action="@{/admin/spct/save}"
+                          th:object="${spct}"
+                          method="post"
+                          enctype="multipart/form-data">
 
                         <!-- Giữ id sản phẩm -->
                         <input type="hidden" th:field="*{idSanPham.id}" />
@@ -499,6 +502,14 @@
                         <div class="form-group">
                             <label>Số lượng *</label>
                             <input type="number" th:field="*{soLuong}" min="1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Hình ảnh sản phẩm (có thể chọn nhiều ảnh)</label>
+                            <input type="file"
+                                   name="moreImages"
+                                   multiple
+                                   accept="image/*">
                         </div>
 
                         <div class="form-actions">

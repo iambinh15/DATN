@@ -475,9 +475,14 @@
             <div class="content-header">
                 <h1 class="page-title">Danh sách sản phẩm chi tiết</h1>
                 <div class="header-actions">
-                    <a th:href="@{/admin/san-pham-chi-tiet/create}" class="btn-primary-custom">
+                    <a th:href="@{/admin/spct/create/{id}(id=${sanPhamId})}" class="btn-primary-custom">
                         <i class="fas fa-plus"></i>
                         Thêm biến thể
+                    </a>
+                    <a th:href="@{/admin/san-pham}" class="btn-primary-custom"
+                       style="background:#f5f5f5;color:#111;border:1px solid #ddd;">
+                        <i class="fas fa-arrow-left"></i>
+                        Quay lại danh sách sản phẩm
                     </a>
                 </div>
             </div>
@@ -517,11 +522,11 @@
                                 </td>
                                 <td>
                                     <div class="action-btns">
-                                        <a th:href="@{/admin/san-pham-chi-tiet/edit/{id}(id=${item.id})}"
+                                        <a th:href="@{/admin/spct/edit/{id}(id=${item.id})}"
                                             class="btn-edit">
                                             <i class="fas fa-edit"></i> Sửa
                                         </a>
-                                        <a th:href="@{/admin/san-pham-chi-tiet/delete/{id}(id=${item.id})}"
+                                        <a th:href="@{/admin/spct/delete/{id}(id=${item.id})}"
                                             class="btn-delete" onclick="return confirm('Bạn có chắc muốn xóa?')">
                                             <i class="fas fa-trash"></i> Xóa
                                         </a>
