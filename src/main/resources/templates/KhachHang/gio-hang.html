@@ -747,15 +747,13 @@
         <div class="item-info">
           <div class="item-image">
             <!-- Ảnh đại diện sản phẩm trong giỏ -->
-            <img th:each="ha, iter : ${item.idSanPhamChiTiet.idSanPham.hinhAnhs}"
-                 th:if="${iter.index == 0}"
-                 th:src="${ha.hinhAnh}"
-                 alt="Ảnh sản phẩm"
-                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+            <img th:each="ha, iter : ${item.idSanPhamChiTiet.idSanPham.hinhAnhs}" th:if="${iter.index == 0}"
+              th:src="${ha.hinhAnh}" alt="Ảnh sản phẩm"
+              style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
 
             <!-- Placeholder nếu không có ảnh -->
             <i class="fas fa-tshirt"
-               th:if="${item.idSanPhamChiTiet.idSanPham.hinhAnhs == null or item.idSanPhamChiTiet.idSanPham.hinhAnhs.isEmpty()}"></i>
+              th:if="${item.idSanPhamChiTiet.idSanPham.hinhAnhs == null or item.idSanPhamChiTiet.idSanPham.hinhAnhs.isEmpty()}"></i>
           </div>
           <div class="item-details">
             <h4>Sản phẩm #<span th:text="${item.idSanPhamChiTiet.id}"></span></h4>
@@ -764,17 +762,17 @@
         </div>
 
         <div class="item-quantity">
-          <a th:href="@{'/khach-hang/gio-hang/update/' + ${item.id} + '/decrease'}" class="qty-btn">
+          <button type="button" class="qty-btn" th:data-id="${item.id}"
+            onclick="updateQuantityAjax(this.dataset.id, 'decrease')">
             <i class="fas fa-minus"></i>
-          </a>
-          <form th:action="@{/khach-hang/gio-hang/update-quantity}" method="post" style="margin: 0;">
-            <input type="hidden" name="id" th:value="${item.id}">
-            <input type="number" name="quantity" th:value="${item.soLuong}" class="qty-input" min="1"
-              onchange="this.form.submit()">
-          </form>
-          <a th:href="@{'/khach-hang/gio-hang/update/' + ${item.id} + '/increase'}" class="qty-btn">
+          </button>
+          <input type="number" th:value="${item.soLuong}" class="qty-input" min="1" th:data-id="${item.id}"
+            th:data-price-per-unit="${item.idSanPhamChiTiet.donGia}"
+            onchange="updateQuantityDirectAjax(this.dataset.id, this.value, this)">
+          <button type="button" class="qty-btn" th:data-id="${item.id}"
+            onclick="updateQuantityAjax(this.dataset.id, 'increase')">
             <i class="fas fa-plus"></i>
-          </a>
+          </button>
         </div>
 
         <div class="item-price"
@@ -955,6 +953,88 @@
         container.appendChild(input);
       });
       return true;
+    }
+
+    // ===== AJAX QUANTITY UPDATE (không reload trang, giữ nguyên trạng thái checkbox) =====
+    function updateQuantityAjax(id, action) {
+      fetch('/khach-hang/gio-hang/update/' + id + '/' + action + '/ajax')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Tìm cart-item chứa nút này
+            const cartItem = document.querySelector('.item-select[value="' + id + '"]').closest('.cart-item');
+            if (!cartItem) return;
+
+            // Cập nhật số lượng hiển thị
+            const qtyInput = cartItem.querySelector('.qty-input');
+            qtyInput.value = data.soLuong;
+
+            // Cập nhật thành tiền
+            const itemTotal = cartItem.querySelector('.item-total');
+            itemTotal.textContent = Number(data.thanhTien).toLocaleString('vi-VN') + 'đ';
+
+            // Cập nhật data-price trên checkbox
+            const checkbox = cartItem.querySelector('.item-select');
+            checkbox.dataset.price = data.thanhTien;
+
+            // Cập nhật tổng bên summary
+            updateSelectedTotal();
+          } else {
+            alert(data.message || 'Có lỗi xảy ra!');
+          }
+        })
+        .catch(err => {
+          console.error('Lỗi:', err);
+          alert('Có lỗi xảy ra khi cập nhật số lượng!');
+        });
+    }
+
+    function updateQuantityDirectAjax(id, quantity, inputElement) {
+      const formData = new FormData();
+      formData.append('id', id);
+      formData.append('quantity', quantity);
+
+      fetch('/khach-hang/gio-hang/update-quantity-ajax', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            if (data.deleted) {
+              // Sản phẩm bị xóa, reload trang
+              window.location.reload();
+              return;
+            }
+
+            // Tìm cart-item chứa input này
+            const cartItem = inputElement.closest('.cart-item');
+            if (!cartItem) return;
+
+            // Cập nhật số lượng
+            inputElement.value = data.soLuong;
+
+            // Cập nhật thành tiền
+            const itemTotal = cartItem.querySelector('.item-total');
+            itemTotal.textContent = Number(data.thanhTien).toLocaleString('vi-VN') + 'đ';
+
+            // Cập nhật data-price trên checkbox
+            const checkbox = cartItem.querySelector('.item-select');
+            checkbox.dataset.price = data.thanhTien;
+
+            // Cập nhật tổng bên summary
+            updateSelectedTotal();
+          } else {
+            alert(data.message || 'Có lỗi xảy ra!');
+            // Khôi phục lại giá trị cũ
+            window.location.reload();
+          }
+        })
+        .catch(err => {
+          console.error('Lỗi:', err);
+          alert('Có lỗi xảy ra khi cập nhật số lượng!');
+          window.location.reload();
+        });
     }
 
     // Initialize totals on page load

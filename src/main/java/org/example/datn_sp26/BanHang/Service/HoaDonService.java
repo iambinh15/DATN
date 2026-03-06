@@ -325,6 +325,7 @@ public class HoaDonService {
 
     /**
      * Thêm sản phẩm chi tiết vào hóa đơn POS
+     * → Trừ kho NGAY khi thêm vào giỏ
      */
     @Transactional
     public void themSanPhamVaoHoaDon(Integer hoaDonId, Integer spctId, Integer soLuong) {
@@ -353,6 +354,10 @@ public class HoaDonService {
             hoaDonChiTietRepository.save(hdct);
         }
 
+        // Trừ kho NGAY khi thêm vào giỏ hàng POS
+        spct.setSoLuong(spct.getSoLuong() - soLuong);
+        sanPhamChiTietRepository.save(spct);
+
         capNhatTongTien(hoaDonId);
     }
 
@@ -368,6 +373,11 @@ public class HoaDonService {
 
         Integer hoaDonId = hdct.getIdHoaDon().getId();
         SanPhamChiTiet spct = hdct.getIdSanPhamChiTiet();
+
+        // Hoàn trả lại kho khi xóa sản phẩm khỏi giỏ POS
+        spct.setSoLuong(spct.getSoLuong() + hdct.getSoLuong());
+        sanPhamChiTietRepository.save(spct);
+
         hoaDonChiTietRepository.delete(hdct);
         capNhatTongTien(hoaDonId);
     }
@@ -383,19 +393,31 @@ public class HoaDonService {
         }
 
         SanPhamChiTiet spct = hdct.getIdSanPhamChiTiet();
-        if (spct.getSoLuong() < soLuong) {
-            throw new RuntimeException("Sản phẩm không đủ số lượng tồn kho!");
+        int soLuongCu = hdct.getSoLuong();
+        int chenhLech = soLuong - soLuongCu; // dương = tăng thêm, âm = giảm bớt
+
+        // Nếu tăng số lượng → kiểm tra tồn kho đủ không
+        if (chenhLech > 0 && spct.getSoLuong() < chenhLech) {
+            throw new RuntimeException(
+                    "Sản phẩm không đủ số lượng tồn kho! Chỉ còn " + spct.getSoLuong() + " sản phẩm.");
         }
 
+        // Cập nhật số lượng trong giỏ
         hdct.setSoLuong(soLuong);
         hoaDonChiTietRepository.save(hdct);
+
+        // Điều chỉnh kho: trừ nếu tăng, hoàn nếu giảm
+        spct.setSoLuong(spct.getSoLuong() - chenhLech);
+        sanPhamChiTietRepository.save(spct);
+
         capNhatTongTien(hdct.getIdHoaDon().getId());
     }
 
     /**
      * Thanh toán hóa đơn tại quầy
-     * - Tiền mặt: hoàn tất ngay (trừ kho + chuyển trạng thái)
-     * - CK: chỉ gán thông tin, KHÔNG trừ kho. Đợi xacNhanChuyenKhoan() để hoàn tất.
+     * - Kho đã được trừ ngay khi thêm sản phẩm vào giỏ POS
+     * - Tiền mặt: hoàn tất ngay (chuyển trạng thái)
+     * - CK: chờ nhân viên xác nhận đã nhận tiền
      */
     @Transactional
     public void thanhToanTaiQuay(Integer hoaDonId, Integer khachHangId, Integer voucherId,
@@ -449,21 +471,20 @@ public class HoaDonService {
             }
         }
 
-        // Nếu thanh toán Tiền mặt → trừ kho + hoàn tất ngay
+        // Kho đã được trừ ngay khi thêm sản phẩm vào giỏ POS → không cần trừ lại
         if ("Tiền mặt".equalsIgnoreCase(phuongThuc)) {
-            truKhoTaiQuay(hoaDonId);
             hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_HOAN_TAT).get());
         } else {
             // CK: giữ nguyên trạng thái "Chờ thanh toán", đợi nhân viên xác nhận đã nhận
             // tiền
-            // Không thay đổi trạng thái ở đây
         }
 
         hoaDonRepository.save(hoaDon);
     }
 
     /**
-     * Xác nhận đã nhận tiền chuyển khoản → trừ kho + hoàn tất hóa đơn
+     * Xác nhận đã nhận tiền chuyển khoản → hoàn tất hóa đơn
+     * (Kho đã được trừ khi thêm sản phẩm vào giỏ POS)
      */
     @Transactional
     public void xacNhanChuyenKhoan(Integer hoaDonId) {
@@ -475,10 +496,7 @@ public class HoaDonService {
             throw new RuntimeException("Hóa đơn không ở trạng thái chờ xác nhận chuyển khoản!");
         }
 
-        // Trừ kho
-        truKhoTaiQuay(hoaDonId);
-
-        // Chuyển sang Hoàn tất
+        // Kho đã được trừ ngay khi thêm sản phẩm → chỉ cần chuyển trạng thái
         hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_HOAN_TAT).get());
         hoaDonRepository.save(hoaDon);
     }
@@ -577,13 +595,21 @@ public class HoaDonService {
 
         for (HoaDon hd : danhSach) {
 
+            // Hoàn trả kho cho các sản phẩm trong hóa đơn POS bị hủy tự động
+            List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByHoaDonId(hd.getId());
+            for (HoaDonChiTiet ct : chiTietList) {
+                SanPhamChiTiet spct = ct.getIdSanPhamChiTiet();
+                spct.setSoLuong(spct.getSoLuong() + ct.getSoLuong());
+                sanPhamChiTietRepository.save(spct);
+            }
+
             hd.setIdTrangThaiHoaDon(
                     trangThaiHoaDonRepository.findById(5).get() // Đã hủy
             );
 
             hoaDonRepository.save(hd);
 
-            System.out.println("===> Đã tự động hủy hóa đơn ID: " + hd.getId());
+            System.out.println("===> Đã tự động hủy hóa đơn ID: " + hd.getId() + " và hoàn trả kho.");
         }
     }
 }
