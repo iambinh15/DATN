@@ -15,55 +15,62 @@ public interface SanPhamChiTietRepository extends JpaRepository<SanPhamChiTiet, 
 
     // ✅ FIX: join đúng tên FIELD trong Entity
     @Query("""
-        SELECT s
-        FROM SanPhamChiTiet s
-        LEFT JOIN FETCH s.idSanPham
-        LEFT JOIN FETCH s.idMauSac
-        LEFT JOIN FETCH s.idSize
-        WHERE s.idSanPham.id = :id
-    """)
+                SELECT s
+                FROM SanPhamChiTiet s
+                LEFT JOIN FETCH s.idSanPham
+                LEFT JOIN FETCH s.idMauSac
+                LEFT JOIN FETCH s.idSize
+                WHERE s.idSanPham.id = :id
+            """)
     List<SanPhamChiTiet> findAllWithDetailsBySanPhamId(@Param("id") Integer id);
 
     // Tìm biến thể đầu tiên của sản phẩm mà còn hàng (soLuong > 0)
     Optional<SanPhamChiTiet> findFirstByIdSanPham_IdAndTrangThaiAndSoLuongGreaterThan(
             Integer idSanPham,
             Integer trangThai,
-            Integer soLuong
-    );
+            Integer soLuong);
+
     // Lọc bỏ các bản ghi có số lượng bằng 0
-    @Query("SELECT s FROM SanPhamChiTiet s WHERE s.soLuong > 0")
+    @Query("""
+                SELECT DISTINCT s FROM SanPhamChiTiet s
+                JOIN FETCH s.idSanPham sp
+                LEFT JOIN FETCH sp.hinhAnhs
+                LEFT JOIN FETCH s.idMauSac
+                LEFT JOIN FETCH s.idSize
+                LEFT JOIN FETCH s.idChatLieu
+                WHERE s.soLuong > 0
+            """)
     List<SanPhamChiTiet> hienThiSPCTConHang();
+
     // Thêm dòng này vào để hết lỗi đỏ ở Service
     List<SanPhamChiTiet> findAllByIdSanPham_Id(Integer idSanPham);
-
 
     List<SanPhamChiTiet> findByIdSanPham_Id(Integer sanPhamId);
 
     // Kiểm tra trùng biến thể
-    Optional<SanPhamChiTiet>
-    findByIdSanPham_IdAndIdMauSac_IdAndIdSize_Id(
+    Optional<SanPhamChiTiet> findByIdSanPham_IdAndIdMauSac_IdAndIdSize_Id(
             Integer sanPhamId,
             Integer mauSacId,
-            Integer sizeId
-    );
+            Integer sizeId);
 
     @Query("""
-    SELECT COALESCE(SUM(s.soLuong),0)
-    FROM SanPhamChiTiet s
-    WHERE s.idSanPham.id = :sanPhamId
-""")
+                SELECT COALESCE(SUM(s.soLuong),0)
+                FROM SanPhamChiTiet s
+                WHERE s.idSanPham.id = :sanPhamId
+            """)
     Integer tongSoLuongBySanPhamId(@Param("sanPhamId") Integer sanPhamId);
 
     @Transactional
     void deleteByIdSanPham_Id(Integer id);
 
     @Query("""
-    SELECT spct
-    FROM SanPhamChiTiet spct
-    JOIN FETCH spct.idSanPham
-    WHERE spct.soLuong < :nguong
-    ORDER BY spct.soLuong ASC
-""")
+                SELECT spct
+                FROM SanPhamChiTiet spct
+                JOIN FETCH spct.idSanPham
+                WHERE spct.soLuong < :nguong
+                ORDER BY spct.soLuong ASC
+            """)
     List<SanPhamChiTiet> findSanPhamSapHetHang(@Param("nguong") Integer nguong);
+
     long countBySoLuongLessThan(Integer soLuong);
 }

@@ -4,12 +4,16 @@ import jakarta.servlet.http.HttpSession;
 import org.example.datn_sp26.BanHang.Entity.GioHangChiTiet;
 import org.example.datn_sp26.BanHang.Service.GioHangService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/khach-hang/gio-hang")
@@ -140,6 +144,73 @@ public class GioHangController {
             ra.addFlashAttribute("message", "Lỗi: " + e.getMessage());
         }
         return "redirect:/khach-hang/gio-hang";
+    }
+
+    // 7. AJAX: TĂNG / GIẢM SỐ LƯỢNG (không reload trang)
+    @GetMapping("/update/{id}/{action}/ajax")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> updateSoLuongAjax(
+            @PathVariable("id") Integer id,
+            @PathVariable("action") String action,
+            HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        Integer idKhachHang = getIdKhachHang(session);
+        if (idKhachHang == null) {
+            result.put("success", false);
+            result.put("message", "Chưa đăng nhập");
+            return ResponseEntity.status(401).body(result);
+        }
+
+        try {
+            int thayDoi = "increase".equals(action) ? 1 : -1;
+            GioHangChiTiet updated = gioHangService.thayDoiSoLuong(id, thayDoi);
+            result.put("success", true);
+            result.put("soLuong", updated.getSoLuong());
+            result.put("donGia", updated.getIdSanPhamChiTiet().getDonGia());
+            result.put("thanhTien",
+                    updated.getIdSanPhamChiTiet().getDonGia().multiply(BigDecimal.valueOf(updated.getSoLuong())));
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "Lỗi: " + e.getMessage());
+            return ResponseEntity.badRequest().body(result);
+        }
+    }
+
+    // 8. AJAX: CẬP NHẬT SỐ LƯỢNG TÙY CHỈNH (không reload trang)
+    @PostMapping("/update-quantity-ajax")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> updateQuantityAjax(
+            @RequestParam("id") Integer id,
+            @RequestParam("quantity") Integer quantity,
+            HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        Integer idKhachHang = getIdKhachHang(session);
+        if (idKhachHang == null) {
+            result.put("success", false);
+            result.put("message", "Chưa đăng nhập");
+            return ResponseEntity.status(401).body(result);
+        }
+
+        try {
+            if (quantity == null || quantity <= 0) {
+                gioHangService.xoaSanPhamKhoiGio(id);
+                result.put("success", true);
+                result.put("deleted", true);
+            } else {
+                GioHangChiTiet updated = gioHangService.capNhatSoLuongTuyChinh(id, quantity);
+                result.put("success", true);
+                result.put("soLuong", updated.getSoLuong());
+                result.put("donGia", updated.getIdSanPhamChiTiet().getDonGia());
+                result.put("thanhTien",
+                        updated.getIdSanPhamChiTiet().getDonGia().multiply(BigDecimal.valueOf(updated.getSoLuong())));
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "Lỗi: " + e.getMessage());
+            return ResponseEntity.badRequest().body(result);
+        }
     }
 
 }
