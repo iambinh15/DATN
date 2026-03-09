@@ -68,14 +68,24 @@ public class KhachHangController {
         Integer idKH = (Integer) session.getAttribute("idKhachHang");
 
         if (idKH != null && diaChi != null && !diaChi.trim().isEmpty()) {
-            // Tìm đối tượng khách hàng từ DB
             KhachHang kh = khachHangRepository.findById(idKH).orElse(null);
 
             if (kh != null) {
                 DiaChi moi = new DiaChi();
                 moi.setDiaChi(diaChi);
-                moi.setIdKhachHang(kh); // Gán cả đối tượng KhachHang vào
-                moi.setTrangThai(1);    // 1: Hoạt động/Mặc định
+                moi.setIdKhachHang(kh);
+
+                // --- LOGIC TỰ ĐỘNG PHÂN LOẠI 0 VÀ 1 ---
+                List<DiaChi> listHienTai = diaChiRepository.findByIdKhachHang_Id(idKH);
+
+                if (listHienTai == null || listHienTai.isEmpty()) {
+                    // Chưa có địa chỉ nào -> Cái này là mặc định
+                    moi.setTrangThai(1);
+                } else {
+                    // Đã có địa chỉ rồi -> Cái mới thêm luôn là 0
+                    moi.setTrangThai(0);
+                }
+                // --------------------------------------
 
                 diaChiRepository.save(moi);
             }

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
@@ -21,11 +22,17 @@ public class MaGiamGia {
     private Integer id;
 
     private String ma;
+
     private Double giaTri;
+
     private Integer trangThai;
+
     private String tenGiamGia;
-    private Integer loaiGiam; // 0: Tiền mặt, 1: Phần trăm
+
+    private Integer loaiGiam;
+
     private Double giamToiDa;
+
     private String dieuKienGiam;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
@@ -35,5 +42,6 @@ public class MaGiamGia {
     private LocalDateTime ngayKetThuc;
 
     private Integer soLuong;
-    private Double giamToiThieu; // Điều kiện đơn hàng tối thiểu
+
+    private Double giamToiThieu;
 }

@@ -9,7 +9,9 @@ import org.example.datn_sp26.BanHang.Service.GioHangService;
 import org.example.datn_sp26.KhuyenMai.Entity.MaGiamGia;
 import org.example.datn_sp26.KhuyenMai.Repository.MaGiamGiaRepository;
 import org.example.datn_sp26.KhuyenMai.Service.MaGiamGiaService;
+import org.example.datn_sp26.NguoiDung.Entity.DiaChi;
 import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
+import org.example.datn_sp26.NguoiDung.Repository.DiaChiRepository;
 import org.example.datn_sp26.NguoiDung.Service.DiaChiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -45,6 +47,8 @@ public class GHNController {
     private MaGiamGiaRepository maGiamGiaRepository;
     @Autowired
     private HoaDonRepository hoaDonRepository;
+    @Autowired
+    private DiaChiRepository diaChiRepository;
 
     // =======================
     // 1️⃣ TRANG THANH TOÁN
@@ -128,7 +132,30 @@ public class GHNController {
         result.put("phiShip", phiShip);
         return result;
     }
+    @PostMapping("/dat-dia-chi-mac-dinh/{id}")
+    @ResponseBody // Trả về text đơn giản để Ajax nhận được (OK/Error)
+    public String datMacDinh(@PathVariable("id") Integer idDiaChi, HttpSession session) {
+        Integer idKH = (Integer) session.getAttribute("idKhachHang");
 
+        if (idKH == null) return "error";
+
+        // 1. Lấy tất cả địa chỉ của khách hàng đó
+        List<DiaChi> list = diaChiRepository.findByIdKhachHang_Id(idKH);
+
+        // 2. Duyệt danh sách: Cái nào trùng ID thì set 1, còn lại tất cả ép về 0
+        for (DiaChi dc : list) {
+            if (dc.getId().equals(idDiaChi)) {
+                dc.setTrangThai(1);
+            } else {
+                dc.setTrangThai(0);
+            }
+        }
+
+        // 3. Lưu toàn bộ thay đổi vào Database
+        diaChiRepository.saveAll(list);
+
+        return "OK"; // Phản hồi cho Ajax reload trang
+    }
     // =======================
     // 3️⃣ LƯU ĐỊA CHỈ TẠM
     // =======================
