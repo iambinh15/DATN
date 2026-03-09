@@ -255,7 +255,7 @@ public class HoaDonService {
         hoaDonRepository.save(hd);
     }
 
-    // 2. Hàm hủy đơn và hoàn kho + Voucher (Dùng cho ID 5)
+    // 2. Hàm hủy đơn và hoàn kho + Voucher
     @Transactional
     public void huyDonHangVaHoanKho(Integer idHoaDon) {
         HoaDon hd = hoaDonRepository.findById(idHoaDon)
@@ -276,12 +276,20 @@ public class HoaDonService {
                     sanPhamChiTietRepository.save(spct);
                 }
             }
-            // KHÔI PHỤC VOUCHER TẠI ĐÂY
+            // 1. Kiểm tra nếu hóa đơn có gắn mã giảm giá
             if (hd.getIdMaGiamGia() != null) {
+                // Lấy đối tượng Voucher từ hóa đơn
                 var voucher = hd.getIdMaGiamGia();
-                voucher.setSoLuong(voucher.getSoLuong() + 1);
-                // Lưu ý: Tên repository mã giảm giá của bạn phải đúng
-                // maGiamGiaRepository.save(voucher);
+
+                // Tăng số lượng lên 1
+                int soLuongMoi = voucher.getSoLuong() + 1;
+                voucher.setSoLuong(soLuongMoi);
+
+                // QUAN TRỌNG: Bạn phải gọi repository của Mã Giảm Giá để lưu
+                // Thay 'maGiamGiaRepo' bằng tên biến Repository mã giảm giá của bạn
+                maGiamGiaRepository.save(voucher);
+
+                System.out.println("Đã hoàn voucher: " + voucher.getMa() + " - Số lượng mới: " + soLuongMoi);
             }
         }
         hd.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(5).get());
