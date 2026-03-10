@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    /* Giữ nguyên CSS của bạn */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background-color: #f9f9f9; color: #111; line-height: 1.6; }
     .header { background: #000; color: #fff; position: sticky; top: 0; z-index: 1000; }
@@ -38,6 +39,8 @@
     .voucher-scroll-container { max-height: 200px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 8px; padding: 5px; margin-top: 10px; }
     .voucher-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; background: #fff; }
     .voucher-item.active { border-color: #000; background: #fcfcfc; }
+    .voucher-item.disabled { opacity: 0.6; pointer-events: none; }
+    .btn-apply-v { padding: 5px 15px; border: 1px solid #000; background: #fff; cursor: pointer; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -51,12 +54,12 @@
     <div class="checkout-section">
       <h2 class="section-title"><span class="number">1</span> Địa chỉ giao hàng</h2>
       <div class="address-options">
-        <label class="address-option active" id="optionTK" onclick="chonDiaChiTK()">
+        <div class="address-option active" id="optionTK" onclick="chonDiaChiTK()">
           <input type="radio" name="dc" checked><div class="radio-circle"></div><span>Địa chỉ có sẵn</span>
-        </label>
-        <label class="address-option" id="optionMoi" onclick="chonDiaChiMoi()">
+        </div>
+        <div class="address-option" id="optionMoi" onclick="chonDiaChiMoi()">
           <input type="radio" name="dc"><div class="radio-circle"></div><span>Địa chỉ mới</span>
-        </label>
+        </div>
       </div>
 
       <div id="diaChiTK">
@@ -65,7 +68,7 @@
             <div style="flex: 1;">
               <p style="font-size: 11px; color: #888; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Giao đến:</p>
               <p id="labelDiaChiMacDinh" style="font-weight: 600; color: #000;"
-                 th:text="${dsDiaChi.?[trangThai == 1].empty ? (dsDiaChi.empty ? 'Chưa có địa chỉ' : dsDiaChi[0].diaChi) : dsDiaChi.?[trangThai == 1][0].diaChi}">
+                 th:text="${dsDiaChi == null or dsDiaChi.empty} ? 'Chưa có địa chỉ' : (${#lists.toList(dsDiaChi.?[trangThai == 1]).empty} ? ${dsDiaChi[0].diaChi} : ${dsDiaChi.?[trangThai == 1][0].diaChi})">
               </p>
             </div>
             <button type="button" onclick="openModalDiaChi()" style="padding: 5px 12px; font-size: 11px; border: 1px solid #000; background: #fff; border-radius: 4px; font-weight: 600; cursor: pointer;">Thay đổi</button>
@@ -92,14 +95,14 @@
     <div class="checkout-section">
       <h2 class="section-title"><span class="number">2</span> Phương thức thanh toán</h2>
       <div class="payment-methods">
-        <label class="payment-option active" onclick="selectPayment(this, 'COD')">
+        <div class="payment-option active" onclick="selectPayment(this, 'COD')">
           <input type="radio" name="pay" value="COD" checked>
           <i class="fas fa-truck"></i><span>Thanh toán khi nhận hàng (COD)</span>
-        </label>
-        <label class="payment-option" onclick="selectPayment(this, 'VNPAY')">
+        </div>
+        <div class="payment-option" onclick="selectPayment(this, 'VNPAY')">
           <input type="radio" name="pay" value="VNPAY">
           <i class="fas fa-credit-card"></i><span>Thanh toán qua VNPay</span>
-        </label>
+        </div>
       </div>
     </div>
   </div>
@@ -112,7 +115,9 @@
           <b th:text="${km.ma}"></b><br>
           <small th:text="${km.loaiGiam == 1 ? 'Giảm ' + km.giaTri + '%' : 'Giảm ' + #numbers.formatDecimal(km.giaTri,0,'COMMA',0,'POINT') + 'đ'}"></small>
         </div>
-        <button class="btn-apply-v" th:disabled="${tongTienHang < km.giamToiThieu}" th:onclick="apDungVoucher([[${km.ma}]], [[${km.loaiGiam}]], [[${km.giaTri}]], [[${km.giamToiDa}]])">Chọn</button>
+        <button type="button" class="btn-apply-v"
+                th:disabled="${tongTienHang < km.giamToiThieu}"
+                th:attr="onclick=|apDungVoucher('${km.ma}', ${km.loaiGiam}, ${km.giaTri}, ${km.giamToiDa})|">Chọn</button>
       </div>
     </div>
 
@@ -132,7 +137,9 @@
       <h3 style="font-size: 18px;">Chọn địa chỉ nhận hàng</h3>
       <button onclick="closeModalDiaChi()" style="border:none; background:none; font-size:20px; cursor:pointer;">&times;</button>
     </div>
-    <div th:each="dc : ${dsDiaChi}" class="address-option" th:onclick="chonNhanhDiaChi(this, [[${dc.diaChi}]])" th:classappend="${dc.trangThai == 1} ? 'active' : ''">
+    <div th:each="dc : ${dsDiaChi}" class="address-option"
+         th:attr="onclick=|chonNhanhDiaChi(this, '${dc.diaChi}')|"
+         th:classappend="${dc.trangThai == 1} ? 'active' : ''">
       <div class="radio-circle"></div>
       <div>
         <p th:text="${dc.diaChi}" style="font-size: 14px; font-weight: 500;"></p>
@@ -143,23 +150,32 @@
 </div>
 
 <script th:inline="javascript">
+  /*<![CDATA[*/
   const TOKEN = "0159688c-fb78-11f0-92cb-eef4825ef61b";
   const tienHang = /*[[${tongTienHang}]]*/ 0;
   let phiShip = 0, tienGiam = 0, maVoucherChon = "", diaChiFinal = "";
 
+  const tinh = document.getElementById('tinh');
+  const huyen = document.getElementById('huyen');
+  const xa = document.getElementById('xa');
+  const soNha = document.getElementById('soNha');
+
   document.addEventListener('DOMContentLoaded', () => {
-    const initialAddr = document.getElementById('labelDiaChiMacDinh').innerText.trim();
-    if(initialAddr && initialAddr !== 'Chưa có địa chỉ') {
-      diaChiFinal = initialAddr;
-      tuDongTinhShip(diaChiFinal);
+    const addrEl = document.getElementById('labelDiaChiMacDinh');
+    if(addrEl) {
+      const initialAddr = addrEl.innerText.trim();
+      if(initialAddr && initialAddr !== 'Chưa có địa chỉ') {
+        diaChiFinal = initialAddr;
+        tuDongTinhShip(diaChiFinal);
+      }
     }
     capNhatTien();
     loadProvinces();
   });
 
-  // MODAL
   function openModalDiaChi() { document.getElementById('modalDiaChi').style.display = 'flex'; }
   function closeModalDiaChi() { document.getElementById('modalDiaChi').style.display = 'none'; }
+
   function chonNhanhDiaChi(el, addr) {
     document.querySelectorAll('#modalDiaChi .address-option').forEach(opt => opt.classList.remove('active'));
     el.classList.add('active');
@@ -169,7 +185,6 @@
     setTimeout(closeModalDiaChi, 200);
   }
 
-  // ĐỊA CHỈ MỚI
   function chonDiaChiMoi() {
     document.getElementById('diaChiMoi').classList.add('active');
     document.getElementById('diaChiTK').style.display = 'none';
@@ -183,7 +198,7 @@
     document.getElementById('diaChiTK').style.display = 'block';
     document.getElementById('optionTK').classList.add('active');
     document.getElementById('optionMoi').classList.remove('active');
-    document.getElementById('oHienThiMoi').style.display = 'none'; // Ẩn ô địa chỉ mới khi quay về
+    document.getElementById('oHienThiMoi').style.display = 'none';
     diaChiFinal = document.getElementById('labelDiaChiMacDinh').innerText.trim();
     tuDongTinhShip(diaChiFinal);
   }
@@ -191,15 +206,11 @@
   function xacNhanDiaChiMoi() {
     if(!soNha.value || !tinh.value || !huyen.value || !xa.value) { alert("Thiếu thông tin địa chỉ!"); return; }
     diaChiFinal = `${soNha.value}, ${xa.options[xa.selectedIndex].text}, ${huyen.options[huyen.selectedIndex].text}, ${tinh.options[tinh.selectedIndex].text}`;
-
-    // HIỂN THỊ Ô ĐỊA CHỈ MỚI
     document.getElementById('labelHienThiMoi').innerText = diaChiFinal;
     document.getElementById('oHienThiMoi').style.display = 'block';
-
     goiApiTinhPhi(huyen.value, xa.value);
   }
 
-  // GHN API LOGIC (Giữ nguyên)
   async function tuDongTinhShip(val) {
     if(!val || val === 'Chưa có địa chỉ') return;
     const p = val.split(',').map(s => s.trim());
@@ -207,12 +218,15 @@
       const resP = await fetch("https://online-gateway.ghn.vn/shiip/public-api/master-data/province", { headers: { Token: TOKEN } });
       const pData = await resP.json();
       const pObj = pData.data.find(x => p[p.length-1].includes(x.ProvinceName));
+
       const resD = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/district?province_id=${pObj.ProvinceID}`, { headers: { Token: TOKEN } });
       const dData = await resD.json();
       const dObj = dData.data.find(x => p[p.length-2].includes(x.DistrictName));
+
       const resW = await fetch(`https://online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${dObj.DistrictID}`, { headers: { Token: TOKEN } });
       const wData = await resW.json();
       const wObj = wData.data.find(x => p[p.length-3].includes(x.WardName));
+
       goiApiTinhPhi(dObj.DistrictID, wObj.WardCode);
     } catch(e) { console.warn("Lỗi tính phí ship."); }
   }
@@ -224,7 +238,6 @@
     }).then(r => r.json()).then(d => { phiShip = d.phiShip; capNhatTien(); });
   }
 
-  // CÁC HÀM CÒN LẠI (GIỮ NGUYÊN)
   function capNhatTien() {
     const total = (tienHang - tienGiam) + phiShip;
     document.getElementById('ship').innerText = Math.round(phiShip).toLocaleString() + " đ";
@@ -234,8 +247,8 @@
   async function loadProvinces() {
     const r = await fetch("https://online-gateway.ghn.vn/shiip/public-api/master-data/province", { headers: { Token: TOKEN } });
     const d = await r.json();
-    const tinhSelect = document.getElementById('tinh');
-    d.data.forEach(p => tinhSelect.innerHTML += `<option value="${p.ProvinceID}">${p.ProvinceName}</option>`);
+    tinh.innerHTML = '<option value="">-- Tỉnh --</option>';
+    d.data.forEach(p => tinh.innerHTML += `<option value="${p.ProvinceID}">${p.ProvinceName}</option>`);
   }
 
   tinh.onchange = async () => {
@@ -274,7 +287,9 @@
 
   function selectPayment(el, v) {
     document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
-    el.classList.add('active'); el.querySelector('input').checked = true;
+    el.classList.add('active');
+    const radio = el.querySelector('input');
+    if(radio) radio.checked = true;
   }
 
   function thanhToan() {
@@ -296,6 +311,7 @@
       }
     });
   }
+  /*]]>*/
 </script>
 </body>
 </html>
