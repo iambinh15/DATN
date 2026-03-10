@@ -180,27 +180,86 @@
       border-top: 1px solid #eee;
     }
 
-    /* ===== HERO BANNER ===== */
-    .hero {
-      background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
-      color: #fff;
-      padding: 100px 20px;
-      text-align: center;
+    /* ===== HERO CAROUSEL ===== */
+    .hero-carousel {
+      position: relative;
+      width: 100%;
+      background: #000;
+      overflow: hidden;
     }
 
-    .hero h1 {
-      font-size: 48px;
+    .carousel-content {
+      text-align: center;
+      padding: 40px 20px 25px;
+      background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
+      color: #fff;
+    }
+
+    .carousel-content h1 {
+      font-size: 42px;
       font-weight: 300;
       letter-spacing: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       text-transform: uppercase;
     }
 
-    .hero p {
-      font-size: 16px;
+    .carousel-content p {
+      font-size: 15px;
       opacity: 0.8;
-      margin-bottom: 40px;
+      margin-bottom: 20px;
       letter-spacing: 2px;
+    }
+
+    .carousel-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 20 / 9;
+      overflow: hidden;
+    }
+
+    .carousel-track {
+      display: flex;
+      width: 300%;
+      height: 100%;
+      transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .carousel-slide {
+      position: relative;
+      width: 33.333%;
+      height: 100%;
+      flex-shrink: 0;
+    }
+
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #000;
+    }
+
+    .carousel-dots {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 3;
+    }
+
+    .carousel-dots .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      transition: all 0.3s;
+    }
+
+    .carousel-dots .dot.active {
+      background: #fff;
+      transform: scale(1.2);
     }
 
     .btn-primary {
@@ -220,6 +279,17 @@
     .btn-primary:hover {
       background: transparent;
       color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .carousel-content h1 {
+        font-size: 24px;
+        letter-spacing: 4px;
+      }
+
+      .carousel-content p {
+        font-size: 13px;
+      }
     }
 
     /* ===== MAIN CONTENT ===== */
@@ -535,11 +605,34 @@
     </nav>
   </header>
 
-  <!-- Hero Banner -->
-  <section class="hero">
-    <h1>Bộ Sưu Tập Mới</h1>
-    <p>Khám phá phong cách thời trang nam hiện đại</p>
-    <a href="#products" class="btn-primary">Xem ngay</a>
+  <!-- Hero Banner Carousel -->
+  <section class="hero-carousel">
+    <!-- Text luôn hiển thị -->
+    <!-- Banner ảnh tự chuyển -->
+    <div class="carousel-wrapper">
+      <div class="carousel-track" id="carouselTrack">
+        <div class="carousel-slide">
+          <img src="/images/banner1.jpg" alt="Banner 1">
+        </div>
+        <div class="carousel-slide">
+          <img src="/images/banner2.jpg" alt="Banner 2">
+        </div>
+        <div class="carousel-slide">
+          <img src="/images/banner3.jpg" alt="Banner 3">
+        </div>
+      </div>
+      <!-- Dots indicator -->
+      <div class="carousel-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+    <div class="carousel-content">
+      <h1>Bộ Sưu Tập Mới</h1>
+      <p>Khám phá phong cách thời trang nam hiện đại</p>
+      <a href="#products" class="btn-primary">Xem ngay</a>
+    </div>
   </section>
 
   <!-- Main Content -->
@@ -556,10 +649,7 @@
           <span class="product-badge">MỚI</span>
 
           <!-- Nếu có ảnh thì hiển thị ảnh đầu tiên, nếu không thì dùng placeholder áo thun -->
-          <img th:each="ha, iter : ${sp.hinhAnhs}"
-               th:if="${iter.index == 0}"
-               th:src="${ha.hinhAnh}"
-               alt="Ảnh sản phẩm">
+          <img th:each="ha, iter : ${sp.hinhAnhs}" th:if="${iter.index == 0}" th:src="${ha.hinhAnh}" alt="Ảnh sản phẩm">
 
           <div class="product-placeholder" th:if="${sp.hinhAnhs == null or sp.hinhAnhs.isEmpty()}">
             <i class="fas fa-tshirt"></i>
@@ -645,6 +735,29 @@
         menu.classList.remove('active');
       }
     });
+
+    // ===== BANNER CAROUSEL AUTO-SLIDE =====
+    (function () {
+      const track = document.getElementById('carouselTrack');
+      const dots = document.querySelectorAll('.carousel-dots .dot');
+      const totalSlides = 3;
+      let currentSlide = 0;
+
+      function goToSlide(index) {
+        currentSlide = index;
+        track.style.transform = 'translateX(-' + (currentSlide * (100 / totalSlides)) + '%)';
+        dots.forEach(function (dot, i) {
+          dot.classList.toggle('active', i === currentSlide);
+        });
+      }
+
+      function nextSlide() {
+        goToSlide((currentSlide + 1) % totalSlides);
+      }
+
+      // Auto-slide every 3 seconds
+      setInterval(nextSlide, 3000);
+    })();
   </script>
 
 </body>
