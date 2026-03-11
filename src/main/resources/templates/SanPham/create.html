@@ -461,6 +461,20 @@
                                    name="imageFile"
                                    accept="image/*">
                         </div>
+                        <div class="form-group" th:if="${sanPham.id != null}">
+                            <label>Ảnh hiện tại</label>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <img th:each="img,iter : ${sanPham.hinhAnhs}"
+                                     th:if="${iter.index == 0}"
+                                     th:src="${img.hinhAnh + '?v=' + cacheBust}"
+                                     alt="Ảnh sản phẩm"
+                                     style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid #e0e0e0;" />
+                                <div th:if="${sanPham.hinhAnhs == null or #sets.isEmpty(sanPham.hinhAnhs)}"
+                                     style="color:#666;font-size:13px;">
+                                    Chưa có ảnh.
+                                </div>
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label>Thương hiệu *</label>
                             <select th:field="*{idThuongHieu}" required>

@@ -4,6 +4,7 @@ import org.example.datn_sp26.BanHang.Repository.HoaDonChiTietRepository;
 import org.example.datn_sp26.BanHang.Repository.HoaDonRepository;
 import org.example.datn_sp26.SanPham.Entity.SanPhamChiTiet;
 import org.example.datn_sp26.SanPham.Repository.SanPhamChiTietRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -56,13 +57,9 @@ public class ThongKeService {
     }
     public List<Object[]> getTopSanPhamBanChay(Instant tu, Instant den) {
         List<Object[]> list =
-                hoaDonChiTietRepository.topSanPhamBanChay(tu, den);
+                hoaDonChiTietRepository.topSanPhamBanChay(tu, den, PageRequest.of(0, 5));
 
-        if (list == null) {
-            return new ArrayList<>();
-        }
-
-        return list.stream().limit(5).toList();
+        return list != null ? list : new ArrayList<>();
     }
 
     public List<SanPhamChiTiet> getSanPhamSapHetHang() {
