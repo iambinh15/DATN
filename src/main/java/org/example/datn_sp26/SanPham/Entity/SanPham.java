@@ -36,7 +36,6 @@ public class SanPham {
     private Integer trangThai;
 
     @OneToMany(mappedBy = "idSanPham")
-    @OrderBy("id ASC")
     private Set<HinhAnh> hinhAnhs = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "idSanPham")
