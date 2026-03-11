@@ -20,10 +20,12 @@ import java.util.Optional;
 
 @Service
 public class GioHangService {
-    @Autowired private GioHangRepository gioHangRepo;
-    @Autowired private GioHangChiTietRepository ghctRepo;
-    @Autowired private SanPhamChiTietRepository spctRepo;
-
+    @Autowired
+    private GioHangRepository gioHangRepo;
+    @Autowired
+    private GioHangChiTietRepository ghctRepo;
+    @Autowired
+    private SanPhamChiTietRepository spctRepo;
 
     /**
      * Hàm thêm sản phẩm vào giỏ hàng
@@ -50,8 +52,7 @@ public class GioHangService {
             // Tìm xem trong giỏ hàng đã có sản phẩm này chưa
             Optional<GioHangChiTiet> existingItem = ghctRepo.findByIdGioHang_IdAndIdSanPhamChiTiet_Id(
                     gioHang.getId(),
-                    spct.getId()
-            );
+                    spct.getId());
 
             // --- BẮT ĐẦU LOGIC KIỂM TRA TỒN KHO ---
             // Lấy số lượng hiện tại khách đã có trong giỏ (nếu chưa có thì là 0)
@@ -98,8 +99,9 @@ public class GioHangService {
         ghct.setSoLuong(soLuongMoi);
         ghctRepo.save(ghct);
     }
+
     @Transactional
-    public void thayDoiSoLuong(Integer idGhct, Integer delta) {
+    public GioHangChiTiet thayDoiSoLuong(Integer idGhct, Integer delta) {
         // 1. Tìm dòng sản phẩm trong giỏ hàng
         GioHangChiTiet item = ghctRepo.findById(idGhct)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm trong giỏ hàng!"));
@@ -119,14 +121,15 @@ public class GioHangService {
         // 4. Giữ nguyên logic cũ: Cập nhật hoặc Xóa
         if (soLuongMoi > 0) {
             item.setSoLuong(soLuongMoi);
-            ghctRepo.save(item);
+            return ghctRepo.save(item);
         } else {
             ghctRepo.delete(item);
+            return item;
         }
     }
 
     @Transactional
-    public void capNhatSoLuongTuyChinh(Integer idGhct, Integer soLuongMoi) {
+    public GioHangChiTiet capNhatSoLuongTuyChinh(Integer idGhct, Integer soLuongMoi) {
         GioHangChiTiet item = ghctRepo.findById(idGhct)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm trong giỏ hàng!"));
 
@@ -140,9 +143,10 @@ public class GioHangService {
             }
 
             item.setSoLuong(soLuongMoi);
-            ghctRepo.save(item);
+            return ghctRepo.save(item);
         } else {
             ghctRepo.delete(item);
+            return item;
         }
     }
 
@@ -168,6 +172,7 @@ public class GioHangService {
             throw new RuntimeException("Không tìm thấy sản phẩm này!");
         }
     }
+
     @Transactional
     public void xoaDanhSachSanPhamDaMua(List<Integer> idsGhct) {
         if (idsGhct != null && !idsGhct.isEmpty()) {
@@ -175,6 +180,7 @@ public class GioHangService {
             ghctRepo.deleteAllById(idsGhct);
         }
     }
+
     /**
      * Xóa sạch giỏ hàng
      */
