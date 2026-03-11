@@ -480,10 +480,13 @@
             <div class="content-header">
                 <h1 class="page-title">Quản lý Nhân viên</h1>
                 <div class="header-actions">
-                    <div class="search-box">
+                    <form th:action="@{/nhan-vien}" method="get" class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Tìm kiếm nhân viên...">
-                    </div>
+                        <input type="text"
+                               name="keyword"
+                               placeholder="Tìm kiếm nhân viên..."
+                               th:value="${keyword}">
+                    </form>
                     <a th:href="@{/nhan-vien/add}" class="btn-primary-custom">
                         <i class="fas fa-plus"></i>
                         Thêm nhân viên
@@ -511,7 +514,7 @@
                     <tbody>
                         <tr th:each="nv : ${list}">
                             <td th:text="${nv.maNhanVien}"></td>
-                            <td th:text="${nv.ten}"></td>
+                            <td th:text="${nv.tenNhanVien}"></td>
                             <td th:text="${nv.sdt}"></td>
                             <td th:text="${nv.email}"></td>
                             <td th:text="${nv.diaChi}"></td>

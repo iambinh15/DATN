@@ -65,6 +65,12 @@ public class ThongKeController {
             }
         }
 
+        // Mặc định tháng này khi chưa chọn bộ lọc (để top sản phẩm bán chạy có dữ liệu)
+        if (tuNgay == null && denNgay == null) {
+            tuNgay = now.withDayOfMonth(1).toLocalDate().atStartOfDay();
+            denNgay = now;
+        }
+
         Instant tu = tuNgay != null
                 ? tuNgay.atZone(ZoneId.systemDefault()).toInstant()
                 : null;
@@ -78,8 +84,12 @@ public class ThongKeController {
         List<BigDecimal> dataThang =
                 thongKeService.getDoanhThuTheoThang(now.getYear());
 
+        // Top sản phẩm bán chạy: luôn theo tháng hiện tại
+        LocalDateTime dauThang = now.withDayOfMonth(1).toLocalDate().atStartOfDay();
+        Instant tuThang = dauThang.atZone(ZoneId.systemDefault()).toInstant();
+        Instant denThang = now.atZone(ZoneId.systemDefault()).toInstant();
         List<Object[]> topSanPham =
-                thongKeService.getTopSanPhamBanChay(tu, den);
+                thongKeService.getTopSanPhamBanChay(tuThang, denThang);
 
         List<SanPhamChiTiet> sapHetHang =
                 thongKeService.getSanPhamSapHetHang();

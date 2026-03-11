@@ -137,8 +137,10 @@ public class KhachHangController {
 
 
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("list", service.findAll());
+    public String list(@RequestParam(value = "keyword", required = false) String keyword,
+                       Model model) {
+        model.addAttribute("list", service.search(keyword));
+        model.addAttribute("keyword", keyword);
         return "KhachHang/list";
     }
 
@@ -148,20 +150,56 @@ public class KhachHangController {
         kh.setNgayTao(Instant.now());
         kh.setTrangThai(1);
         model.addAttribute("kh", kh);
+        model.addAttribute("error", null);
         return "KhachHang/form";
     }
 
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
         model.addAttribute("kh", service.findById(id));
+        model.addAttribute("error", null);
         return "KhachHang/form";
     }
 
     @PostMapping("/save")
-    public String save(@ModelAttribute KhachHang kh) {
+    public String save(@ModelAttribute KhachHang kh, Model model) {
+
+        // Validate rỗng
+        if (kh.getMaKhachHang() == null || kh.getMaKhachHang().trim().isEmpty()
+                || kh.getTenKhachHang() == null || kh.getTenKhachHang().trim().isEmpty()
+                || kh.getSdt() == null || kh.getSdt().trim().isEmpty()
+                || kh.getEmail() == null || kh.getEmail().trim().isEmpty()) {
+
+            model.addAttribute("kh", kh);
+            model.addAttribute("error", "Mã KH, Tên, SĐT và Email không được để trống.");
+            return "KhachHang/form";
+        }
+
+        // Validate trùng mã khách hàng
+        if (service.isMaKhachHangTrung(kh.getMaKhachHang(), kh.getId())) {
+            model.addAttribute("kh", kh);
+            model.addAttribute("error", "Mã khách hàng đã tồn tại, vui lòng chọn mã khác.");
+            return "KhachHang/form";
+        }
+
+        // Validate SĐT phải là số và đủ 10 chữ số
+        if (!kh.getSdt().trim().matches("\\d{10}")) {
+            model.addAttribute("kh", kh);
+            model.addAttribute("error", "Số điện thoại phải đủ 10 chữ số.");
+            return "KhachHang/form";
+        }
+
+        // Validate email phải có @gmail.com
+        if (!kh.getEmail().trim().toLowerCase().contains("@gmail.com")) {
+            model.addAttribute("kh", kh);
+            model.addAttribute("error", "Email phải có đuôi @gmail.com.");
+            return "KhachHang/form";
+        }
+
         if (kh.getNgayTao() == null) {
             kh.setNgayTao(Instant.now());
         }
+
         service.save(kh);
         return "redirect:/khach-hang";
     }

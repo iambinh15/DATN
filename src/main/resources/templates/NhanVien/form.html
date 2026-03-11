@@ -474,28 +474,34 @@
                         <!-- Hidden field -->
                         <input type="hidden" th:field="*{id}" />
 
+                        <div th:if="${error}" class="empty-state" style="padding:10px 0;color:#e74c3c;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span th:text="${error}"></span>
+                        </div>
+
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Mã nhân viên</label>
+                                <label class="form-label">Mã nhân viên *</label>
                                 <input type="text" class="form-control" th:field="*{maNhanVien}"
-                                    placeholder="VD: NV001">
+                                    placeholder="VD: NV001" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Tên nhân viên</label>
-                                <input type="text" class="form-control" th:field="*{ten}"
-                                    placeholder="Nhập tên nhân viên">
+                                <label class="form-label">Tên nhân viên *</label>
+                                <input type="text" class="form-control" th:field="*{tenNhanVien}"
+                                    placeholder="Nhập tên nhân viên" required>
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Số điện thoại</label>
+                                <label class="form-label">Số điện thoại *</label>
                                 <input type="text" class="form-control" th:field="*{sdt}"
-                                    placeholder="Nhập số điện thoại">
+                                    placeholder="Nhập số điện thoại" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" th:field="*{email}" placeholder="Nhập email">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" th:field="*{email}" placeholder="Nhập email"
+                                    required>
                             </div>
                         </div>
 

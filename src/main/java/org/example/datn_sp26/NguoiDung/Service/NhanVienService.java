@@ -19,7 +19,7 @@ public class NhanVienService {
         return repo.findAll();
     }
 
-    public NhanVien getById(Integer id) {
+    public NhanVien getById(Long id) {
         return repo.findById(id).orElse(null);
     }
 
@@ -27,7 +27,25 @@ public class NhanVienService {
         repo.save(nv);
     }
 
-    public void delete(Integer id) {
+    public void delete(Long id) {
         repo.deleteById(id);
+    }
+
+    public List<NhanVien> search(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getAll();
+        }
+        String kw = keyword.trim();
+        return repo.findByTenNhanVienContainingIgnoreCaseOrMaNhanVienContainingIgnoreCaseOrSdtContainingIgnoreCase(
+                kw, kw, kw
+        );
+    }
+
+    public boolean isMaNhanVienTrung(String ma, Long currentId) {
+        if (ma == null || ma.trim().isEmpty()) return false;
+        if (currentId == null) {
+            return repo.existsByMaNhanVien(ma.trim());
+        }
+        return repo.existsByMaNhanVienAndIdNot(ma.trim(), currentId);
     }
 }
