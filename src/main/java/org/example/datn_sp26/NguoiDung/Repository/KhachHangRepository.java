@@ -7,7 +7,17 @@ import java.util.List;
 import java.util.Optional;
 
 public interface KhachHangRepository extends JpaRepository<KhachHang, Integer> {
+
     List<KhachHang> findByTrangThai(Integer trangThai);
 
     Optional<KhachHang> findBySdt(String sdt);
+
+    List<KhachHang>
+    findByTenKhachHangContainingIgnoreCaseOrMaKhachHangContainingIgnoreCaseOrSdtContainingIgnoreCase(
+            String tenKhachHang, String maKhachHang, String sdt
+    );
+
+    boolean existsByMaKhachHang(String maKhachHang);
+
+    boolean existsByMaKhachHangAndIdNot(String maKhachHang, Integer id);
 }

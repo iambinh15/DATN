@@ -486,6 +486,11 @@
                         <input type="hidden" th:field="*{id}" />
                         <input type="hidden" th:field="*{ngayTao}" />
 
+                        <div th:if="${error}" style="color:#e74c3c; margin-bottom:15px;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span th:text="${error}"></span>
+                        </div>
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Mã khách hàng <span style="color: #e74c3c;">*</span></label>
@@ -501,13 +506,14 @@
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Số điện thoại</label>
+                                <label class="form-label">Số điện thoại <span style="color:#e74c3c;">*</span></label>
                                 <input type="text" class="form-control" th:field="*{sdt}"
-                                    placeholder="Nhập số điện thoại">
+                                    placeholder="Nhập số điện thoại" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" th:field="*{email}" placeholder="Nhập email">
+                                <label class="form-label">Email <span style="color:#e74c3c;">*</span></label>
+                                <input type="email" class="form-control" th:field="*{email}" placeholder="Nhập email"
+                                    required>
                             </div>
                         </div>
 

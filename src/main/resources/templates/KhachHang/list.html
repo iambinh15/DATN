@@ -474,10 +474,13 @@
             <div class="content-header">
                 <h1 class="page-title">Quản lý Khách hàng</h1>
                 <div class="header-actions">
-                    <div class="search-box">
+                    <form th:action="@{/khach-hang}" method="get" class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Tìm kiếm khách hàng...">
-                    </div>
+                        <input type="text"
+                               name="keyword"
+                               placeholder="Tìm kiếm khách hàng..."
+                               th:value="${keyword}">
+                    </form>
                     <a th:href="@{/khach-hang/add}" class="btn-primary-custom">
                         <i class="fas fa-plus"></i>
                         Thêm khách hàng
@@ -523,6 +526,11 @@
                                         <i class="fas fa-trash"></i> Xóa
                                     </a>
                                 </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${list == null or #lists.isEmpty(list)}">
+                            <td colspan="7" style="text-align:center; padding: 30px; color:#999;">
+                                Không tìm thấy khách hàng nào.
                             </td>
                         </tr>
                     </tbody>

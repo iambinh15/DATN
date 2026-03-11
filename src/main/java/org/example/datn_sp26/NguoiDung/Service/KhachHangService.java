@@ -3,17 +3,15 @@ package org.example.datn_sp26.NguoiDung.Service;
 import org.example.datn_sp26.NguoiDung.Entity.DiaChi;
 import org.example.datn_sp26.NguoiDung.Entity.KhachHang;
 import org.example.datn_sp26.NguoiDung.Entity.TaiKhoan;
+import org.example.datn_sp26.NguoiDung.Repository.DiaChiRepository;
 import org.example.datn_sp26.NguoiDung.Repository.KhachHangRepository;
 import org.example.datn_sp26.NguoiDung.Repository.TaiKhoanRepository;
-import org.example.datn_sp26.NguoiDung.Repository.DiaChiRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import org.example.datn_sp26.NguoiDung.Repository.KhachHangRepository;
 @Service
 public class KhachHangService {
     @Autowired
@@ -37,6 +35,25 @@ public class KhachHangService {
 
     public void save(KhachHang kh) {
         repo.save(kh);
+    }
+
+    public List<KhachHang> search(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return findAll();
+        }
+        String kw = keyword.trim();
+        return repo.findByTenKhachHangContainingIgnoreCaseOrMaKhachHangContainingIgnoreCaseOrSdtContainingIgnoreCase(
+                kw, kw, kw
+        );
+    }
+
+    public boolean isMaKhachHangTrung(String ma, Integer currentId) {
+        if (ma == null || ma.trim().isEmpty()) return false;
+        String trimmed = ma.trim();
+        if (currentId == null) {
+            return repo.existsByMaKhachHang(trimmed);
+        }
+        return repo.existsByMaKhachHangAndIdNot(trimmed, currentId);
     }
 
     /**
