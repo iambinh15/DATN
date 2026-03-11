@@ -5,8 +5,10 @@ import org.example.datn_sp26.BanHang.Entity.HoaDonChiTiet;
 import org.example.datn_sp26.SanPham.Entity.SanPhamChiTiet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -35,7 +37,7 @@ public interface HoaDonChiTietRepository extends JpaRepository<HoaDonChiTiet, In
            SELECT hdc.idSanPhamChiTiet.idSanPham.tenSanPham,
                   SUM(hdc.soLuong)
            FROM HoaDonChiTiet hdc
-           WHERE hdc.idHoaDon.idTrangThaiHoaDon.tenTrangThai IN ('Hoàn thành', 'Hoàn tất')
+           WHERE hdc.idHoaDon.idTrangThaiHoaDon.id = 4
            AND (:tuNgay IS NULL OR hdc.idHoaDon.ngayTao >= :tuNgay)
            AND (:denNgay IS NULL OR hdc.idHoaDon.ngayTao <= :denNgay)
            GROUP BY hdc.idSanPhamChiTiet.idSanPham.tenSanPham
@@ -43,7 +45,8 @@ public interface HoaDonChiTietRepository extends JpaRepository<HoaDonChiTiet, In
            """)
     List<Object[]> topSanPhamBanChay(
             @Param("tuNgay") Instant tuNgay,
-            @Param("denNgay") Instant denNgay
+            @Param("denNgay") Instant denNgay,
+            Pageable pageable
     );
     // POS: Tìm chi tiết hóa đơn theo hóa đơn + sản phẩm chi tiết (để gộp số lượng)
     Optional<HoaDonChiTiet> findByIdHoaDonAndIdSanPhamChiTiet(HoaDon hoaDon, SanPhamChiTiet spct);
@@ -57,4 +60,7 @@ public interface HoaDonChiTietRepository extends JpaRepository<HoaDonChiTiet, In
             "LEFT JOIN FETCH spct.idChatLieu " +
             "WHERE h.idHoaDon.id = ?1")
     List<HoaDonChiTiet> findByHoaDonIdWithFullDetails(Integer idHoaDon);
+
+    @Transactional
+    void deleteByIdSanPhamChiTiet_IdIn(List<Integer> sanPhamChiTietIds);
 }

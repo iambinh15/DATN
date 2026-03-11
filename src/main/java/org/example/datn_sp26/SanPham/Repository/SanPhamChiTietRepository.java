@@ -15,12 +15,14 @@ public interface SanPhamChiTietRepository extends JpaRepository<SanPhamChiTiet, 
 
     // ✅ FIX: join đúng tên FIELD trong Entity
     @Query("""
-                SELECT s
+                SELECT DISTINCT s
                 FROM SanPhamChiTiet s
                 LEFT JOIN FETCH s.idSanPham
                 LEFT JOIN FETCH s.idMauSac
                 LEFT JOIN FETCH s.idSize
+                LEFT JOIN FETCH s.idChatLieu
                 WHERE s.idSanPham.id = :id
+                ORDER BY s.id DESC
             """)
     List<SanPhamChiTiet> findAllWithDetailsBySanPhamId(@Param("id") Integer id);
 
@@ -52,6 +54,12 @@ public interface SanPhamChiTietRepository extends JpaRepository<SanPhamChiTiet, 
             Integer sanPhamId,
             Integer mauSacId,
             Integer sizeId);
+
+    Optional<SanPhamChiTiet> findByIdSanPham_IdAndIdMauSac_IdAndIdSize_IdAndIdNot(
+            Integer sanPhamId,
+            Integer mauSacId,
+            Integer sizeId,
+            Integer idNot);
 
     @Query("""
                 SELECT COALESCE(SUM(s.soLuong),0)
