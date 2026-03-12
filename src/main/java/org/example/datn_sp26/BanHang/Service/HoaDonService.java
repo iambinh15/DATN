@@ -43,11 +43,11 @@ public class HoaDonService {
     private SanPhamChiTietService sanPhamChiTietService;
     @Autowired
     private MaGiamGiaRepository maGiamGiaRepository;
-
+    private static final int ID_DANG_GIAO = 3;
     private static final int ID_CHO_XAC_NHAN = 1;
     private static final int ID_CHO_THANH_TOAN = 11;
     private static final int ID_DA_THANH_TOAN = 14;
-
+    private static final int ID_GIAO_THAT_BAI = 15;
     // Thông tin ngân hàng cho QR Code chuyển khoản tại quầy
     private static final String BANK_ID = "MB";
     private static final String BANK_ACCOUNT = "0946073693";
@@ -213,6 +213,27 @@ public class HoaDonService {
             }
         }
 
+        // ✅ THÊM ĐOẠN NÀY: Nếu chuyển sang Giao thất bại
+        if (trangThaiIdMoi.equals(15)) { // 15 = Giao thất bại
+
+            // Hoàn lại số lượng sản phẩm
+            for (HoaDonChiTiet ct : hoaDon.getHoaDonChiTiets()) {
+                SanPhamChiTiet spct = ct.getIdSanPhamChiTiet();
+                if (spct != null) {
+                    spct.setSoLuong(spct.getSoLuong() + ct.getSoLuong());
+                    sanPhamChiTietRepository.save(spct);
+                }
+            }
+
+            // Hoàn lại voucher
+            if (hoaDon.getIdMaGiamGia() != null) {
+                MaGiamGia voucher = hoaDon.getIdMaGiamGia();
+                voucher.setSoLuong(voucher.getSoLuong() + 1);
+                maGiamGiaRepository.save(voucher);
+            }
+        }
+
+        // Cập nhật trạng thái
         hoaDon.setIdTrangThaiHoaDon(
                 trangThaiHoaDonRepository.findById(trangThaiIdMoi).get());
 
@@ -547,7 +568,7 @@ public class HoaDonService {
         List<HoaDon> danhSach = hoaDonRepository
                 .findByIdTrangThaiHoaDon_IdAndNgayTaoBefore(
                         ID_CHO_THANH_TOAN,
-                        gioiHan);
+                        gioiHan);   
 
         for (HoaDon hd : danhSach) {
             List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByHoaDonId(hd.getId());
@@ -565,5 +586,44 @@ public class HoaDonService {
 
             System.out.println("===> Đã tự động hủy hóa đơn ID: " + hd.getId() + " và hoàn trả kho.");
         }
+    }
+    @Transactional
+    public void giaoThatBai(Integer idHoaDon) {
+        HoaDon hd = hoaDonRepository.findById(idHoaDon)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
+
+        int idTTTruocKhiHuy = hd.getIdTrangThaiHoaDon().getId();
+        String loaiTT = hd.getIdLoaiThanhToan().getTenLoai();
+
+        boolean laDonOnline = "CK".equalsIgnoreCase(loaiTT);
+        boolean daTruKhoCOD = (idTTTruocKhiHuy == 3);
+
+        if (laDonOnline || daTruKhoCOD) {
+            // Hoàn sản phẩm
+            for (HoaDonChiTiet ct : hd.getHoaDonChiTiets()) {
+                SanPhamChiTiet spct = ct.getIdSanPhamChiTiet();
+                if (spct != null) {
+                    spct.setSoLuong(spct.getSoLuong() + ct.getSoLuong());
+                    sanPhamChiTietRepository.save(spct);
+                }
+            }
+            // 1. Kiểm tra nếu hóa đơn có gắn mã giảm giá
+            if (hd.getIdMaGiamGia() != null) {
+                // Lấy đối tượng Voucher từ hóa đơn
+                var voucher = hd.getIdMaGiamGia();
+
+                // Tăng số lượng lên 1
+                int soLuongMoi = voucher.getSoLuong() + 1;
+                voucher.setSoLuong(soLuongMoi);
+
+                // QUAN TRỌNG: Bạn phải gọi repository của Mã Giảm Giá để lưu
+                // Thay 'maGiamGiaRepo' bằng tên biến Repository mã giảm giá của bạn
+                maGiamGiaRepository.save(voucher);
+
+                System.out.println("Đã hoàn voucher: " + voucher.getMa() + " - Số lượng mới: " + soLuongMoi);
+            }
+        }
+        hd.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(15).get());
+        hoaDonRepository.save(hd);
     }
 }
