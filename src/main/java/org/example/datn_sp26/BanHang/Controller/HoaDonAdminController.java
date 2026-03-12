@@ -40,18 +40,29 @@ public class HoaDonAdminController {
             @RequestParam(required = false) String tenKH,
             @RequestParam(required = false) String trangThai,
             @RequestParam(required = false) String loaiTT,
+            @RequestParam(required = false) String loaiHoaDon,
             @RequestParam(required = false) String tuNgay,
             @RequestParam(required = false) String denNgay,
             Model model) {
 
         List<HoaDon> danhSach = getDanhSachFiltered(tenKH, trangThai, loaiTT, tuNgay, denNgay);
-
+        if ("ONLINE".equals(loaiHoaDon)) {
+            danhSach = danhSach.stream()
+                    .filter(h -> h.getMaHoaDon().startsWith("HD_VNP")
+                            || h.getMaHoaDon().startsWith("HD_COD"))
+                    .toList();
+        }
+        else if ("POS".equals(loaiHoaDon)) {
+            danhSach = danhSach.stream()
+                    .filter(h -> h.getMaHoaDon().startsWith("HD_POS"))
+                    .toList();
+        }
         // Load dropdown options
         List<TrangThaiHoaDon> dsTrangThai = hoaDonService.getAllTrangThai();
 
         model.addAttribute("list", danhSach);
         model.addAttribute("dsTrangThai", dsTrangThai);
-
+        model.addAttribute("loaiHoaDon", loaiHoaDon);
         // Preserve filter values in form
         model.addAttribute("tenKH", tenKH);
         model.addAttribute("trangThai", trangThai);
@@ -112,6 +123,9 @@ public class HoaDonAdminController {
                 // Chỉ khi chọn "Đã hủy" mới chạy logic hoàn kho
                 hoaDonService.huyDonHangVaHoanKho(hoaDonId);
                 redirectAttributes.addFlashAttribute("successMessage", "Hủy đơn và hoàn kho thành công!");
+            }else if (trangThaiId == 15) { // Thêm nhánh Giao thất bại
+                hoaDonService.giaoThatBai(hoaDonId);
+                redirectAttributes.addFlashAttribute("successMessage", "Xác nhận giao thất bại và đã hoàn lại kho/voucher!");
             }
             else {
                 // Các trạng thái khác (Giao hàng, Hoàn thành...) CHỈ đổi trạng thái, KHÔNG đụng vào kho

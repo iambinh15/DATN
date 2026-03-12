@@ -656,8 +656,12 @@
             <!-- Filter Bar -->
             <form th:action="@{/hoa-don}" method="get" class="filter-bar">
                 <div class="filter-group">
-                    <label>Tên khách hàng</label>
-                    <input type="text" name="tenKH" th:value="${tenKH}" placeholder="Nhập tên khách hàng...">
+                    <label>Loại hóa đơn</label>
+                    <select name="loaiHoaDon" th:value="${loaiHoaDon}">
+                        <option value="">— Tất cả —</option>
+                        <option value="ONLINE">Online</option>
+                        <option value="POS">Tại quầy</option>
+                    </select>
                 </div>
 
                 <div class="filter-group">
@@ -1013,13 +1017,17 @@
     <script>
         // Cập nhật link xuất Excel khi thay đổi bộ lọc
         function capNhatLinkExcel() {
-            var tenKH = document.querySelector('input[name="tenKH"]').value || '';
+
+            var tenKHEl = document.querySelector('input[name="tenKH"]');
+            var tenKH = tenKHEl ? tenKHEl.value : '';
+
             var trangThai = document.querySelector('select[name="trangThai"]').value || '';
             var loaiTT = document.querySelector('select[name="loaiTT"]').value || '';
             var tuNgay = document.querySelector('input[name="tuNgay"]').value || '';
             var denNgay = document.querySelector('input[name="denNgay"]').value || '';
 
             var params = new URLSearchParams();
+
             if (tenKH) params.append('tenKH', tenKH);
             if (trangThai) params.append('trangThai', trangThai);
             if (loaiTT) params.append('loaiTT', loaiTT);
@@ -1049,6 +1057,7 @@
         var TIEN_MAT_FLOW = [1, 13, 2, 3, 4];
         var ID_HUY = 5;
         var ID_HOAN_TAT = 4;
+        var ID_GIAO_THAT_BAI = 15; // 1. Khai báo thêm ID giao thất bại
 
         document.querySelectorAll('.status-select').forEach(function (select) {
             var loaiTT = (select.getAttribute('data-loai-thanh-toan') || '').trim();
@@ -1057,27 +1066,23 @@
             var flow = isTienMat ? TIEN_MAT_FLOW : CK_VI_FLOW;
             var currentIndex = flow.indexOf(currentId);
 
-            // 3 trạng thái đầu cho phép hủy
             var canCancel = (currentIndex >= 0 && currentIndex <= 2);
 
-            // Trạng thái kết thúc (Hoàn tất hoặc Đã hủy) → khóa toàn bộ
-            var isTerminal = (currentId === ID_HOAN_TAT || currentId === ID_HUY);
+            // 2. Cập nhật trạng thái kết thúc: Nếu là Giao thất bại cũng sẽ khóa select
+            var isTerminal = (currentId === ID_HOAN_TAT || currentId === ID_HUY || currentId === ID_GIAO_THAT_BAI);
 
             for (var i = 0; i < select.options.length; i++) {
                 var opt = select.options[i];
                 var optId = parseInt(opt.getAttribute('data-id'));
 
-                // Trạng thái đang chọn → luôn hiện
                 if (opt.selected) continue;
 
                 if (isTerminal) {
-                    // Đã kết thúc → ẩn hết
                     opt.style.display = 'none';
                     opt.disabled = true;
                     continue;
                 }
 
-                // Option "Đã hủy"
                 if (optId === ID_HUY) {
                     if (canCancel) {
                         opt.style.display = '';
@@ -1089,16 +1094,26 @@
                     continue;
                 }
 
-                // Option thuộc luồng hiện tại
+                // 3. Xử lý hiển thị option "Giao thất bại"
+                if (optId === ID_GIAO_THAT_BAI) {
+                    // Chỉ hiển thị nếu trạng thái hiện tại là "Đang giao" (ID: 3)
+                    if (currentId === 3) {
+                        opt.style.display = '';
+                        opt.disabled = false;
+                    } else {
+                        opt.style.display = 'none';
+                        opt.disabled = true;
+                    }
+                    continue;
+                }
+
                 var optIndex = flow.indexOf(optId);
                 if (optIndex === -1) {
-                    // Không thuộc luồng này → ẩn
                     opt.style.display = 'none';
                     opt.disabled = true;
                     continue;
                 }
 
-                // Chỉ hiện bước tiếp theo (currentIndex + 1)
                 if (currentIndex !== -1 && optIndex === currentIndex + 1) {
                     opt.style.display = '';
                     opt.disabled = false;
@@ -1108,7 +1123,6 @@
                 }
             }
 
-            // Nếu trạng thái kết thúc → disable toàn bộ select
             if (isTerminal) {
                 select.disabled = true;
                 select.style.opacity = '0.6';
