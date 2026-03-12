@@ -79,12 +79,13 @@ public class HoaDonAdminController {
     @GetMapping("/chi-tiet/{id}")
     @ResponseBody
     public ResponseEntity<?> getChiTietHoaDon(@PathVariable Integer id) {
-        List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByHoaDonIdWithDetails(id);
+        List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByHoaDonIdWithFullDetails(id);
 
         List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
         for (HoaDonChiTiet ct : chiTietList) {
             java.util.Map<String, Object> item = new java.util.LinkedHashMap<>();
             SanPhamChiTiet spct = ct.getIdSanPhamChiTiet();
+            item.put("tenSanPham", spct != null && spct.getIdSanPham() != null ? spct.getIdSanPham().getTenSanPham() : "—");
             item.put("mauSac", spct != null && spct.getIdMauSac() != null ? spct.getIdMauSac().getTenMau() : "—");
             item.put("size", spct != null && spct.getIdSize() != null ? spct.getIdSize().getTenSize() : "—");
             item.put("chatLieu",
