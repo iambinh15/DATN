@@ -330,11 +330,6 @@ public class HoaDonService {
 
         return hoaDonRepository.save(hoaDon);
     }
-
-    /**
-     * Thêm sản phẩm chi tiết vào hóa đơn POS
-     * → Trừ kho NGAY khi thêm vào giỏ
-     */
     @Transactional
     public void themSanPhamVaoHoaDon(Integer hoaDonId, Integer spctId, Integer soLuong) {
 
@@ -368,11 +363,6 @@ public class HoaDonService {
 
         capNhatTongTien(hoaDonId);
     }
-
-    /**
-     * Xóa sản phẩm khỏi hóa đơn POS
-     */
-
     @Transactional
     public void xoaSanPhamKhoiHoaDon(Integer hoaDonChiTietId) {
 
@@ -420,21 +410,12 @@ public class HoaDonService {
 
         capNhatTongTien(hdct.getIdHoaDon().getId());
     }
-
-    /**
-     * Thanh toán hóa đơn tại quầy
-     * - Kho đã được trừ ngay khi thêm sản phẩm vào giỏ POS
-     * - Tiền mặt: hoàn tất ngay (chuyển trạng thái)
-     * - CK: chờ nhân viên xác nhận đã nhận tiền
-     */
     @Transactional
     public void thanhToanTaiQuay(Integer hoaDonId, Integer khachHangId, Integer voucherId,
             String phuongThuc, BigDecimal tienKhachDua) {
 
         HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
-
-        // Gán khách hàng và địa chỉ vào hóa đơn
         if (khachHangId != null) {
             KhachHang kh = khachHangRepository.findById(khachHangId).orElse(null);
             if (kh != null) {
@@ -445,15 +426,9 @@ public class HoaDonService {
                 }
             }
         }
-
-        // Gán phương thức thanh toán
         hoaDon.setIdLoaiThanhToan(loaiThanhToanRepository.findByTenLoai(phuongThuc).get());
-
-        // Tính tổng tiền trước khi áp voucher
         capNhatTongTien(hoaDonId);
         hoaDon = hoaDonRepository.findById(hoaDonId).get(); // reload
-
-        // Áp voucher nếu có
         if (voucherId != null) {
             MaGiamGia voucher = maGiamGiaRepository.findById(voucherId).orElse(null);
             if (voucher != null) {
@@ -478,40 +453,25 @@ public class HoaDonService {
                 maGiamGiaRepository.save(voucher);
             }
         }
-
-        // Kho đã được trừ ngay khi thêm sản phẩm vào giỏ POS → không cần trừ lại
         if ("Tiền mặt".equalsIgnoreCase(phuongThuc)) {
             hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_HOAN_TAT).get());
         } else {
-            // CK: giữ nguyên trạng thái "Chờ thanh toán", đợi nhân viên xác nhận đã nhận
-            // tiền
         }
 
         hoaDonRepository.save(hoaDon);
     }
-
-    /**
-     * Xác nhận đã nhận tiền chuyển khoản → hoàn tất hóa đơn
-     * (Kho đã được trừ khi thêm sản phẩm vào giỏ POS)
-     */
     @Transactional
     public void xacNhanChuyenKhoan(Integer hoaDonId) {
         HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
-
-        // Kiểm tra trạng thái phải là "Chờ thanh toán" (đang chờ xác nhận CK)
         if (hoaDon.getIdTrangThaiHoaDon().getId() != ID_CHO_THANH_TOAN) {
             throw new RuntimeException("Hóa đơn không ở trạng thái chờ xác nhận chuyển khoản!");
         }
-
-        // Kho đã được trừ ngay khi thêm sản phẩm → chỉ cần chuyển trạng thái
         hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_HOAN_TAT).get());
         hoaDonRepository.save(hoaDon);
     }
 
-    /**
-     * Trừ kho cho hóa đơn POS (dùng chung cho Tiền mặt và CK)
-     */
+
     private void truKhoTaiQuay(Integer hoaDonId) {
         List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByHoaDonId(hoaDonId);
         for (HoaDonChiTiet ct : chiTietList) {
@@ -524,9 +484,7 @@ public class HoaDonService {
         }
     }
 
-    /**
-     * Sinh URL QR Code chuyển khoản qua VietQR
-     */
+
     public String taoQRUrl(Integer hoaDonId, Integer voucherId) {
         HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
@@ -562,16 +520,10 @@ public class HoaDonService {
                 + "&accountName=" + URLEncoder.encode(BANK_ACCOUNT_NAME, StandardCharsets.UTF_8);
     }
 
-    /**
-     * Lấy danh sách hóa đơn POS (trạng thái "Chờ thanh toán")
-     */
+
     public List<HoaDon> layDsHoaDonTaiQuay() {
         return hoaDonRepository.findByIdTrangThaiHoaDon_IdOrderByNgayTaoDesc(ID_CHO_THANH_TOAN);
     }
-
-    /**
-     * Cập nhật tổng tiền của hóa đơn dựa trên chi tiết
-     */
     private void capNhatTongTien(Integer hoaDonId) {
         List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByHoaDonId(hoaDonId);
         BigDecimal tongTien = BigDecimal.ZERO;
@@ -582,19 +534,15 @@ public class HoaDonService {
         hoaDon.setTongThanhToan(tongTien);
         hoaDonRepository.save(hoaDon);
     }
-
-    /**
-     * Lấy danh sách chi tiết hóa đơn cho POS
-     */
     public List<HoaDonChiTiet> layChiTietHoaDon(Integer hoaDonId) {
         return hoaDonChiTietRepository.findByHoaDonIdWithDetails(hoaDonId);
     }
 
-    @Scheduled(fixedRate = 60000) // chạy mỗi 60 giây
+    @Scheduled(fixedRate = 60000)
     @Transactional
     public void tuDongHuyHoaDonQuaHan() {
 
-        Instant gioiHan = Instant.now().minusSeconds(600); // 10 phút
+        Instant gioiHan = Instant.now().minusSeconds(600);
 
         List<HoaDon> danhSach = hoaDonRepository
                 .findByIdTrangThaiHoaDon_IdAndNgayTaoBefore(
@@ -602,8 +550,6 @@ public class HoaDonService {
                         gioiHan);
 
         for (HoaDon hd : danhSach) {
-
-            // Hoàn trả kho cho các sản phẩm trong hóa đơn POS bị hủy tự động
             List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByHoaDonId(hd.getId());
             for (HoaDonChiTiet ct : chiTietList) {
                 SanPhamChiTiet spct = ct.getIdSanPhamChiTiet();
@@ -612,7 +558,7 @@ public class HoaDonService {
             }
 
             hd.setIdTrangThaiHoaDon(
-                    trangThaiHoaDonRepository.findById(5).get() // Đã hủy
+                    trangThaiHoaDonRepository.findById(5).get()
             );
 
             hoaDonRepository.save(hd);
