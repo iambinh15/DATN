@@ -66,41 +66,81 @@
 <div class="admin-layout">
     <aside class="sidebar">
         <div class="sidebar-header">
-            <a href="/admin" class="sidebar-logo">COTIT <span>ADMIN</span></a>
+            <a href="/admin" class="sidebar-logo">
+                COTIT <span>ADMIN</span>
+            </a>
         </div>
+
         <nav class="sidebar-nav">
             <div class="nav-section">
                 <p class="nav-section-title">Menu chính</p>
-                <a th:href="@{/admin}" class="nav-item"><i class="fas fa-home"></i> <span>Tổng quan</span></a>
-                <a th:href="@{/admin/ban-hang}" class="nav-item"><i class="fas fa-shopping-cart"></i> <span>Bán hàng</span></a>
-                <a th:href="@{/hoa-don}" class="nav-item"><i class="fas fa-file-invoice"></i> <span>Hóa đơn</span></a>
+                <a th:href="@{/admin}" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Tổng quan</span>
+                </a>
+                <!-- Active vào Quản lý bán hàng -->
+                <a th:href="@{/admin/ban-hang}" class="nav-item ">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Quản lý bán hàng</span>
+                </a>
+                <a th:href="@{/hoa-don}" class="nav-item">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Quản lý hóa đơn</span>
+                </a>
                 <li sec:authorize="hasRole('ADMIN')">
-                    <a th:href="@{/admin/khuyen-mai}" class="nav-item active"><i class="fas fa-ticket-alt"></i> <span>Voucher</span></a>
+                    <a th:href="@{/admin/khuyen-mai}" class="nav-item active">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Quản lý voucher</span>
+                    </a>
                 </li>
-                <a th:href="@{/thong-ke}" class="nav-item"><i class="fas fa-chart-bar"></i> <span>Thống kê</span></a>
+                <a th:href="@{/thong-ke}" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Thống kê</span>
+                </a>
             </div>
             <div class="nav-section">
                 <p class="nav-section-title">Quản lý</p>
-                <a th:href="@{/khach-hang}" class="nav-item"><i class="fas fa-users"></i> <span>Khách hàng</span></a>
+                <a th:href="@{/khach-hang}" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Quản lý khách hàng</span>
+                </a>
                 <li sec:authorize="hasRole('ADMIN')">
-                    <a th:href="@{/nhan-vien}" class="nav-item"><i class="fas fa-user-tie"></i> <span>Nhân viên</span></a>
+                    <a th:href="@{/nhan-vien}" class="nav-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Quản lý nhân viên</span>
+                    </a>
                 </li>
             </div>
+
+            <div class="nav-section">
+                <li sec:authorize="hasRole('ADMIN')">
+                    <p class="nav-section-title">Sản phẩm</p>
+                    <a th:href="@{/admin/san-pham}" class="nav-item">
+                        <i class="fas fa-box"></i>
+                        <span>Danh sách sản phẩm</span>
+                    </a>
+                </li>
+            </div>
+            <!-- ... Các phần menu khác giữ nguyên ... -->
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar"><i class="fas fa-user"></i></div>
+                    <div class="user-details">
+                        <p class="user-name"
+                           th:text="${session.tenNhanVien != null ? session.tenNhanVien : 'Admin'}">Admin</p>
+                        <p class="user-role">Quản trị viên</p>
+                    </div>
+                </div>
+                <form th:action="@{/logout}" method="post" style="margin: 0;">
+                    <button type="submit" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
+                    </button>
+                </form>
+            </div>
+        </nav>
     </aside>
 
-    <div class="sidebar-footer">
-        <div class="user-info">
-            <div class="user-avatar"><i class="fas fa-user"></i></div>
-            <div class="user-details">
-                <p class="user-name" th:text="${session.tenNhanVien != null ? session.tenNhanVien : 'Admin'}">Admin</p>
-                <p class="user-role">Quản trị viên</p>
-            </div>
-        </div>
-        <form th:action="@{/logout}" method="post">
-            <button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span></button>
-        </form>
-    </div>
-    </aside>
+
 
     <main class="main-content">
         <div class="content-header">
