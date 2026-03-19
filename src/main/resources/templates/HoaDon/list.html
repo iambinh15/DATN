@@ -783,6 +783,7 @@
                                         th:data-tongthanhtoan="${hd.tongThanhToan != null ? #numbers.formatDecimal(hd.tongThanhToan, 0, 'COMMA', 0, 'POINT') + ' ₫' : '—'}"
                                         th:data-ngaytao="${hd.ngayTao != null ? #temporals.format(hd.ngayTao, 'dd/MM/yyyy HH:mm') : '—'}"
                                         th:data-magiamgia="${hd.idMaGiamGia != null ? hd.idMaGiamGia.ma : 'Không có'}"
+                                        th:data-lydohuy="${hd.lyDoHuy != null ? hd.lyDoHuy : ''}"
                                         onclick="xemChiTiet(this)">
                                         <i class="fas fa-eye"></i> Chi tiết
                                     </button>
@@ -849,6 +850,13 @@
                         <div class="info-item">
                             <span class="info-label"><i class="fas fa-ticket-alt"></i> Mã giảm giá</span>
                             <span class="info-value" id="infoMaGiamGia">—</span>
+                        </div>
+                    </div>
+                    <!-- Lý do hủy (chỉ hiện khi đơn đã hủy) -->
+                    <div class="info-row" id="rowLyDoHuy" style="display:none;">
+                        <div class="info-item full-width">
+                            <span class="info-label" style="color:#b91c1c;"><i class="fas fa-ban"></i> Lý do hủy</span>
+                            <span class="info-value" id="infoLyDoHuy" style="color:#b91c1c; background:#fef2f2; padding:8px 12px; border-radius:6px; border:1px solid #fecaca;">—</span>
                         </div>
                     </div>
                 </div>
@@ -1156,6 +1164,17 @@
             document.getElementById('infoTongThanhToan').textContent = btn.getAttribute('data-tongthanhtoan') || '—';
             document.getElementById('infoNgayTao').textContent = btn.getAttribute('data-ngaytao') || '—';
             document.getElementById('infoMaGiamGia').textContent = btn.getAttribute('data-magiamgia') || '—';
+
+            // Hiển thị lý do hủy nếu đơn đã hủy
+            var lyDoHuy = btn.getAttribute('data-lydohuy') || '';
+            var trangThai = btn.getAttribute('data-trangthai') || '';
+            var rowLyDoHuy = document.getElementById('rowLyDoHuy');
+            if (trangThai === 'Đã hủy' && lyDoHuy) {
+                document.getElementById('infoLyDoHuy').textContent = lyDoHuy;
+                rowLyDoHuy.style.display = 'flex';
+            } else {
+                rowLyDoHuy.style.display = 'none';
+            }
 
             document.getElementById('modalTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#999;">Đang tải...</td></tr>';
             document.getElementById('modalEmpty').style.display = 'none';

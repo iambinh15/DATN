@@ -47,10 +47,12 @@ public class DonHangController {
     }
     @PostMapping("/huy/{id}")
     @ResponseBody
-    public ResponseEntity<String> huyDon(@PathVariable Integer id) {
+    public ResponseEntity<String> huyDon(@PathVariable Integer id,
+                                         @RequestBody java.util.Map<String, String> body) {
 
         try {
-            hoaDonService.huyDonHangVaHoanKho(id);
+            String lyDoHuy = body.get("lyDoHuy");
+            hoaDonService.huyDonHangVaHoanKho(id, lyDoHuy);
             return ResponseEntity.ok("Hủy đơn thành công");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Không thể hủy đơn: " + e.getMessage());

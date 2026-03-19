@@ -55,6 +55,10 @@ public class HoaDon {
     @Column(name = "tongThanhToan", precision = 18, scale = 2)
     private BigDecimal tongThanhToan;
 
+    @Nationalized
+    @Column(name = "lyDoHuy")
+    private String lyDoHuy;
+
     @OneToMany(mappedBy = "idHoaDon")
     private Set<HoaDonChiTiet> hoaDonChiTiets = new LinkedHashSet<>();
 
