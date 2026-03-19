@@ -495,7 +495,7 @@
             <!-- TOP SẢN PHẨM -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-fire"></i> Top sản phẩm bán chạy</h3>
+                    <h3 class="card-title"><i class="fas fa-fire"></i> Top sản phẩm bán chạy trong tháng</h3>
                 </div>
                 <div class="card-body" style="padding: 0;">
                     <table class="data-table">
@@ -509,6 +509,11 @@
                             <tr th:each="sp : ${topSanPham}">
                                 <td th:text="${sp[0]}"></td>
                                 <td style="font-weight: 600; color: #2563eb;" th:text="${sp[1]}"></td>
+                            </tr>
+                            <tr th:if="${topSanPham == null or topSanPham.isEmpty()}">
+                                <td colspan="2" style="text-align: center; color: #999; padding: 30px;">
+                                    Chưa có dữ liệu bán hàng trong khoảng thời gian đã chọn
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -536,13 +541,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="sp : ${sapHetHang}" th:style="${sp.soLuong < 10} ? 'background: #fef2f2;'">
+                            <tr th:each="sp : ${sapHetHang}" style="background: #fef2f2;">
                                 <td th:text="${sp.idSanPham != null ? sp.idSanPham.tenSanPham : ''}"></td>
                                 <td th:text="${sp.idMauSac != null ? sp.idMauSac.tenMau : ''}"></td>
                                 <td th:text="${sp.idSize != null ? sp.idSize.tenSize : ''}"></td>
                                 <td th:text="${sp.idChatLieu != null ? sp.idChatLieu.tenChatLieu : ''}"></td>
                                 <td class="money" th:text="${sp.soLuong}"></td>
                                 <td th:text="${#numbers.formatDecimal(sp.donGia,0,'COMMA',0,'POINT')} + ' đ'"></td>
+                            </tr>
+                            <tr th:if="${sapHetHang == null or sapHetHang.isEmpty()}">
+                                <td colspan="6" style="text-align: center; color: #999; padding: 30px;">
+                                    Không có sản phẩm nào sắp hết hàng (số lượng từ 1 đến 9)
+                                </td>
                             </tr>
                         </tbody>
                     </table>

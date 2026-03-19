@@ -27,7 +27,11 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, Integer> {
         List<HoaDon> findByIdKhachHang_IdOrderByNgayTaoDesc(Integer idKhachHang);
 
         List<HoaDon> findByIdKhachHang_Id(Integer idKhachHang);
+    @Query("SELECT h FROM HoaDon h WHERE h.maHoaDon LIKE 'HD_VNP%' OR h.maHoaDon LIKE 'HD_COD%'")
+    List<HoaDon> findHoaDonOnline();
 
+    @Query("SELECT h FROM HoaDon h WHERE h.maHoaDon LIKE 'HD_POS%'")
+    List<HoaDon> findHoaDonTaiQuay();
         @Query("SELECT COUNT(h) > 0 FROM HoaDon h WHERE h.idKhachHang.id = :idKH " +
                         "AND h.idMaGiamGia.id = :idVoucher AND h.idTrangThaiHoaDon.id <> 0")
         boolean checkDaDung(@Param("idKH") Integer idKH, @Param("idVoucher") Integer idVoucher);

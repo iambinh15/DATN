@@ -69,6 +69,6 @@ public class ThongKeService {
         return sanPhamChiTietRepository.findSanPhamSapHetHang(10);
     }
     public long countSanPhamSapHetHang() {
-        return sanPhamChiTietRepository.countBySoLuongLessThan(10);
+        return sanPhamChiTietRepository.countBySoLuongGreaterThanEqualAndSoLuongLessThan(1, 10);
     }
 }

@@ -64,13 +64,16 @@ public interface SanPhamChiTietRepository extends JpaRepository<SanPhamChiTiet, 
     void deleteByIdSanPham_Id(Integer id);
 
     @Query("""
-                SELECT spct
-                FROM SanPhamChiTiet spct
-                JOIN FETCH spct.idSanPham
-                WHERE spct.soLuong < :nguong
-                ORDER BY spct.soLuong ASC
-            """)
+    SELECT spct
+    FROM SanPhamChiTiet spct
+    JOIN FETCH spct.idSanPham
+    LEFT JOIN FETCH spct.idMauSac
+    LEFT JOIN FETCH spct.idSize
+    LEFT JOIN FETCH spct.idChatLieu
+    WHERE spct.soLuong >= 1 AND spct.soLuong < :nguong
+    ORDER BY spct.soLuong ASC
+""")
     List<SanPhamChiTiet> findSanPhamSapHetHang(@Param("nguong") Integer nguong);
 
-    long countBySoLuongLessThan(Integer soLuong);
+    long countBySoLuongGreaterThanEqualAndSoLuongLessThan(Integer minInclusive, Integer maxExclusive);
 }

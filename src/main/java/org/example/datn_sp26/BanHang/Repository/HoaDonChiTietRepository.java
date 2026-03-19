@@ -35,7 +35,7 @@ public interface HoaDonChiTietRepository extends JpaRepository<HoaDonChiTiet, In
            SELECT hdc.idSanPhamChiTiet.idSanPham.tenSanPham,
                   SUM(hdc.soLuong)
            FROM HoaDonChiTiet hdc
-           WHERE hdc.idHoaDon.idTrangThaiHoaDon.tenTrangThai = 'Hoàn thành'
+           WHERE hdc.idHoaDon.idTrangThaiHoaDon.tenTrangThai IN ('Hoàn thành', 'Hoàn tất')
            AND (:tuNgay IS NULL OR hdc.idHoaDon.ngayTao >= :tuNgay)
            AND (:denNgay IS NULL OR hdc.idHoaDon.ngayTao <= :denNgay)
            GROUP BY hdc.idSanPhamChiTiet.idSanPham.tenSanPham
