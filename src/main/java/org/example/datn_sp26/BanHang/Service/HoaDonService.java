@@ -279,6 +279,12 @@ public class HoaDonService {
     // 2. Hàm hủy đơn và hoàn kho + Voucher
     @Transactional
     public void huyDonHangVaHoanKho(Integer idHoaDon) {
+        huyDonHangVaHoanKho(idHoaDon, null);
+    }
+
+    // Overload: hủy đơn với lý do hủy (dùng cho khách hàng)
+    @Transactional
+    public void huyDonHangVaHoanKho(Integer idHoaDon, String lyDoHuy) {
         HoaDon hd = hoaDonRepository.findById(idHoaDon)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
 
@@ -314,6 +320,9 @@ public class HoaDonService {
             }
         }
         hd.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(5).get());
+        if (lyDoHuy != null && !lyDoHuy.trim().isEmpty()) {
+            hd.setLyDoHuy(lyDoHuy.trim());
+        }
         hoaDonRepository.save(hd);
     }
 

@@ -296,7 +296,8 @@
         }
 
         th, td{
-            white-space:nowrap;
+            white-space:normal;
+            word-break:break-word;
         }
 
         th:last-child,
@@ -328,7 +329,11 @@
             transition:all 0.2s;
             font-family:'Inter', sans-serif;
         }
-
+        td:first-child,
+        th:first-child {
+            white-space: nowrap;
+            width: 60px;
+        }
         .btn-cancel:hover{
             background:#dc2626;
             color:#fff;
@@ -500,6 +505,41 @@
         </div>
     </div>
 
+    <!-- Modal Hủy đơn hàng -->
+    <div id="modalHuyDon" class="modal-overlay" style="display:none;">
+        <div class="modal-content" style="width:480px;">
+            <div class="modal-header" style="border-bottom-color:#fee2e2;">
+                <h3 style="color:#b91c1c;"><i class="fas fa-exclamation-triangle" style="margin-right:8px;"></i>Hủy đơn hàng</h3>
+                <button class="modal-close" onclick="dongModalHuy()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="huyDonId" />
+                <label style="font-size:13px; font-weight:600; color:#333; display:block; margin-bottom:6px;">
+                    Lý do hủy <span style="color:#dc2626;">*</span>
+                </label>
+                <textarea id="lyDoHuyInput" rows="4"
+                    placeholder="Nhập lý do hủy đơn hàng..."
+                    style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-family:'Inter',sans-serif; resize:vertical; outline:none; transition:border-color 0.2s;"
+                    onfocus="this.style.borderColor='#b91c1c'" onblur="this.style.borderColor='#ddd'"></textarea>
+                <p id="huyDonError" style="display:none; color:#dc2626; font-size:12px; margin-top:6px;">
+                    <i class="fas fa-info-circle"></i> Vui lòng nhập lý do hủy đơn.
+                </p>
+                <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+                    <button onclick="dongModalHuy()"
+                        style="padding:10px 20px; background:#f3f4f6; color:#374151; border:1px solid #ddd; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s;"
+                        onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">
+                        Đóng
+                    </button>
+                    <button onclick="xacNhanHuyDon()"
+                        style="padding:10px 20px; background:#dc2626; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s;"
+                        onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
+                        <i class="fas fa-ban" style="margin-right:6px;"></i>Xác nhận hủy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function xemChiTiet(btn) {
             var id = btn.getAttribute('data-id');
@@ -580,33 +620,58 @@
                     document.getElementById('modalError').style.display = 'block';
                 });
         }
-        function huyDon(btn){
 
-            const id = btn.getAttribute("data-id");
+        // Mở modal hủy đơn
+        function huyDon(btn) {
+            var id = btn.getAttribute("data-id");
+            document.getElementById("huyDonId").value = id;
+            document.getElementById("lyDoHuyInput").value = "";
+            document.getElementById("huyDonError").style.display = "none";
+            document.getElementById("modalHuyDon").style.display = "flex";
+        }
 
-            if(!confirm("Bạn có chắc muốn hủy đơn hàng này không?")){
+        // Đóng modal hủy đơn
+        function dongModalHuy() {
+            document.getElementById("modalHuyDon").style.display = "none";
+        }
+
+        // Xác nhận hủy đơn
+        function xacNhanHuyDon() {
+            var id = document.getElementById("huyDonId").value;
+            var lyDo = document.getElementById("lyDoHuyInput").value.trim();
+
+            if (!lyDo) {
+                document.getElementById("huyDonError").style.display = "block";
+                document.getElementById("lyDoHuyInput").style.borderColor = "#dc2626";
                 return;
             }
 
-            fetch("/khach-hang/don-hang/huy/" + id,{
-                method:"POST"
+            fetch("/khach-hang/don-hang/huy/" + id, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ lyDoHuy: lyDo })
             })
-                .then(res=>res.text())
-                .then(data=>{
+                .then(function(res) { return res.text(); })
+                .then(function(data) {
                     alert(data);
                     location.reload();
                 })
-                .catch(err=>{
+                .catch(function(err) {
                     console.error(err);
                     alert("Lỗi khi hủy đơn");
                 });
         }
+
         function dongModal() {
             document.getElementById('modalChiTiet').style.display = 'none';
         }
 
         document.getElementById('modalChiTiet').addEventListener('click', function (e) {
             if (e.target === this) dongModal();
+        });
+
+        document.getElementById('modalHuyDon').addEventListener('click', function (e) {
+            if (e.target === this) dongModalHuy();
         });
     </script>
 </body>
