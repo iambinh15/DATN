@@ -101,5 +101,4 @@ public class SanPhamAdminController {
 
         return "redirect:/admin/san-pham";
     }
-    // acb
 }
