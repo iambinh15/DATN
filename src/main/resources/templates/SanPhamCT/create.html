@@ -462,9 +462,6 @@
                           method="post"
                           enctype="multipart/form-data">
 
-                        <!-- Ẩn ID để khi sửa không tạo bản ghi mới -->
-                        <input type="hidden" th:field="*{id}" />
-
                         <!-- Giữ id sản phẩm -->
                         <input type="hidden" th:field="*{idSanPham.id}" />
 
@@ -514,29 +511,6 @@
                                    multiple
                                    accept="image/*">
                         </div>
-                        <div class="form-group" th:if="${spct.idSanPham != null}">
-                            <label>Ảnh hiện tại</label>
-                            <!-- Chọn ảnh muốn thay -->
-                            <input type="hidden" id="selectedImageId" name="selectedImageId" value="" />
-                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                                <button type="button"
-                                        th:each="img,iter : ${spct.idSanPham.hinhAnhs}"
-                                        th:attr="data-img-id=${img.id}"
-                                        onclick="selectImage(this)"
-                                        style="padding:0;border:2px solid #e0e0e0;border-radius:12px;background:#fff;cursor:pointer;">
-                                    <img th:src="${img.hinhAnh + '?v=' + cacheBust}"
-                                         alt="Ảnh sản phẩm"
-                                         style="width:90px;height:90px;object-fit:cover;border-radius:10px;display:block;" />
-                                </button>
-                                <div th:if="${spct.idSanPham.hinhAnhs == null or #sets.isEmpty(spct.idSanPham.hinhAnhs)}"
-                                     style="color:#666;font-size:13px;">
-                                    Chưa có ảnh.
-                                </div>
-                            </div>
-                            <div style="margin-top:8px;color:#666;font-size:13px;">
-                                Bấm vào ảnh muốn thay (ảnh được chọn sẽ có viền đen).
-                            </div>
-                        </div>
 
                         <div class="form-actions">
                             <button type="submit" class="btn-save">
@@ -555,25 +529,3 @@
 </body>
 
 </html>
-
-<script>
-    function selectImage(btn) {
-        const container = btn.parentElement;
-        const buttons = container.querySelectorAll('button[data-img-id]');
-        buttons.forEach(b => b.style.borderColor = '#e0e0e0');
-
-        btn.style.borderColor = '#000';
-        const id = btn.getAttribute('data-img-id');
-        const input = document.getElementById('selectedImageId');
-        if (input) input.value = id;
-    }
-
-    // Auto-select first image on load (if any)
-    (function initSelectedImage() {
-        const input = document.getElementById('selectedImageId');
-        const first = document.querySelector('button[data-img-id]');
-        if (input && first && !input.value) {
-            selectImage(first);
-        }
-    })();
-</script>

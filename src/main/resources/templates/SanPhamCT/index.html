@@ -500,7 +500,6 @@
                                 <th>ID</th>
                                 <th>Màu</th>
                                 <th>Size</th>
-                                <th>Chất liệu</th>
                                 <th>Giá</th>
                                 <th>Số lượng</th>
                                 <th>Trạng thái</th>
@@ -512,7 +511,6 @@
                                 <td th:text="${item.id}"></td>
                                 <td th:text="${item.idMauSac != null ? item.idMauSac.tenMau : '---'}"></td>
                                 <td th:text="${item.idSize != null ? item.idSize.tenSize : '---'}"></td>
-                                <td th:text="${item.idChatLieu != null ? item.idChatLieu.tenChatLieu : '---'}"></td>
                                 <td class="money"
                                     th:text="${#numbers.formatDecimal(item.donGia, 0, 'COMMA', 0, 'POINT')} + ' ₫'">
                                 </td>
