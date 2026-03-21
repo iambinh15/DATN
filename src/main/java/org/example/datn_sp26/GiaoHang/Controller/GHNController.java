@@ -234,7 +234,7 @@ public class GHNController {
         try {
             // ✅ GỌI SERVICE: Truyền đủ 4 tham số.
             // Logic 'xuLyVoucher' bên trong Service sẽ gán Voucher ID vào DB và trừ tiền.
-            HoaDon hoaDon = hoaDonService.taoHoaDonCODDayDu(khachHang, tongThanhToan, diaChi, maVoucher);
+            HoaDon hoaDon = hoaDonService.taoHoaDonCODDayDu(khachHang, tongThanhToan, diaChi, maVoucher, phiShip  );
 
             // THÔNG BÁO THÀNH CÔNG TRONG CONSOLE
             System.out.println("===> [THÀNH CÔNG]: Đã tạo hóa đơn: " + hoaDon.getMaHoaDon());

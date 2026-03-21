@@ -328,11 +328,17 @@
     btn.innerText = "ĐANG XỬ LÝ...";
 
     const paymentMethod = document.querySelector("input[name='pay']:checked").value;
-    const totalFinal = Math.round((tienHang - tienGiam) + phiShip);
+    const totalFinal = tienHang + phiShip;
 
     fetch("/khach-hang/luu-dia-chi-tam", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ diaChi: diaChiFinal, phiShip: Math.round(phiShip), maVoucher: maVoucherChon, tongTien: totalFinal })
+      body: JSON.stringify({
+        diaChi: diaChiFinal,
+        phiShip: Math.round(phiShip),
+        maVoucher: maVoucherChon,
+        tongTien: totalFinal,
+        tienHang: tienHang // ✅ thêm dòng này
+      })
     }).then(() => {
       if (paymentMethod === "VNPAY") {
         window.location.href = "/api/vnpay/pay?amount=" + totalFinal;
