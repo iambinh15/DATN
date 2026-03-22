@@ -12,6 +12,9 @@ import java.util.Optional;
 public interface MaGiamGiaRepository extends JpaRepository<MaGiamGia, Integer> {
 
     List<MaGiamGia> findByTrangThai(Integer trangThai);
+
+    // Lấy mã giảm giá đang hoạt động và còn số lượng
+    List<MaGiamGia> findByTrangThaiAndSoLuongGreaterThanEqual(Integer trangThai, Integer soLuong);
     // Tìm kiếm mã giảm giá theo mã code (ví dụ: 'SALE10')
     // Thêm điều kiện trangThai = 1 để chỉ lấy mã còn hoạt động
     @Query("SELECT k FROM MaGiamGia k WHERE k.ma = ?1 AND k.trangThai = 1")
