@@ -181,82 +181,68 @@ public class GHNController {
     @ResponseBody
     public Map<String, Object> taoDonCOD(HttpSession session) {
         Map<String, Object> response = new HashMap<>();
-
-        // 1. Kiểm tra session khách hàng
         KhachHang khachHang = (KhachHang) session.getAttribute("khachHang");
+
         if (khachHang == null) {
-            System.out.println("===> [CẢNH BÁO]: Phiên đăng nhập (session) khách hàng bị null!");
             response.put("success", false);
             response.put("message", "Phiên đăng nhập hết hạn");
             return response;
         }
 
-        // 2. LẤY MÃ VOUCHER TỪ SESSION (ĐÃ FIX TÊN ATTRIBUTE)
-        // Lưu ý: Tên này phải khớp 100% với tên bạn dùng ở hàm 'apDungVoucher' trong Controller
+        // 1. LẤY MÃ VOUCHER (Đảm bảo lấy đúng từ session đã lưu ở apDungVoucher)
         String maVoucher = (String) session.getAttribute("MA_GIAM_GIA_DA_CHON");
 
-        // THÔNG BÁO KIỂM TRA MÃ TRƯỚC KHI GỬI XUỐNG SERVICE
-        System.out.println("===> [CONTROLLER]: Đang lấy mã từ Session: [" + maVoucher + "]");
+        // 2. LẤY ID SẢN PHẨM ĐƯỢC CHỌN (Để tính tiền hàng chính xác)
+        List<Integer> selectedIds = (List<Integer>) session.getAttribute("SELECTED_IDS");
+        var allItems = gioHangService.layGioHangCuaKhach(khachHang.getId());
 
-        // 3. Lấy thông tin địa chỉ và phí ship
-        Object diaChiObj = session.getAttribute("DIA_CHI_TAM");
-        Object phiShipObj = session.getAttribute("PHI_SHIP");
+        // Lọc đúng những món khách đã chọn ở bước trước
+        var itemsToBuy = allItems.stream()
+                .filter(i -> selectedIds == null || selectedIds.contains(i.getId()))
+                .collect(Collectors.toList());
 
-        if (diaChiObj == null || phiShipObj == null) {
-            System.out.println("===> [LỖI]: Thiếu DIA_CHI_TAM hoặc PHI_SHIP trong session!");
+        if (itemsToBuy.isEmpty()) {
             response.put("success", false);
-            response.put("message", "Thiếu thông tin địa chỉ hoặc phí ship");
+            response.put("message", "Vui lòng chọn sản phẩm cần mua!");
             return response;
         }
 
-        String diaChi = diaChiObj.toString();
-        // Chống lỗi NumberFormatException nếu phiShipObj không phải chuỗi số thuần túy
-        BigDecimal phiShip = new BigDecimal(phiShipObj.toString().replaceAll("[^\\d.]", ""));
-
-        // 4. Tính tổng tiền hàng từ giỏ hàng
-        var items = gioHangService.layGioHangCuaKhach(khachHang.getId());
-        if (items.isEmpty()) {
-            response.put("success", false);
-            response.put("message", "Giỏ hàng của bạn đang trống!");
-            return response;
-        }
-
-        BigDecimal tongTienHang = items.stream()
+        // 3. TÍNH TIỀN HÀNG (BigDecimal)
+        BigDecimal tongTienHang = itemsToBuy.stream()
                 .map(i -> i.getIdSanPhamChiTiet().getDonGia().multiply(BigDecimal.valueOf(i.getSoLuong())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 5. Tổng thanh toán tạm tính (Tiền hàng + Ship)
-        // Lưu ý: Bạn truyền tổng chưa giảm xuống, Service sẽ lo phần trừ tiền dựa trên mã voucher
+        // 4. LẤY PHÍ SHIP AN TOÀN
+        Object phiShipObj = session.getAttribute("PHI_SHIP");
+        BigDecimal phiShip = BigDecimal.ZERO;
+        if (phiShipObj != null) {
+            // Ép kiểu an toàn từ Long/Integer sang BigDecimal
+            phiShip = new BigDecimal(phiShipObj.toString());
+        }
+
+        // 5. TỔNG TẠM TÍNH = TIỀN HÀNG + SHIP (Trước khi giảm giá)
         BigDecimal tongThanhToan = tongTienHang.add(phiShip);
 
-        System.out.println("===> [CONTROLLER]: Tổng tạm tính (Hàng + Ship): " + tongThanhToan);
+        String diaChi = (String) session.getAttribute("DIA_CHI_TAM");
 
         try {
-            // ✅ GỌI SERVICE: Truyền đủ 4 tham số.
-            // Logic 'xuLyVoucher' bên trong Service sẽ gán Voucher ID vào DB và trừ tiền.
-            HoaDon hoaDon = hoaDonService.taoHoaDonCODDayDu(khachHang, tongThanhToan, diaChi, maVoucher, phiShip  );
+            // GỌI SERVICE XỬ LÝ (Service này sẽ tự tách tiền hàng và trừ voucher tiền mặt/%)
+            HoaDon hoaDon = hoaDonService.taoHoaDonCODDayDu(khachHang, tongThanhToan, diaChi, maVoucher, phiShip);
 
-            // THÔNG BÁO THÀNH CÔNG TRONG CONSOLE
-            System.out.println("===> [THÀNH CÔNG]: Đã tạo hóa đơn: " + hoaDon.getMaHoaDon());
-
-            // 6. Xóa các session tạm sau khi tạo đơn thành công để tránh trùng lặp cho đơn sau
+            // Clear session
             session.removeAttribute("MA_GIAM_GIA_DA_CHON");
             session.removeAttribute("DIA_CHI_TAM");
             session.removeAttribute("PHI_SHIP");
+            session.removeAttribute("SELECTED_IDS");
 
             response.put("success", true);
-            response.put("message", "Đặt hàng thành công!");
+            return response;
         } catch (Exception e) {
-            // THÔNG BÁO LỖI CHI TIẾT
-            System.err.println("===> [LỖI TẠO ĐƠN]: " + e.getMessage());
-            e.printStackTrace();
             response.put("success", false);
-            response.put("message", "Lỗi khi tạo hóa đơn: " + e.getMessage());
+            response.put("message", "Lỗi: " + e.getMessage());
+            return response;
         }
-
-        return response;
     }
-
 
     @PostMapping("/ap-dung-voucher-session")
     @ResponseBody
