@@ -57,66 +57,64 @@ public class HoaDonService {
     // LOGIC XỬ LÝ VOUCHER (Đã thêm logic trừ tiền)
     // ============================================================
     private void xuLyVoucher(HoaDon hoaDon, String maVoucher, BigDecimal phiShip) {
+        if (maVoucher == null || maVoucher.trim().isEmpty()) return;
 
-        System.out.println("===> Service nhận được mã Voucher: [" + maVoucher + "]");
+        MaGiamGia voucher = maGiamGiaRepository.findByMa(maVoucher.trim()).orElse(null);
+        if (voucher == null || voucher.getSoLuong() <= 0) return;
 
-        if (maVoucher != null && !maVoucher.isEmpty()) {
+        // 1. Lấy Tổng thanh toán hiện tại (đã bao gồm ship)
+        BigDecimal tongHienTai = hoaDon.getTongThanhToan();
+        BigDecimal tienHang = tongHienTai.subtract(phiShip);
+        if (tienHang.compareTo(BigDecimal.ZERO) < 0) tienHang = BigDecimal.ZERO;
 
-            MaGiamGia voucher = maGiamGiaRepository.findByMa(maVoucher.trim())
-                    .orElse(null);
+        // 2. Chuyển đổi giá trị Voucher an toàn (từ Double sang BigDecimal)
+        BigDecimal giaTriVoucher = (voucher.getGiaTri() != null)
+                ? BigDecimal.valueOf(voucher.getGiaTri())
+                : BigDecimal.ZERO;
 
-            if (voucher == null) {
-                System.out.println("===> THÔNG BÁO: Mã [" + maVoucher + "] KHÔNG tồn tại trong Database!");
-                return;
-            }
+        // 3. ÉP KIỂU LOAI GIAM (Quan trọng nhất)
+        // Nếu loaiGiam là null, mặc định về 0 (Tiền mặt)
+        int loaiGiamThucTe = (voucher.getLoaiGiam() != null) ? voucher.getLoaiGiam() : 0;
 
-            // 1. Gán voucher
-            hoaDon.setIdMaGiamGia(voucher);
-            System.out.println("===> THÔNG BÁO: Đã gán Voucher [" + voucher.getMa() + "]");
+        BigDecimal soTienGiam = BigDecimal.ZERO;
 
-            // 2. TÁCH tiền hàng ra khỏi tổng
-            BigDecimal tongHienTai = hoaDon.getTongThanhToan(); // đã gồm ship
-            BigDecimal tienHang = tongHienTai.subtract(phiShip); // ✅ tách ra
+        // LOG ĐỂ BẮT BỆNH
+        System.out.println("---------- DEBUG VOUCHER ----------");
+        System.out.println("Ma Voucher: " + voucher.getMa());
+        System.out.println("Loai Giam (Thực tế): " + loaiGiamThucTe);
+        System.out.println("Gia Tri Voucher: " + giaTriVoucher);
+        System.out.println("Tiền hàng gốc: " + tienHang);
 
-            if (tienHang.compareTo(BigDecimal.ZERO) < 0) {
-                tienHang = BigDecimal.ZERO;
-            }
-
-            BigDecimal giaTriGiam = BigDecimal.valueOf(voucher.getGiaTri());
-            BigDecimal soTienTru = BigDecimal.ZERO;
-
-            if (voucher.getLoaiGiam() == 0) {
-                // giảm tiền cố định
-                soTienTru = giaTriGiam;
-            } else {
-                // ✅ CHỈ giảm trên tiền hàng
-                soTienTru = tienHang.multiply(giaTriGiam)
-                        .divide(BigDecimal.valueOf(100), 0, java.math.RoundingMode.HALF_UP);
-            }
-
-            // Không cho giảm quá tiền hàng
-            if (soTienTru.compareTo(tienHang) > 0) {
-                soTienTru = tienHang;
-            }
-
-            // 3. Tính lại tổng (giữ nguyên ship)
-            BigDecimal tongSauGiam = tienHang.subtract(soTienTru).add(phiShip);
-
-            if (tongSauGiam.compareTo(BigDecimal.ZERO) < 0) {
-                tongSauGiam = BigDecimal.ZERO;
-            }
-
-            hoaDon.setTongThanhToan(tongSauGiam);
-
-            System.out.println("===> Giảm: " + soTienTru + " | Tổng mới: " + tongSauGiam);
-
-            // 4. Trừ số lượng voucher
-            voucher.setSoLuong(voucher.getSoLuong() - 1);
-            maGiamGiaRepository.save(voucher);
-
+        if (loaiGiamThucTe == 0) {
+            // LOGIC GIẢM TIỀN MẶT
+            soTienGiam = giaTriVoucher;
+            System.out.println("=> Đang áp dụng: GIẢM TIỀN MẶT");
         } else {
-            System.out.println("===> Không dùng voucher");
+            // LOGIC GIẢM %
+            soTienGiam = tienHang.multiply(giaTriVoucher)
+                    .divide(BigDecimal.valueOf(100), 0, java.math.RoundingMode.HALF_UP);
+            System.out.println("=> Đang áp dụng: GIẢM PHẦN TRĂM");
         }
+
+        // 4. Ràng buộc: Không giảm quá tiền hàng
+        if (soTienGiam.compareTo(tienHang) > 0) {
+            soTienGiam = tienHang;
+        }
+
+        // 5. Tính tổng cuối cùng
+        BigDecimal tongCuoi = tienHang.subtract(soTienGiam).add(phiShip);
+
+        // Cập nhật lại hóa đơn
+        hoaDon.setIdMaGiamGia(voucher);
+        hoaDon.setTongThanhToan(tongCuoi);
+
+        // Lưu voucher (giảm số lượng)
+        voucher.setSoLuong(voucher.getSoLuong() - 1);
+        maGiamGiaRepository.save(voucher);
+
+        System.out.println("Số tiền được giảm: " + soTienGiam);
+        System.out.println("Tổng thanh toán mới: " + tongCuoi);
+        System.out.println("------------------------------------");
     }
     // ============================================================
     // THANH TOÁN VNPAY
@@ -132,29 +130,35 @@ public class HoaDonService {
                                  String maVoucher) {
 
         HoaDon hoaDon = new HoaDon();
+        // Tạo mã hóa đơn duy nhất kèm theo timestamp của VNPay
         hoaDon.setMaHoaDon("HD_VNP" + System.currentTimeMillis());
         hoaDon.setIdKhachHang(khachHang);
         hoaDon.setNgayTao(Instant.now());
         hoaDon.setDiaChi(diaChi);
-
-        // 1️⃣ Gán tổng tiền gốc (chưa trừ voucher, gồm phí ship)
+        // 1️⃣ Gán THẲNG tổng tiền từ VNPay trả về
+        // Con số này đã được Controller tính toán (TienHang - Voucher + PhiShip)
+        // Nên tuyệt đối không gọi hàm xuLyVoucher() ở đây nữa.
         hoaDon.setTongThanhToan(tongThanhToan);
 
-        // 2️⃣ Xử lý voucher: tính toán tiền hàng, trừ tiền, lưu quan hệ MaGiamGia
-        // ✅ Sau khi gọi xuLyVoucher, hoaDon.getTongThanhToan() đã là giá thực tế
-        xuLyVoucher(hoaDon, maVoucher, phiShip);
+        // 2️⃣ Lưu vết Mã giảm giá để hiển thị lên giao diện "Đơn hàng của tôi"
+        if (maVoucher != null && !maVoucher.isEmpty()) {
+            maGiamGiaRepository.findByMa(maVoucher).ifPresent(voucher -> {
+                // Chỉ set đối tượng để lưu quan hệ database (Foreign Key)
+                // Việc gán này không làm thay đổi tongThanhToan đã set ở trên
+                hoaDon.setIdMaGiamGia(voucher);
+            });
+        }
 
         // 3️⃣ Gán trạng thái và loại thanh toán
         hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_CHO_XAC_NHAN).get());
         hoaDon.setIdLoaiThanhToan(loaiThanhToanRepository.findByTenLoai("CK").get());
 
-        // 4️⃣ Lưu hóa đơn, lúc này tongThanhToan đã đúng
+        // 4️⃣ Lưu hóa đơn
         hoaDonRepository.save(hoaDon);
 
-        // 5️⃣ Lưu chi tiết đơn & trừ kho ngay (vì thanh toán online)
+        // 5️⃣ Lưu chi tiết đơn & trừ kho ngay (vì thanh toán online thành công mới vào đây)
         luuChiTietVaTruKho(hoaDon, khachHang.getId(), true);
 
-        // ✅ HoaDon đã sẵn sàng để tạo request VNPay
         return hoaDon;
     }
 
@@ -169,25 +173,37 @@ public class HoaDonService {
                                     String diaChi,
                                     String maVoucher,
                                     BigDecimal phiShip) {
+
         HoaDon hoaDon = new HoaDon();
         hoaDon.setMaHoaDon("HD_COD" + System.currentTimeMillis());
         hoaDon.setIdKhachHang(khachHang);
         hoaDon.setNgayTao(Instant.now());
         hoaDon.setDiaChi(diaChi);
 
-        // Quan trọng: Gán tiền TRƯỚC khi gọi xuLyVoucher
+        // 1. Thiết lập trạng thái ban đầu: "Chờ xác nhận" (ID = 1)
+        hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_CHO_XAC_NHAN)
+                .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy trạng thái ID " + ID_CHO_XAC_NHAN)));
+
+        // 2. Thiết lập loại thanh toán: "Tiền mặt"
+        hoaDon.setIdLoaiThanhToan(loaiThanhToanRepository.findByTenLoai("Tiền mặt")
+                .orElseThrow(() -> new RuntimeException("Lỗi: Chưa cấu hình phương thức Tiền mặt")));
+
+        // 3. QUAN TRỌNG: Gán số tiền tạm tính vào Hóa đơn trước khi xử lý Voucher
+        // tongThanhToan này là giá trị truyền từ FE (gồm Tiền hàng + Ship)
         hoaDon.setTongThanhToan(tongThanhToan);
 
+        // 4. Áp dụng Voucher (Sử dụng hàm logic chuẩn ở trên)
         xuLyVoucher(hoaDon, maVoucher, phiShip);
 
-        hoaDon.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_CHO_XAC_NHAN).get());
-        hoaDon.setIdLoaiThanhToan(loaiThanhToanRepository.findByTenLoai("Tiền mặt").get());
-        hoaDonRepository.saveAndFlush(hoaDon);
+        // 5. Lưu hóa đơn để lấy ID (dùng saveAndFlush để đảm bảo ID có ngay)
+        HoaDon savedHoaDon = hoaDonRepository.saveAndFlush(hoaDon);
 
-        luuChiTietVaTruKho(hoaDon, khachHang.getId(), false);
-        return hoaDon;
+        // 6. Lưu chi tiết hóa đơn (HoaDonChiTiet) và Xử lý giỏ hàng
+        // Đơn COD: false (không trừ kho ngay, sẽ trừ khi chuyển sang trạng thái "Xác nhận")
+        luuChiTietVaTruKho(savedHoaDon, khachHang.getId(), false);
+
+        return savedHoaDon;
     }
-
     // Logic dùng chung để lưu chi tiết và xử lý giỏ hàng
     private void luuChiTietVaTruKho(HoaDon hoaDon, Integer idKhachHang, boolean laThanhToanOnline) {
         var listGioHang = gioHangService.layGioHangCuaKhach(idKhachHang);
@@ -659,5 +675,36 @@ public class HoaDonService {
         }
         hd.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(15).get());
         hoaDonRepository.save(hd);
+    }
+    public BigDecimal tinhTongThanhToanThucTe(Integer idKhachHang, String maVoucher, BigDecimal phiShip) {
+        // 1. Tính Tiền hàng (Subtotal) từ giỏ hàng thực tế trong DB
+        var listGioHang = gioHangService.layGioHangCuaKhach(idKhachHang);
+        BigDecimal tienHang = BigDecimal.ZERO;
+        for (var item : listGioHang) {
+            BigDecimal gia = item.getIdSanPhamChiTiet().getDonGia();
+            tienHang = tienHang.add(gia.multiply(BigDecimal.valueOf(item.getSoLuong())));
+        }
+
+        // 2. Tính số tiền giảm từ Voucher
+        BigDecimal soTienGiam = BigDecimal.ZERO;
+        if (maVoucher != null && !maVoucher.trim().isEmpty()) {
+            MaGiamGia voucher = maGiamGiaRepository.findByMa(maVoucher.trim()).orElse(null);
+            if (voucher != null && voucher.getSoLuong() > 0) {
+                BigDecimal giaTriVoucher = BigDecimal.valueOf(voucher.getGiaTri());
+                // loaiGiam = 0 là Tiền mặt, loaiGiam = 1 là %
+                if (voucher.getLoaiGiam() == 0) {
+                    soTienGiam = giaTriVoucher;
+                } else {
+                    soTienGiam = tienHang.multiply(giaTriVoucher)
+                            .divide(BigDecimal.valueOf(100), 0, java.math.RoundingMode.HALF_UP);
+                }
+            }
+        }
+
+        // Ràng buộc: Voucher không được giảm quá tiền hàng
+        if (soTienGiam.compareTo(tienHang) > 0) soTienGiam = tienHang;
+
+        // 3. Công thức: (Tiền hàng - Voucher) + Phí ship
+        return tienHang.subtract(soTienGiam).add(phiShip != null ? phiShip : BigDecimal.ZERO);
     }
 }
