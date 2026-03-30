@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form Chất liệu - CotiT Admin</title>
+    <title>Quản lý Màu sắc - CotiT Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -33,19 +33,28 @@
         .main-content { flex: 1; margin-left: 260px; padding: 30px; }
         .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         .page-title { font-size: 28px; font-weight: 600; }
+        .btn-primary-custom { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: #000; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; transition: background 0.3s; }
+        .btn-primary-custom:hover { background: #333; color: #fff; }
         .card { background: #fff; border-radius: 12px; overflow: hidden; }
         .card-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; border-bottom: 1px solid #eee; }
         .card-title { font-size: 16px; font-weight: 600; }
-        .card-body { padding: 25px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; color: #333; }
-        .form-control { width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; transition: border-color 0.2s; }
-        .form-control:focus { outline: none; border-color: #000; }
-        .form-actions { display: flex; gap: 12px; margin-top: 25px; }
-        .btn-save { padding: 12px 24px; background: #000; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.3s; }
-        .btn-save:hover { background: #333; }
-        .btn-cancel { padding: 12px 24px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s; }
-        .btn-cancel:hover { background: #eee; color: #111; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #eee; }
+        .data-table th { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #666; background: #fafafa; }
+        .data-table td { font-size: 14px; }
+        .data-table tbody tr:hover { background: #f9f9f9; }
+        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .status-badge.active { background: #d4edda; color: #155724; }
+        .status-badge.inactive { background: #f8d7da; color: #721c24; }
+        .action-btns { display: flex; gap: 8px; }
+        .btn-detail, .btn-delete { padding: 6px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+        .btn-detail { background: #e2e3ff; color: #1d1f91; }
+        .btn-detail:hover { background: #28a745; color: #fff; }
+        .btn-delete { background: #f8d7da; color: #721c24; }
+        .btn-delete:hover { background: #dc3545; color: #fff; }
+        .empty-state { text-align: center; padding: 80px 20px; color: #999; }
+        .empty-state i { font-size: 50px; margin-bottom: 16px; color: #ddd; }
+        .empty-state p { font-size: 16px; }
         @media (max-width: 768px) {
             .sidebar { width: 80px; }
             .sidebar-header, .nav-section-title, .nav-item span, .user-details, .btn-logout span { display: none; }
@@ -79,10 +88,20 @@
                     <li sec:authorize="hasRole('ADMIN')">
                         <p class="nav-section-title">Sản phẩm</p>
                         <a th:href="@{/admin/san-pham}" class="nav-item"><i class="fas fa-box"></i><span>Danh sách sản phẩm</span></a>
-                        <a th:href="@{/size}" class="nav-item"><i class="fas fa-ruler"></i><span>Size</span></a>
-                        <a th:href="@{/mau-sac}" class="nav-item"><i class="fas fa-palette"></i><span>Màu sắc</span></a>
+                        <a th:href="@{/size}" class="nav-item">
+                            <i class="fas fa-ruler"></i>
+                            <span>Size</span>
+                        </a>
+                        <a th:href="@{/mau-sac}" class="nav-item">
+                            <i class="fas fa-palette"></i>
+                            <span>Màu sắc</span>
+                        </a>
                     </li>
-                    <a th:href="@{/chat-lieu}" class="nav-item active"><i class="fas fa-layer-group"></i><span>Chất liệu</span></a>
+                    <a th:href="@{/chat-lieu}" class="nav-item">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Chất liệu</span>
+                    </a>
+                    </li>
                 </div>
             </nav>
             <div class="sidebar-footer">
@@ -101,29 +120,39 @@
 
         <main class="main-content">
             <div class="content-header">
-                <h1 class="page-title" th:text="${cl.id != null ? 'Sửa Chất liệu' : 'Thêm Chất liệu'}">Thêm Chất liệu</h1>
+                <h1 class="page-title">Quản lý Màu sắc</h1>
+                <div class="header-actions">
+                    <a th:href="@{/mau-sac/add}" class="btn-primary-custom"><i class="fas fa-plus"></i> Thêm Màu sắc</a>
+                </div>
             </div>
-            <div class="card" style="max-width: 600px;">
-                <div class="card-header"><h3 class="card-title">Thông tin Chất liệu</h3></div>
-                <div class="card-body">
-                    <form th:action="@{/chat-lieu/save}" th:object="${cl}" method="post">
-                        <input type="hidden" th:field="*{id}"/>
-                        <div class="form-group">
-                            <label>Tên Chất liệu</label>
-                            <input type="text" class="form-control" placeholder="Nhập tên chất liệu" th:field="*{tenChatLieu}" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Trạng thái</label>
-                            <select class="form-control" th:field="*{trangThai}">
-                                <option value="1">Hoạt động</option>
-                                <option value="0">Không hoạt động</option>
-                            </select>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn-save"><i class="fas fa-save"></i> Lưu</button>
-                            <a th:href="@{/chat-lieu}" class="btn-cancel">Quay lại</a>
-                        </div>
-                    </form>
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Danh sách Màu sắc</h3></div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width:60px;">ID</th>
+                            <th>Tên Màu</th>
+                            <th style="width:130px;">Trạng thái</th>
+                            <th style="width:200px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="ms : ${list}">
+                            <td th:text="${ms.id}"></td>
+                            <td th:text="${ms.tenMau}"></td>
+                            <td><span class="status-badge" th:classappend="${ms.trangThai == 1 ? 'active' : 'inactive'}" th:text="${ms.trangThai == 1 ? 'Hoạt động' : 'Không hoạt động'}"></span></td>
+                            <td>
+                                <div class="action-btns">
+                                    <a th:href="@{/mau-sac/edit/{id}(id=${ms.id})}" class="btn-detail"><i class="fas fa-edit"></i> Sửa</a>
+                                    <a th:href="@{/mau-sac/delete/{id}(id=${ms.id})}" class="btn-delete" onclick="return confirm('Bạn có chắc muốn xóa?')"><i class="fas fa-trash"></i> Xóa</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="empty-state" th:if="${#lists.isEmpty(list)}">
+                    <i class="fas fa-palette"></i>
+                    <p>Chưa có màu sắc nào</p>
                 </div>
             </div>
         </main>
