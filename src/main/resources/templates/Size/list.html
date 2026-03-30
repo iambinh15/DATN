@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thêm sản phẩm - CotiT Admin</title>
+    <title>Quản lý Size - CotiT Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -187,6 +187,7 @@
             padding: 30px;
         }
 
+        /* ===== HEADER ===== */
         .content-header {
             display: flex;
             justify-content: space-between;
@@ -199,77 +200,17 @@
             font-weight: 600;
         }
 
-        /* ===== FORM CARD ===== */
-        .form-card {
-            background: #fff;
-            border-radius: 12px;
-            overflow: hidden;
-            max-width: 700px;
-        }
-
-        .form-card-header {
-            padding: 20px 25px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .form-card-title {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .form-card-body {
-            padding: 25px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #666;
-            margin-bottom: 8px;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            border-color: #000;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .form-actions {
+        .header-actions {
             display: flex;
-            gap: 12px;
-            margin-top: 25px;
+            gap: 15px;
+            align-items: center;
         }
 
-        .btn-save {
+        .btn-primary-custom {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 12px 24px;
+            padding: 12px 20px;
             background: #000;
             color: #fff;
             border: none;
@@ -277,34 +218,134 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s;
-            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            transition: background 0.3s;
         }
 
-        .btn-save:hover {
+        .btn-primary-custom:hover {
             background: #333;
+            color: #fff;
         }
 
-        .btn-back {
+        /* ===== TABLE ===== */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .card-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: transparent;
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             color: #666;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .data-table td {
             font-size: 14px;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-detail,
+        .btn-delete {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             text-decoration: none;
             transition: all 0.2s;
         }
 
-        .btn-back:hover {
-            background: #f5f5f5;
-            color: #333;
-            border-color: #ccc;
+        .btn-detail {
+            background: #e2e3ff;
+            color: #1d1f91;
+        }
+
+        .btn-detail:hover {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-delete {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-delete:hover {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 50px;
+            margin-bottom: 16px;
+            color: #ddd;
+        }
+
+        .empty-state p {
+            font-size: 16px;
         }
 
         /* ===== RESPONSIVE ===== */
@@ -392,25 +433,25 @@
                 <div class="nav-section">
                     <li sec:authorize="hasRole('ADMIN')">
                         <p class="nav-section-title">Sản phẩm</p>
-                        <a th:href="@{/admin/san-pham}" class="nav-item active">
+                        <a th:href="@{/admin/san-pham}" class="nav-item">
                             <i class="fas fa-box"></i>
                             <span>Danh sách sản phẩm</span>
                         </a>
+                        <a th:href="@{/size}" class="nav-item">
+                            <i class="fas fa-ruler"></i>
+                            <span>Size</span>
+                        </a>
+                        <a th:href="@{/mau-sac}" class="nav-item">
+                            <i class="fas fa-palette"></i>
+                            <span>Màu sắc</span>
+                        </a>
+                    </li>
+                    <a th:href="@{/chat-lieu}" class="nav-item">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Chất liệu</span>
+                    </a>
                     </li>
                 </div>
-                <a th:href="@{/size}" class="nav-item">
-                    <i class="fas fa-ruler"></i>
-                    <span>Size</span>
-                </a>
-                <a th:href="@{/mau-sac}" class="nav-item">
-                    <i class="fas fa-palette"></i>
-                    <span>Màu sắc</span>
-                </a>
-                </li>
-                <a th:href="@{/chat-lieu}" class="nav-item">
-                    <i class="fas fa-layer-group"></i>
-                    <span>Chất liệu</span>
-                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -436,71 +477,57 @@
         <!-- Main Content -->
         <main class="main-content">
             <div class="content-header">
-                <h1 class="page-title">Thêm sản phẩm</h1>
+                <h1 class="page-title">Quản lý Size</h1>
+                <div class="header-actions">
+                    <a th:href="@{/size/add}" class="btn-primary-custom">
+                        <i class="fas fa-plus"></i>
+                        Thêm Size
+                    </a>
+                </div>
             </div>
 
-            <!-- Form Card -->
-            <div class="form-card">
-                <div class="form-card-header">
-                    <h3 class="form-card-title"><i class="fas fa-plus-circle"></i> Thông tin sản phẩm</h3>
+            <!-- Data Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Danh sách Size</h3>
                 </div>
-                <div class="form-card-body">
-                    <form th:action="@{/admin/san-pham/save}"
-                          th:object="${sanPham}"
-                          method="post"
-                          enctype="multipart/form-data">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width:60px;">ID</th>
+                            <th>Tên Size</th>
+                            <th style="width:130px;">Trạng thái</th>
+                            <th style="width:200px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="sz : ${list}">
+                            <td th:text="${sz.id}"></td>
+                            <td th:text="${sz.tenSize}"></td>
+                            <td>
+                                <span class="status-badge"
+                                      th:classappend="${sz.trangThai == 1 ? 'active' : 'inactive'}"
+                                      th:text="${sz.trangThai == 1 ? 'Hoạt động' : 'Không hoạt động'}"></span>
+                            </td>
+                            <td>
+                                <div class="action-btns">
+                                    <a th:href="@{/size/edit/{id}(id=${sz.id})}" class="btn-detail">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </a>
+                                    <a th:href="@{/size/delete/{id}(id=${sz.id})}" class="btn-delete"
+                                       onclick="return confirm('Bạn có chắc muốn xóa?')">
+                                        <i class="fas fa-trash"></i> Xóa
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 
-                        <!-- Ẩn ID để khi sửa không tạo bản ghi mới -->
-                        <input type="hidden" th:field="*{id}"/>
-
-                        <div class="form-group">
-                            <label>Mã sản phẩm *</label>
-                            <input type="text" th:field="*{maSanPham}" placeholder="Nhập mã sản phẩm" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Tên sản phẩm *</label>
-                            <input type="text" th:field="*{tenSanPham}" placeholder="Nhập tên sản phẩm" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Mô tả</label>
-                            <textarea th:field="*{moTa}" placeholder="Nhập mô tả sản phẩm"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Ảnh sản phẩm</label>
-                            <input type="file"
-                                   name="imageFile"
-                                   accept="image/*">
-                        </div>
-                        <div class="form-group">
-                            <label>Thương hiệu *</label>
-                            <select th:field="*{idThuongHieu}" required>
-                                <option value="">-- Chọn thương hiệu --</option>
-                                <option th:each="th : ${listThuongHieu}" th:value="${th.id}"
-                                    th:text="${th.tenThuongHieu}">
-                                </option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Trạng thái</label>
-                            <select th:field="*{trangThai}">
-                                <option value="1">Hoạt động</option>
-                                <option value="0">Ngừng hoạt động</option>
-                            </select>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="submit" class="btn-save">
-                                <i class="fas fa-save"></i> Lưu sản phẩm
-                            </button>
-                            <a th:href="@{/admin/san-pham}" class="btn-back">
-                                <i class="fas fa-arrow-left"></i> Quay lại
-                            </a>
-                        </div>
-                    </form>
+                <!-- Empty State -->
+                <div class="empty-state" th:if="${#lists.isEmpty(list)}">
+                    <i class="fas fa-ruler"></i>
+                    <p>Chưa có size nào</p>
                 </div>
             </div>
         </main>
