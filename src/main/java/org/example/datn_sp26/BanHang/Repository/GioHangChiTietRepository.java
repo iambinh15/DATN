@@ -2,6 +2,7 @@ package org.example.datn_sp26.BanHang.Repository;
 
 import org.example.datn_sp26.BanHang.Entity.GioHangChiTiet;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,4 +13,9 @@ public interface GioHangChiTietRepository extends JpaRepository<GioHangChiTiet, 
     Optional<GioHangChiTiet> findByIdGioHang_IdAndIdSanPhamChiTiet_Id(Integer idGioHang, Integer idSanPhamChiTiet);
     // Hàm dùng để lấy tất cả sản phẩm trong giỏ để hiển thị
     List<GioHangChiTiet> findByIdGioHang_Id(Integer idGioHang);
+
+    boolean existsByIdSanPhamChiTiet_Id(Integer idSanPhamChiTiet);
+
+    @Transactional
+    void deleteByIdSanPhamChiTiet_Id(Integer idSanPhamChiTiet);
 }
