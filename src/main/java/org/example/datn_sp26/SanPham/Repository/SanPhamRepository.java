@@ -3,8 +3,10 @@ package org.example.datn_sp26.SanPham.Repository;
 import org.example.datn_sp26.SanPham.Entity.SanPham;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SanPhamRepository extends JpaRepository<SanPham, Integer> {
@@ -27,4 +29,13 @@ public interface SanPhamRepository extends JpaRepository<SanPham, Integer> {
     List<SanPham> hienThiSanPhamTrenTrangChu();
 
     List<SanPham> findByTrangThai(Integer trangThai);
+
+    @Query("""
+            SELECT DISTINCT s
+            FROM SanPham s
+            LEFT JOIN FETCH s.hinhAnhs
+            LEFT JOIN FETCH s.idThuongHieu
+            WHERE s.id = :id
+            """)
+    Optional<SanPham> findByIdWithImages(@Param("id") Integer id);
 }

@@ -462,6 +462,9 @@
                           method="post"
                           enctype="multipart/form-data">
 
+                        <!-- Ẩn ID để khi sửa không tạo bản ghi mới -->
+                        <input type="hidden" th:field="*{id}" />
+
                         <!-- Giữ id sản phẩm -->
                         <input type="hidden" th:field="*{idSanPham.id}" />
 

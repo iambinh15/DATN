@@ -53,6 +53,12 @@ public interface SanPhamChiTietRepository extends JpaRepository<SanPhamChiTiet, 
             Integer mauSacId,
             Integer sizeId);
 
+    Optional<SanPhamChiTiet> findByIdSanPham_IdAndIdMauSac_IdAndIdSize_IdAndIdNot(
+            Integer sanPhamId,
+            Integer mauSacId,
+            Integer sizeId,
+            Integer idNot);
+
     @Query("""
                 SELECT COALESCE(SUM(s.soLuong),0)
                 FROM SanPhamChiTiet s

@@ -18,7 +18,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f5f5f5;
+            background-color: #f3f4f6;
             color: #111;
             line-height: 1.6;
         }
@@ -185,6 +185,7 @@
             flex: 1;
             margin-left: 260px;
             padding: 30px;
+            background: radial-gradient(circle at top left, #f9fafb 0, #f3f4f6 45%, #e5e7eb 100%);
         }
 
         /* Cards */
@@ -247,9 +248,14 @@
 
         /* Stats specific */
         .page-title {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 700;
-            margin-bottom: 25px;
+            margin-bottom: 4px;
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: #6b7280;
         }
 
         .filter-bar {
@@ -257,7 +263,8 @@
             gap: 12px;
             align-items: flex-end;
             flex-wrap: wrap;
-            margin-bottom: 15px;
+            margin-top: 18px;
+            margin-bottom: 8px;
         }
 
         .filter-bar label {
@@ -453,10 +460,15 @@
         <!-- Main Content -->
         <main class="main-content">
 
-            <h1 class="page-title"><i class="fas fa-chart-bar"></i> Thống kê doanh thu</h1>
+            <div class="content-header">
+                <div>
+                    <h1 class="page-title"><i class="fas fa-chart-bar"></i> Thống kê doanh thu</h1>
+                    <p class="page-subtitle">Tổng quan tình hình bán hàng và tồn kho trong hệ thống</p>
+                </div>
+            </div>
 
             <!-- BỘ LỌC -->
-            <div class="card">
+            <div class="card" style="margin-bottom: 20px;">
                 <div class="card-body">
                     <form method="get" th:action="@{/thong-ke}">
                         <div class="filter-bar">
@@ -487,11 +499,19 @@
             </div>
 
             <!-- TỔNG DOANH THU -->
-            <div class="card">
-                <div class="card-body" style="text-align: center; padding: 30px;">
-                    <p class="stat-label">Tổng doanh thu</p>
-                    <p class="revenue-big" th:text="${#numbers.formatDecimal(doanhThu,0,'COMMA',0,'POINT')} + ' đ'">
-                    </p>
+            <div class="card" style="margin-bottom: 20px;">
+                <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
+                    <div>
+                        <p class="stat-label">Tổng doanh thu</p>
+                        <p class="revenue-big" th:text="${#numbers.formatDecimal(doanhThu,0,'COMMA',0,'POINT')} + ' đ'">
+                        </p>
+                    </div>
+                    <div style="text-align:right;font-size:12px;color:#6b7280;">
+                        <p>Khoảng thời gian:</p>
+                        <p th:text="${#temporals.format(tuNgay, 'dd/MM/yyyy HH:mm')} + ' - ' + ${#temporals.format(denNgay, 'dd/MM/yyyy HH:mm')}"
+                           th:if="${tuNgay != null and denNgay != null}"></p>
+                        <p th:if="${tuNgay == null or denNgay == null}">Toàn bộ dữ liệu đã hoàn thành</p>
+                    </div>
                 </div>
             </div>
 
