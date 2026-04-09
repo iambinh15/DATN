@@ -103,6 +103,7 @@ public class SanPhamAdminChiTietController {
         Integer sizeId = spct.getIdSize().getId();
 
         boolean isEdit = spct.getId() != null;
+        Integer targetSpctId = spct.getId();
 
         if (isEdit) {
             // ===== SỬA: update đúng bản ghi theo ID (KHÔNG tạo biến thể mới) =====
@@ -138,9 +139,11 @@ public class SanPhamAdminChiTietController {
                 old.setDonGia(spct.getDonGia());
                 if (old.getTrangThai() == null) old.setTrangThai(1);
                 spctRepository.save(old);
+                targetSpctId = old.getId();
             } else {
                 if (spct.getTrangThai() == null) spct.setTrangThai(1);
                 spctRepository.save(spct);
+                targetSpctId = spct.getId();
             }
         }
 
@@ -209,7 +212,8 @@ public class SanPhamAdminChiTietController {
             }
         }
 
-        return "redirect:/admin/spct/list/" + sanPhamId;
+        // Reload đúng trang sửa để người dùng thấy ảnh vừa cập nhật ngay
+        return "redirect:/admin/spct/edit/" + targetSpctId;
     }
 
     // ===============================
@@ -232,7 +236,7 @@ public class SanPhamAdminChiTietController {
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
 
-        SanPhamChiTiet spct = spctRepository.findById(id).orElseThrow();
+        SanPhamChiTiet spct = spctRepository.findByIdWithSanPhamImages(id).orElseThrow();
 
         model.addAttribute("spct", spct);
         model.addAttribute("mauSacs", mauSacRepository.findAll());

@@ -22,8 +22,9 @@ public class MaGiamGiaService {
         // Lấy từ Repo những mã có trangThai = 1
         return maGiamGiaRepository.findByTrangThai(1).stream()
                 .filter(km -> km.getSoLuong() != null && km.getSoLuong() > 0) // Lọc mã còn lượt dùng
-                .filter(km -> (km.getNgayBatDau() == null || now.isAfter(km.getNgayBatDau()))) // Lọc mã đã đến ngày bắt đầu
-                .filter(km -> (km.getNgayKetThuc() == null || now.isBefore(km.getNgayKetThuc()))) // Lọc mã chưa hết hạn
+                // So sánh inclusive để không loại nhầm đúng thời điểm bắt đầu/kết thúc
+                .filter(km -> km.getNgayBatDau() == null || !now.isBefore(km.getNgayBatDau()))
+                .filter(km -> km.getNgayKetThuc() == null || !now.isAfter(km.getNgayKetThuc()))
                 .collect(Collectors.toList());
     }
 

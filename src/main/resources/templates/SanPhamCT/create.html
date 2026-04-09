@@ -515,6 +515,26 @@
                                    accept="image/*">
                         </div>
 
+                        <!-- CHỈ HIỂN THỊ KHI ĐANG SỬA: cho phép chọn ảnh muốn thay -->
+                        <div class="form-group" th:if="${spct.id != null}">
+                            <label>Ảnh hiện tại (bấm để chọn ảnh muốn sửa)</label>
+                            <input type="hidden" id="selectedImageId" name="selectedImageId" value="" />
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+                                <button type="button"
+                                        th:each="img,iter : ${spct.idSanPham.hinhAnhs}"
+                                        th:attr="data-img-id=${img.id}"
+                                        onclick="selectSpctImage(this)"
+                                        style="padding:0;border:2px solid #e0e0e0;border-radius:12px;background:#fff;cursor:pointer;">
+                                    <img th:src="${img.hinhAnh + '?v=' + cacheBust}"
+                                         alt="Ảnh sản phẩm"
+                                         style="width:90px;height:90px;object-fit:cover;border-radius:10px;display:block;" />
+                                </button>
+                            </div>
+                            <div style="margin-top:8px;color:#666;font-size:13px;">
+                                Ảnh được chọn sẽ có viền đen. Nếu không chọn, hệ thống sẽ dùng ảnh đầu tiên.
+                            </div>
+                        </div>
+
                         <div class="form-actions">
                             <button type="submit" class="btn-save">
                                 <i class="fas fa-save"></i> Lưu biến thể
@@ -528,6 +548,27 @@
             </div>
         </main>
     </div>
+
+    <script>
+        function selectSpctImage(btn) {
+            const container = btn.parentElement;
+            const buttons = container.querySelectorAll('button[data-img-id]');
+            buttons.forEach(b => b.style.borderColor = '#e0e0e0');
+
+            btn.style.borderColor = '#000';
+            const id = btn.getAttribute('data-img-id');
+            const input = document.getElementById('selectedImageId');
+            if (input) input.value = id;
+        }
+
+        // Auto chọn ảnh đầu tiên nếu chưa chọn
+        (function initSelectedImage() {
+            const input = document.getElementById('selectedImageId');
+            if (!input || input.value) return;
+            const first = document.querySelector('button[data-img-id]');
+            if (first) selectSpctImage(first);
+        })();
+    </script>
 
 </body>
 
