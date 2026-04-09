@@ -227,7 +227,7 @@ public class GHNController {
 
         try {
             // GỌI SERVICE XỬ LÝ (Service này sẽ tự tách tiền hàng và trừ voucher tiền mặt/%)
-            HoaDon hoaDon = hoaDonService.taoHoaDonCODDayDu(khachHang, tongThanhToan, diaChi, maVoucher, phiShip);
+            HoaDon hoaDon = hoaDonService.taoHoaDonCODDayDu(khachHang, tongThanhToan, diaChi, maVoucher, phiShip, selectedIds);
 
             // Clear session
             session.removeAttribute("MA_GIAM_GIA_DA_CHON");

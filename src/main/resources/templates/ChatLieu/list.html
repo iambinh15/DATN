@@ -10,18 +10,32 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background-color: #f5f5f5; color: #111; line-height: 1.6; }
         .admin-layout { display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background: #000; color: #fff; position: fixed; height: 100vh; overflow-y: auto; z-index: 1000; }
+        .sidebar {
+            width: 260px;
+            background: #000;
+            color: #fff;
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* QUAN TRỌNG */
+        }
         .sidebar-header { padding: 25px 20px; border-bottom: 1px solid #222; }
         .sidebar-logo { font-size: 24px; font-weight: 700; letter-spacing: 2px; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 10px; }
         .sidebar-logo span { font-size: 12px; font-weight: 400; background: #333; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; }
-        .sidebar-nav { padding: 20px 0; }
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;   /* CHỈ scroll ở đây */
+        }
         .nav-section { margin-bottom: 20px; }
         .nav-section-title { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #666; padding: 0 20px; margin-bottom: 10px; }
         .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #999; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; }
         .nav-item:hover { background: #111; color: #fff; }
         .nav-item.active { background: #111; color: #fff; border-left-color: #fff; }
         .nav-item i { width: 20px; text-align: center; }
-        .sidebar-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; border-top: 1px solid #222; background: #000; }
+        .sidebar-footer {
+            position: relative; /* hoặc bỏ hẳn position */
+        }
         .user-info { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
         .user-avatar { width: 40px; height: 40px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .user-avatar i { font-size: 18px; color: #999; }

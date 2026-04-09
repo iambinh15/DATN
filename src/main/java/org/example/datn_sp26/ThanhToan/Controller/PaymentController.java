@@ -47,12 +47,18 @@ public class PaymentController {
 
         BigDecimal phiShip = (phiShipObj != null) ? new BigDecimal(phiShipObj.toString()) : BigDecimal.ZERO;
 
-        // BƯỚC A: Tính tiền hàng thực tế từ DB
+        // Lấy danh sách ID sản phẩm được chọn từ session
+        List<Integer> selectedIds = (List<Integer>) session.getAttribute("SELECTED_IDS");
+
+        // BƯỚC A: Tính tiền hàng thực tế từ DB (chỉ các sản phẩm được chọn)
         var listGioHang = gioHangService.layGioHangCuaKhach(kh.getId());
         BigDecimal tienHang = BigDecimal.ZERO;
         for (var item : listGioHang) {
-            BigDecimal gia = item.getIdSanPhamChiTiet().getDonGia();
-            tienHang = tienHang.add(gia.multiply(BigDecimal.valueOf(item.getSoLuong())));
+            // Chỉ tính sản phẩm đã được chọn
+            if (selectedIds == null || selectedIds.isEmpty() || selectedIds.contains(item.getId())) {
+                BigDecimal gia = item.getIdSanPhamChiTiet().getDonGia();
+                tienHang = tienHang.add(gia.multiply(BigDecimal.valueOf(item.getSoLuong())));
+            }
         }
 
         // BƯỚC B: Tính số tiền giảm giá từ Voucher
@@ -129,13 +135,17 @@ public class PaymentController {
                 String vnpAmountStr = request.getParameter("vnp_Amount");
                 BigDecimal tongThanhToanThucTe = new BigDecimal(vnpAmountStr).divide(new BigDecimal(100));
 
-                // LƯU HÓA ĐƠN VỚI SỐ TIỀN THỰC TẾ ĐÃ TRẢ
-                hoaDonService.taoHoaDonVNPay(kh, tongThanhToanThucTe, diaChi, phiShip, maVoucher);
+                // Lấy danh sách ID sản phẩm được chọn từ session
+                List<Integer> selectedIds = (List<Integer>) session.getAttribute("SELECTED_IDS");
+
+                // LƯU HÓA ĐƠN VỚI SỐ TIỀN THỰC TẾ ĐÃ TRẢ (truyền selectedIds)
+                hoaDonService.taoHoaDonVNPay(kh, tongThanhToanThucTe, diaChi, phiShip, maVoucher, selectedIds);
 
                 // Dọn dẹp session sau khi xong việc
                 session.removeAttribute("MA_GIAM_GIA_DA_CHON");
                 session.removeAttribute("DIA_CHI_TAM");
                 session.removeAttribute("PHI_SHIP");
+                session.removeAttribute("SELECTED_IDS");
 
                 return "payment-success"; // Đã bỏ 'khach-hang/' để khớp với ảnh cấu hình file của bạn
             } catch (Exception e) {
