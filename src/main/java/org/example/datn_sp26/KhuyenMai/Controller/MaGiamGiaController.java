@@ -29,27 +29,24 @@ public class MaGiamGiaController {
     @PostMapping("/save")
     public String save(@ModelAttribute("km") MaGiamGia km, RedirectAttributes ra) {
 
-        // 1. Kiểm tra NULL hoặc RỖNG cho tất cả các trường bắt buộc
+        // --- GIỮ NGUYÊN TOÀN BỘ LOGIC KIỂM TRA (VALIDATION) CỦA BẠN ---
         if (km.getMa() == null || km.getMa().trim().isEmpty() ||
                 km.getTenGiamGia() == null || km.getTenGiamGia().trim().isEmpty() ||
                 km.getGiaTri() == null ||
                 km.getNgayBatDau() == null ||
                 km.getNgayKetThuc() == null ||
                 km.getSoLuong() == null ||
-                km.getGiamToiThieu() == null ||
-                km.getTrangThai() == null) {
+                km.getGiamToiThieu() == null) {
 
             ra.addFlashAttribute("error", "Lỗi: Không được để trống bất kỳ thông tin nào!");
             return "redirect:/admin/khuyen-mai";
         }
 
-        // 2. Kiểm tra logic giá trị âm
         if (km.getGiaTri() < 0 || km.getSoLuong() < 0 || km.getGiamToiThieu() < 0) {
             ra.addFlashAttribute("error", "Lỗi: Các giá trị số không được âm!");
             return "redirect:/admin/khuyen-mai";
         }
 
-        // 3. Kiểm tra logic % (không quá 100)
         if (km.getLoaiGiam() != null && km.getLoaiGiam() == 1) {
             if (km.getGiaTri() > 100) {
                 ra.addFlashAttribute("error", "Lỗi: Phần trăm giảm giá tối đa là 100%!");
@@ -57,15 +54,15 @@ public class MaGiamGiaController {
             }
         }
 
-        // 4. Kiểm tra logic ngày tháng (Ngày kết thúc phải sau ngày bắt đầu)
         if (km.getNgayKetThuc().isBefore(km.getNgayBatDau())) {
             ra.addFlashAttribute("error", "Lỗi: Ngày kết thúc phải sau ngày bắt đầu!");
             return "redirect:/admin/khuyen-mai";
         }
 
-        // 5. Mọi thứ hợp lệ mới thực hiện lưu
+        // --- THỰC HIỆN LƯU THÔNG QUA SERVICE ĐỂ TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI ---
         try {
-            repo.save(km);
+            // Thay đổi repo.save(km) thành maGiamGiaService.saveVoucher(km)
+            maGiamGiaService.saveVoucher(km);
             ra.addFlashAttribute("message", "Lưu thông tin khuyến mãi thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Lỗi hệ thống khi lưu dữ liệu!");

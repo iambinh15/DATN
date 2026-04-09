@@ -31,7 +31,7 @@ public class ChatController {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @GetMapping("/")
+    @GetMapping("/uu")
     public String showcv() {
         return "fragments/cv";
     }

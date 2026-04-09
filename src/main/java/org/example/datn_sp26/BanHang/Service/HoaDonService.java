@@ -48,6 +48,7 @@ public class HoaDonService {
     private static final int ID_CHO_THANH_TOAN = 11;
     private static final int ID_DA_THANH_TOAN = 14;
     private static final int ID_GIAO_THAT_BAI = 15;
+    private static final int ID_DA_XAC_NHAN = 13;
     // Thông tin ngân hàng cho QR Code chuyển khoản tại quầy
     private static final String BANK_ID = "MB";
     private static final String BANK_ACCOUNT = "0946073693";
@@ -123,11 +124,17 @@ public class HoaDonService {
     // Tương thích PaymentController cũ (4 tham số)
     @Transactional
     public HoaDon taoHoaDonVNPay(KhachHang khachHang, BigDecimal tongThanhToan, String diaChi, BigDecimal phiShip) {
-        return taoHoaDonVNPay(khachHang, tongThanhToan, diaChi, phiShip, null);
+        return taoHoaDonVNPay(khachHang, tongThanhToan, diaChi, phiShip, null, null);
     }
     @Transactional
     public HoaDon taoHoaDonVNPay(KhachHang khachHang, BigDecimal tongThanhToan, String diaChi, BigDecimal phiShip,
                                  String maVoucher) {
+        return taoHoaDonVNPay(khachHang, tongThanhToan, diaChi, phiShip, maVoucher, null);
+    }
+
+    @Transactional
+    public HoaDon taoHoaDonVNPay(KhachHang khachHang, BigDecimal tongThanhToan, String diaChi, BigDecimal phiShip,
+                                 String maVoucher, List<Integer> selectedIds) {
 
         HoaDon hoaDon = new HoaDon();
         // Tạo mã hóa đơn duy nhất kèm theo timestamp của VNPay
@@ -157,7 +164,7 @@ public class HoaDonService {
         hoaDonRepository.save(hoaDon);
 
         // 5️⃣ Lưu chi tiết đơn & trừ kho ngay (vì thanh toán online thành công mới vào đây)
-        luuChiTietVaTruKho(hoaDon, khachHang.getId(), true);
+        luuChiTietVaTruKho(hoaDon, khachHang.getId(), selectedIds, true);
 
         return hoaDon;
     }
@@ -173,6 +180,16 @@ public class HoaDonService {
                                     String diaChi,
                                     String maVoucher,
                                     BigDecimal phiShip) {
+        return taoHoaDonCODDayDu(khachHang, tongThanhToan, diaChi, maVoucher, phiShip, null);
+    }
+
+    @Transactional
+    public HoaDon taoHoaDonCODDayDu(KhachHang khachHang,
+                                    BigDecimal tongThanhToan,
+                                    String diaChi,
+                                    String maVoucher,
+                                    BigDecimal phiShip,
+                                    List<Integer> selectedIds) {
 
         HoaDon hoaDon = new HoaDon();
         hoaDon.setMaHoaDon("HD_COD" + System.currentTimeMillis());
@@ -200,13 +217,22 @@ public class HoaDonService {
 
         // 6. Lưu chi tiết hóa đơn (HoaDonChiTiet) và Xử lý giỏ hàng
         // Đơn COD: false (không trừ kho ngay, sẽ trừ khi chuyển sang trạng thái "Xác nhận")
-        luuChiTietVaTruKho(savedHoaDon, khachHang.getId(), false);
+        luuChiTietVaTruKho(hoaDon, khachHang.getId(), selectedIds, false);
 
         return savedHoaDon;
     }
     // Logic dùng chung để lưu chi tiết và xử lý giỏ hàng
-    private void luuChiTietVaTruKho(HoaDon hoaDon, Integer idKhachHang, boolean laThanhToanOnline) {
-        var listGioHang = gioHangService.layGioHangCuaKhach(idKhachHang);
+    // selectedIds: danh sách ID giỏ hàng được chọn, null = lấy tất cả
+    private void luuChiTietVaTruKho(HoaDon hoaDon,
+                                    Integer idKhachHang,
+                                    List<Integer> selectedIds,
+                                    boolean laThanhToanOnline) {
+
+        var listGioHang = gioHangService.layGioHangCuaKhach(idKhachHang)
+                .stream()
+                .filter(item -> selectedIds.contains(item.getId()))
+                .toList();
+
         for (var item : listGioHang) {
             HoaDonChiTiet hdct = new HoaDonChiTiet();
             hdct.setIdHoaDon(hoaDon);
@@ -215,14 +241,15 @@ public class HoaDonService {
             hdct.setDonGia(item.getIdSanPhamChiTiet().getDonGia());
             hoaDonChiTietRepository.save(hdct);
 
-            // Thanh toán online trừ kho ngay, COD trừ khi xác nhận (theo logic cũ của bạn)
             if (laThanhToanOnline) {
                 SanPhamChiTiet spct = item.getIdSanPhamChiTiet();
                 spct.setSoLuong(spct.getSoLuong() - item.getSoLuong());
                 sanPhamChiTietRepository.save(spct);
             }
+
+            // Xóa từng item đã mua
+            gioHangService.xoaSanPhamKhoiGio(item.getId());
         }
-        gioHangService.xoaTatCaGioHang(idKhachHang);
     }
 
     // ============================================================
@@ -289,9 +316,12 @@ public class HoaDonService {
         List<HoaDonChiTiet> listChiTiet = hoaDonChiTietRepository.findByHoaDonId(hoaDonId);
         for (HoaDonChiTiet chiTiet : listChiTiet) {
             SanPhamChiTiet spct = chiTiet.getIdSanPhamChiTiet();
+
+            // ✅ CHỐT CHẶN: Kiểm tra ngay lập tức trước khi trừ
             if (spct.getSoLuong() < chiTiet.getSoLuong()) {
-                throw new RuntimeException("Sản phẩm ID " + spct.getId() + " không đủ tồn kho!");
+                throw new RuntimeException("Sản phẩm đã hết hàng hoặc không đủ số lượng để xác nhận!");
             }
+
             spct.setSoLuong(spct.getSoLuong() - chiTiet.getSoLuong());
             sanPhamChiTietRepository.save(spct);
         }
@@ -300,20 +330,17 @@ public class HoaDonService {
     // 1. Hàm xác nhận đơn hàng (Dùng cho ID 13)
     @Transactional
     public void xacnhanDonHang(Integer idHoaDon) {
-        HoaDon hd = hoaDonRepository.findById(idHoaDon)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
+        HoaDon hd = hoaDonRepository.findById(idHoaDon).orElseThrow(() -> new RuntimeException("Không tìm thấy hđ"));
 
-        // Chỉ trừ kho cho đơn Tiền mặt (COD)
-        if ("Tiền mặt".equalsIgnoreCase(hd.getIdLoaiThanhToan().getTenLoai())) {
-            for (HoaDonChiTiet ct : hd.getHoaDonChiTiets()) {
-                SanPhamChiTiet spct = ct.getIdSanPhamChiTiet();
-                if (spct != null) {
-                    spct.setSoLuong(spct.getSoLuong() - ct.getSoLuong());
-                    sanPhamChiTietRepository.save(spct);
-                }
-            }
+        // Tránh người khác đã xác nhận trước đó
+        if (hd.getIdTrangThaiHoaDon().getId() != ID_CHO_XAC_NHAN) {
+            throw new RuntimeException("Đơn hàng này không còn ở trạng thái chờ xác nhận!");
         }
-        hd.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(13).get());
+
+        if ("Tiền mặt".equalsIgnoreCase(hd.getIdLoaiThanhToan().getTenLoai())) {
+            truSoLuongTonKho(idHoaDon);
+        }
+        hd.setIdTrangThaiHoaDon(trangThaiHoaDonRepository.findById(ID_DA_XAC_NHAN).get());
         hoaDonRepository.save(hd);
     }
 
@@ -618,7 +645,7 @@ public class HoaDonService {
         List<HoaDon> danhSach = hoaDonRepository
                 .findByIdTrangThaiHoaDon_IdAndNgayTaoBefore(
                         ID_CHO_THANH_TOAN,
-                        gioiHan);   
+                        gioiHan);
 
         for (HoaDon hd : danhSach) {
             List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByHoaDonId(hd.getId());

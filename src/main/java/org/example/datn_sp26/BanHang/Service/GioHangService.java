@@ -182,6 +182,14 @@ public class GioHangService {
     }
 
     /**
+     * Xóa 1 sản phẩm khỏi giỏ theo ID giỏ hàng chi tiết
+     */
+    @Transactional
+    public void xoaGioHangById(Integer idGioHangChiTiet) {
+        ghctRepo.deleteById(idGioHangChiTiet);
+    }
+
+    /**
      * Xóa sạch giỏ hàng
      */
     @Transactional

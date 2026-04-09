@@ -8,56 +8,348 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: #f5f5f5; color: #111; line-height: 1.6; }
-        .admin-layout { display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background: #000; color: #fff; position: fixed; height: 100vh; overflow-y: auto; z-index: 1000; }
-        .sidebar-header { padding: 25px 20px; border-bottom: 1px solid #222; }
-        .sidebar-logo { font-size: 24px; font-weight: 700; letter-spacing: 2px; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-        .sidebar-logo span { font-size: 12px; font-weight: 400; background: #333; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; }
-        .sidebar-nav { padding: 20px 0; }
-        .nav-section { margin-bottom: 20px; }
-        .nav-section-title { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #666; padding: 0 20px; margin-bottom: 10px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: #999; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; }
-        .nav-item:hover { background: #111; color: #fff; }
-        .nav-item.active { background: #111; color: #fff; border-left-color: #fff; }
-        .nav-item i { width: 20px; text-align: center; }
-        .sidebar-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; border-top: 1px solid #222; background: #000; }
-        .user-info { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
-        .user-avatar { width: 40px; height: 40px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .user-details { flex: 1; }
-        .user-name { font-size: 14px; font-weight: 600; color: #fff; }
-        .user-role { font-size: 12px; color: #666; }
-        .btn-logout { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: transparent; border: 1px solid #333; color: #999; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
-        .btn-logout:hover { background: #e74c3c; border-color: #e74c3c; color: #fff; }
-        .main-content { flex: 1; margin-left: 260px; padding: 30px; }
-        .content-header { margin-bottom: 30px; }
-        .page-title { font-size: 28px; font-weight: 600; }
-        .form-card { background: #fff; border-radius: 12px; padding: 25px; margin-bottom: 25px; border: 1px solid #eee; }
-        .form-card-header { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-        .form-card-title { font-size: 16px; font-weight: 600; }
-        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
-        .form-group.span-2 { grid-column: span 2; }
-        .form-group label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #666; }
-        .form-group input, .form-group select { padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; transition: all 0.2s; }
-        .form-group input:focus { border-color: #000; }
-        .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; }
-        .btn-reset { padding: 10px 20px; background: transparent; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; }
-        .btn-save { padding: 10px 20px; background: #000; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
-        .card { background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #eee; }
-        .card-header { padding: 20px 25px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th, .data-table td { padding: 15px 16px; text-align: left; border-bottom: 1px solid #eee; }
-        .data-table th { font-size: 12px; text-transform: uppercase; color: #666; background: #fafafa; }
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
-        .status-badge.active { background: #d4edda; color: #155724; }
-        .status-badge.inactive { background: #f8d7da; color: #721c24; }
-        .money { font-weight: 700; color: #dc2626; white-space: nowrap; }
-        .code-badge { padding: 4px 10px; background: #e2e3e5; border-radius: 6px; font-weight: 600; font-size: 12px; }
-        .action-btns { display: flex; gap: 8px; }
-        .btn-edit { background: #fff3cd; color: #856404; padding: 6px 10px; border-radius: 6px; text-decoration: none; }
-        .btn-delete { background: #f8d7da; color: #721c24; padding: 6px 10px; border-radius: 6px; text-decoration: none; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            color: #111;
+            line-height: 1.6;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #000;
+            color: #fff;
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* QUAN TRỌNG */
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid #222;
+        }
+
+        .sidebar-logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-logo span {
+            font-size: 12px;
+            font-weight: 400;
+            background: #333;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;   /* CHỈ scroll ở đây */
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #666;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #999;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: #111;
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: #111;
+            color: #fff;
+            border-left-color: #fff;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            position: relative; /* hoặc bỏ hẳn position */
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid #333;
+            color: #999;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #e74c3c;
+            border-color: #e74c3c;
+            color: #fff;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 30px;
+        }
+
+        .content-header {
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .form-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #eee;
+        }
+
+        .form-card-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.span-2 {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #666;
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: #000;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-reset {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            padding: 10px 20px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #eee;
+        }
+
+        .card-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th, .data-table td {
+            padding: 15px 16px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #666;
+            background: #fafafa;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .money {
+            font-weight: 700;
+            color: #dc2626;
+            white-space: nowrap;
+        }
+
+        .code-badge {
+            padding: 4px 10px;
+            background: #e2e3e5;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-edit {
+            background: #fff3cd;
+            color: #856404;
+            padding: 6px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+
+        .btn-delete {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 6px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+        }
     </style>
 </head>
 
@@ -155,21 +447,23 @@
     </aside>
 
 
-
     <main class="main-content">
         <div class="content-header">
             <h1 class="page-title">Quản lý Voucher</h1>
         </div>
 
-        <div th:if="${message}" style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <div th:if="${message}"
+             style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
             <i class="fas fa-check-circle"></i> <span th:text="${message}"></span>
         </div>
-        <div th:if="${error}" style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <div th:if="${error}"
+             style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
             <i class="fas fa-exclamation-triangle"></i> <span th:text="${error}"></span>
         </div>
 
         <div class="form-card">
-            <div class="form-card-header"><h3 class="form-card-title">Thiết lập khuyến mãi (Yêu cầu nhập đủ *)</h3></div>
+            <div class="form-card-header"><h3 class="form-card-title">Thiết lập khuyến mãi (Yêu cầu nhập đủ *)</h3>
+            </div>
 
             <form id="voucherForm" th:action="@{/admin/khuyen-mai/save}" th:object="${km}" method="post">
                 <input type="hidden" th:field="*{id}">
@@ -257,8 +551,10 @@
                         </td>
                         <td>
                             <div style="font-size: 12px; color: #555;">
-                                <i class="far fa-calendar-check"></i> <span th:text="${#temporals.format(item.ngayBatDau, 'dd/MM/yyyy HH:mm')}"></span><br>
-                                <i class="far fa-calendar-times"></i> <span th:text="${#temporals.format(item.ngayKetThuc, 'dd/MM/yyyy HH:mm')}"></span>
+                                <i class="far fa-calendar-check"></i> <span
+                                    th:text="${#temporals.format(item.ngayBatDau, 'dd/MM/yyyy HH:mm')}"></span><br>
+                                <i class="far fa-calendar-times"></i> <span
+                                    th:text="${#temporals.format(item.ngayKetThuc, 'dd/MM/yyyy HH:mm')}"></span>
                             </div>
                         </td>
                         <td th:text="${item.soLuong}"></td>
@@ -268,8 +564,10 @@
                         </td>
                         <td>
                             <div class="action-btns">
-                                <a th:href="@{'/admin/khuyen-mai/edit/' + ${item.id}}" class="btn-edit"><i class="fas fa-edit"></i></a>
-                                <a th:href="@{'/admin/khuyen-mai/delete/' + ${item.id}}" class="btn-delete" onclick="return confirm('Xác nhận xóa?')"><i class="fas fa-trash"></i></a>
+                                <a th:href="@{'/admin/khuyen-mai/edit/' + ${item.id}}" class="btn-edit"><i
+                                        class="fas fa-edit"></i></a>
+                                <a th:href="@{'/admin/khuyen-mai/delete/' + ${item.id}}" class="btn-delete"
+                                   onclick="return confirm('Xác nhận xóa?')"><i class="fas fa-trash"></i></a>
                             </div>
                         </td>
                     </tr>
@@ -285,17 +583,17 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('voucherForm');
         const loaiGiam = document.getElementById('loaiGiam');
         const giaTri = document.getElementById('giaTri');
 
         // CHẶN NHẬP DẤU PHẨY/CHẤM: Chỉ cho phép số
-        giaTri.addEventListener('input', function() {
+        giaTri.addEventListener('input', function () {
             this.value = this.value.replace(/[^0-9]/g, '');
         });
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function (e) {
             let isValid = true;
             let msg = "";
 

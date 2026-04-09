@@ -34,8 +34,9 @@
             color: #fff;
             position: fixed;
             height: 100vh;
-            overflow-y: auto;
-            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* QUAN TRỌNG */
         }
 
         .sidebar-header {
@@ -64,9 +65,9 @@
         }
 
         .sidebar-nav {
-            padding: 20px 0;
+            flex: 1;
+            overflow-y: auto;   /* CHỈ scroll ở đây */
         }
-
         .nav-section {
             margin-bottom: 20px;
         }
@@ -111,13 +112,7 @@
         }
 
         .sidebar-footer {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 20px;
-            border-top: 1px solid #222;
-            background: #000;
+            position: relative; /* hoặc bỏ hẳn position */
         }
 
         .user-info {
