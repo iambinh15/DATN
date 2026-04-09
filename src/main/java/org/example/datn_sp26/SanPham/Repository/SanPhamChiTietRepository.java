@@ -24,6 +24,18 @@ public interface SanPhamChiTietRepository extends JpaRepository<SanPhamChiTiet, 
             """)
     List<SanPhamChiTiet> findAllWithDetailsBySanPhamId(@Param("id") Integer id);
 
+    @Query("""
+            SELECT spct
+            FROM SanPhamChiTiet spct
+            JOIN FETCH spct.idSanPham sp
+            LEFT JOIN FETCH sp.hinhAnhs
+            LEFT JOIN FETCH spct.idMauSac
+            LEFT JOIN FETCH spct.idSize
+            LEFT JOIN FETCH spct.idChatLieu
+            WHERE spct.id = :id
+            """)
+    Optional<SanPhamChiTiet> findByIdWithSanPhamImages(@Param("id") Integer id);
+
     // Tìm biến thể đầu tiên của sản phẩm mà còn hàng (soLuong > 0)
     Optional<SanPhamChiTiet> findFirstByIdSanPham_IdAndTrangThaiAndSoLuongGreaterThan(
             Integer idSanPham,

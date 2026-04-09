@@ -748,7 +748,7 @@
           <div class="item-image">
             <!-- Ảnh đại diện sản phẩm trong giỏ -->
             <img th:each="ha, iter : ${item.idSanPhamChiTiet.idSanPham.hinhAnhs}" th:if="${iter.index == 0}"
-              th:src="${ha.hinhAnh}" alt="Ảnh sản phẩm"
+              th:src="|${ha.hinhAnh}?v=${#dates.createNow().time}|" alt="Ảnh sản phẩm"
               style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
 
             <!-- Placeholder nếu không có ảnh -->
@@ -756,8 +756,16 @@
               th:if="${item.idSanPhamChiTiet.idSanPham.hinhAnhs == null or item.idSanPhamChiTiet.idSanPham.hinhAnhs.isEmpty()}"></i>
           </div>
           <div class="item-details">
-            <h4>Sản phẩm #<span th:text="${item.idSanPhamChiTiet.id}"></span></h4>
-            <p>Mã: SP<span th:text="${item.idSanPhamChiTiet.id}"></span></p>
+            <h4 th:text="${item.idSanPhamChiTiet != null and item.idSanPhamChiTiet.idSanPham != null ? item.idSanPhamChiTiet.idSanPham.tenSanPham : 'Sản phẩm'}">
+              Sản phẩm
+            </h4>
+            <p>
+              <span th:text="${item.idSanPhamChiTiet != null and item.idSanPhamChiTiet.idMauSac != null ? item.idSanPhamChiTiet.idMauSac.tenMau : '--'}"></span>
+              /
+              <span th:text="${item.idSanPhamChiTiet != null and item.idSanPhamChiTiet.idSize != null ? item.idSanPhamChiTiet.idSize.tenSize : '--'}"></span>
+              /
+              <span th:text="${item.idSanPhamChiTiet != null and item.idSanPhamChiTiet.idChatLieu != null ? item.idSanPhamChiTiet.idChatLieu.tenChatLieu : '--'}"></span>
+            </p>
           </div>
         </div>
 

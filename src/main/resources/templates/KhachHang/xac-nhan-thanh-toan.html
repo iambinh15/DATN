@@ -112,7 +112,11 @@
 
     <p style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Mã giảm giá khả dụng:</p>
     <div class="voucher-scroll-container">
-      <div th:each="km : ${dsMaGiamGia}" th:id="'v-' + ${km.ma}" class="voucher-item"
+      <div th:if="${dsMaGiamGia == null or dsMaGiamGia.empty}"
+           style="padding: 10px; color: #777; font-size: 13px;">
+        Hiện chưa có mã giảm giá khả dụng.
+      </div>
+      <div th:each="km : ${dsMaGiamGia}" th:id="|v-${km.ma}|" class="voucher-item"
            th:classappend="${tongTienHang < km.giamToiThieu} ? 'disabled' : ''"
            th:attr="onclick=|apDungVoucher('${km.ma}', ${km.loaiGiam}, ${km.giaTri}, ${km.giamToiDa})|">
         <div style="flex: 1;">

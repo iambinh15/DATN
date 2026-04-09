@@ -156,7 +156,7 @@ public class GioHangService {
     public List<GioHangChiTiet> layGioHangCuaKhach(Integer idKhachHang) {
         Optional<GioHang> gioHang = gioHangRepo.findByIdKhachHang_Id(idKhachHang);
         if (gioHang.isPresent()) {
-            return ghctRepo.findByIdGioHang_Id(gioHang.get().getId());
+            return ghctRepo.findByIdGioHang_IdWithDetails(gioHang.get().getId());
         }
         return Collections.emptyList();
     }
