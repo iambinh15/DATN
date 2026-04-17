@@ -593,6 +593,7 @@
                         <span>Chất liệu</span>
                     </a>
                 </div>
+            </nav>
                 <!-- ... Các phần menu khác giữ nguyên ... -->
                 <div class="sidebar-footer">
                     <div class="user-info">
@@ -609,7 +610,7 @@
                         </button>
                     </form>
                 </div>
-            </nav>
+
         </aside>
 
         <!-- Main Content -->
@@ -855,9 +856,9 @@
                                 <div class="summary-row">
                                     <span>Tổng tiền hàng:</span>
                                     <span id="tongTienHangDisplay"
-                                        th:text="${#numbers.formatDecimal(selectedHoaDon.tongThanhToan, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                        th:text="${#numbers.formatDecimal(tongTienHangGoc, 0, 'COMMA', 0, 'POINT')}">0</span>
                                     <input type="hidden" id="tongTienHangRaw"
-                                        th:value="${selectedHoaDon.tongThanhToan}">
+                                        th:value="${tongTienHangGoc}">
                                 </div>
 
                                 <div class="summary-row" style="color: #27ae60;">
@@ -868,8 +869,8 @@
                                 <div class="summary-row summary-total">
                                     <span>Khách phải trả:</span>
                                     <span id="khachCanTraDisplay"
-                                        th:text="${#numbers.formatDecimal(selectedHoaDon.tongThanhToan, 0, 'COMMA', 0, 'POINT')}">0</span>
-                                    <input type="hidden" id="khachCanTraRaw" th:value="${selectedHoaDon.tongThanhToan}">
+                                        th:text="${#numbers.formatDecimal(tongTienHangGoc, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                    <input type="hidden" id="khachCanTraRaw" th:value="${tongTienHangGoc}">
                                 </div>
 
                                 <hr style="border: 0; border-top: 1px dashed #ddd; margin: 20px 0;">

@@ -75,7 +75,17 @@ public class BanHangController {
             HoaDon hoaDon = hoaDonRepository.findById(idHoaDon).orElse(null);
             if (hoaDon != null) {
                 model.addAttribute("selectedHoaDon", hoaDon);
-                model.addAttribute("cartItems", hoaDonService.layChiTietHoaDon(idHoaDon));
+                List<HoaDonChiTiet> cartItems = hoaDonService.layChiTietHoaDon(idHoaDon);
+                model.addAttribute("cartItems", cartItems);
+
+                // Tính tổng tiền hàng GỐC (chưa giảm giá) từ chi tiết hóa đơn
+                // Để JS luôn tính giảm giá trên tổng gốc, tránh giảm 2 lần
+                BigDecimal tongTienHangGoc = BigDecimal.ZERO;
+                for (HoaDonChiTiet ct : cartItems) {
+                    tongTienHangGoc = tongTienHangGoc.add(
+                            ct.getDonGia().multiply(BigDecimal.valueOf(ct.getSoLuong())));
+                }
+                model.addAttribute("tongTienHangGoc", tongTienHangGoc);
             }
         }
 
@@ -207,11 +217,11 @@ public class BanHangController {
             @RequestParam(value = "voucherId", required = false) Integer voucherId) {
         Map<String, Object> response = new HashMap<>();
         try {
-            String qrUrl = hoaDonService.taoQRUrl(hoaDonId, voucherId);
+            Map<String, Object> qrResult = hoaDonService.taoQRUrl(hoaDonId, voucherId);
             HoaDon hoaDon = hoaDonRepository.findById(hoaDonId).orElse(null);
             response.put("success", true);
-            response.put("qrUrl", qrUrl);
-            response.put("tongTien", hoaDon != null ? hoaDon.getTongThanhToan() : 0);
+            response.put("qrUrl", qrResult.get("qrUrl"));
+            response.put("tongTien", qrResult.get("tongTien"));
             response.put("maHoaDon", hoaDon != null ? hoaDon.getMaHoaDon() : "");
         } catch (Exception e) {
             response.put("success", false);
