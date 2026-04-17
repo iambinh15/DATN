@@ -583,14 +583,17 @@ public class HoaDonService {
     }
 
 
-    public String taoQRUrl(Integer hoaDonId, Integer voucherId) {
+
+    public Map<String, Object> taoQRUrl(Integer hoaDonId, Integer voucherId) {
         HoaDon hoaDon = hoaDonRepository.findById(hoaDonId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
 
-        // Tính tổng tiền
-        capNhatTongTien(hoaDonId);
-        hoaDon = hoaDonRepository.findById(hoaDonId).get();
-        BigDecimal tongTien = hoaDon.getTongThanhToan();
+        // Tính tổng tiền hàng từ chi tiết (KHÔNG ghi vào DB)
+        List<HoaDonChiTiet> chiTietList = hoaDonChiTietRepository.findByHoaDonId(hoaDonId);
+        BigDecimal tongTien = BigDecimal.ZERO;
+        for (HoaDonChiTiet ct : chiTietList) {
+            tongTien = tongTien.add(ct.getDonGia().multiply(BigDecimal.valueOf(ct.getSoLuong())));
+        }
 
         // Áp voucher vào tính toán (chỉ preview, chưa lưu)
         if (voucherId != null) {
@@ -601,7 +604,8 @@ public class HoaDonService {
                 if (voucher.getLoaiGiam() == 0) {
                     soTienTru = giaTriGiam;
                 } else {
-                    soTienTru = tongTien.multiply(giaTriGiam).divide(BigDecimal.valueOf(100));
+                    soTienTru = tongTien.multiply(giaTriGiam)
+                            .divide(BigDecimal.valueOf(100), 0, java.math.RoundingMode.HALF_UP);
                 }
                 tongTien = tongTien.subtract(soTienTru);
                 if (tongTien.compareTo(BigDecimal.ZERO) < 0)
@@ -612,10 +616,15 @@ public class HoaDonService {
         String amount = tongTien.toBigInteger().toString();
         String addInfo = URLEncoder.encode("Thanh toan " + hoaDon.getMaHoaDon(), StandardCharsets.UTF_8);
 
-        return "https://img.vietqr.io/image/" + BANK_ID + "-" + BANK_ACCOUNT
+        String qrUrl = "https://img.vietqr.io/image/" + BANK_ID + "-" + BANK_ACCOUNT
                 + "-compact.png?amount=" + amount
                 + "&addInfo=" + addInfo
                 + "&accountName=" + URLEncoder.encode(BANK_ACCOUNT_NAME, StandardCharsets.UTF_8);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("qrUrl", qrUrl);
+        result.put("tongTien", tongTien);
+        return result;
     }
 
 
