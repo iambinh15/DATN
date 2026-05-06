@@ -44,9 +44,8 @@ public interface SanPhamChiTietRepository extends JpaRepository<SanPhamChiTiet, 
 
     // Lọc bỏ các bản ghi có số lượng bằng 0
     @Query("""
-                SELECT DISTINCT s FROM SanPhamChiTiet s
+                SELECT s FROM SanPhamChiTiet s
                 JOIN FETCH s.idSanPham sp
-                LEFT JOIN FETCH sp.hinhAnhs
                 LEFT JOIN FETCH s.idMauSac
                 LEFT JOIN FETCH s.idSize
                 LEFT JOIN FETCH s.idChatLieu
